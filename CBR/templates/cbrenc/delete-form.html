@@ -1,0 +1,67 @@
+{% extends "index.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block content %}
+
+    <div class="row justify-content-center p-0 rounded">
+        <div class="card card-primary w-50 col-6 p-0 rounded">
+            <div class="card-header rounded bg-light">
+                <h1 class="card-title text-lg">{{ title }}</h1>
+                <a href="/" type="button" class="close" aria-hidden="true">×</a>
+                <small class="card-title float-md-right">{{ codigo }}</small>
+            </div>
+            <!-- /.card-header -->
+            <form method="post" action="../conciliacion" enctype="multipart/form-data"  data-ajax="false" >
+                <!-- form start -->
+                {% csrf_token %}
+                <input type="hidden" name="action" value="{{ action }}">
+                <input type="hidden" name="sobreescribir" value={{ sobreescribir }}>
+                <div class="card-body pt-0">
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <h5><i class="icon fas fa-ban"></i> Revise la información</h5>
+                            {{ form.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="row">
+                        <div class="form-group col-12 mb-0">
+                            <label for="idrenc-text" class="col-form-label mr-2">{{ form.idrenc.label }}</label>
+                                {{ form.idrenc}}
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="Glosa" class="col-form-label">{{ form.glosa.label }}</label>
+                            {{ form.glosa }}
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                    <div class="card-footer text-right">
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Eliminar</button>
+                        <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
+                                onclick="location.href='{{ list_url }}'">Cancelar</button>
+                    </div>
+            </form>
+            <div class="progress">
+                <div class="progress-bar bg-primary progress-bar-striped" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                    <span class="sr-only">100% Complete (success)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+            var parameters = new FormData(this);
+            submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
+                location.href = "{% url 'CBR:cbrenc-list' %}";
+            });
+        });
+        $('.form-control').on("change", function(e){
+             $('#btnGuardar').attr('disabled', false);
+        });
+    </script>
+{% endblock %}
+{% block scripts %}
+    <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+{% endblock %}
+

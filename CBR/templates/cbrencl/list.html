@@ -1,0 +1,37 @@
+{% extends 'Classes/list.html' %}
+{% load static %}
+{% block head_list %}
+    <script src="{% static 'js/list-cbrencl.js' %}"></script>
+{% endblock %}
+    {% block botones %}
+        <a href="{{ return_url }}" class="btn btn-primary btn-flat mb-3">
+            <i class="fas fa-arrow-circle-left"></i>
+        </a>
+
+    {% endblock %}
+{% block columns %}
+
+    <tr>
+        <th scope="col" style="width: 2%;">FECHA</th>
+        <th scope="col" style="width: 3%;">HORARIO</th>
+        <th scope="col" style="width: 5%;">USUARIO</th>
+        <th scope="col" style="width: 5%;">ESTADO</th>
+        <th scope="col" style="width: 3%;">SALDOBCO</th>
+        <th scope="col" style="width: 3%;">SALDOERP</th>
+        <th scope="col" style="width: 3%;">DIFERENCIA</th>
+        <th scope="col" style="width: 20%;">GLOSA</th>
+
+
+
+{#        <th scope="col" style="width: 20%; min-width: 20%" class="acciones-header" >Acción</th>#}
+
+    </tr>
+{% endblock %}
+
+{% block rows %}
+
+{% endblock %}
+
+{% block javascript %}
+
+{% endblock %}

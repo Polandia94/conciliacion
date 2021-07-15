@@ -1,0 +1,71 @@
+{% extends "root.html" %}
+{% load static %}
+
+{% block body %}
+
+<body >
+{% block header %}{% endblock %}
+
+<div class="contenedor-main">
+    <header>
+        <!-- Navbar -->
+        {% include 'header.html' %}
+        <!-- Navbar -->
+
+    </header>
+    <div class="">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+{#                    <div class="col-sm-6 text-white">#}
+{#                        <h1>Conciliación</h1>#}
+{#                    </div>#}
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+
+        <!-- Main content -->
+{#        <section class="wrapper-page">#}
+{#            <div class="container">#}
+{#                <div class="row">#}
+{#                    <div class="col-11">#}
+                        <!-- Default box -->
+
+                               {% block content %}
+
+                               {% endblock %}
+
+                                {# {% include 'conciliacion/cbrenc_list.html' %}#}
+
+
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </section>#}
+        <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+
+
+
+
+</div>
+<!-- ./wrapper -->
+
+    <script>
+        {% if messages %}
+            var html = '<p>';
+            {% for message in messages %}
+                html += '{{ message }}<br>';
+            {% endfor %}
+            html += '</p>';
+            Swal.fire({
+                title: 'Error!',
+                html: html,
+                icon: 'error'
+            });
+        {% endif %}
+    </script>
+</body>
+{% endblock %}

@@ -1,0 +1,35 @@
+
+pip install virtualenv
+-----------------------------
+python -m venv entornovirtual
+\entornovirtual\Scripts\activate.bat
+
+pip install mod_wsgi
+pip install psycopg2
+pip install django
+pip install django-widget-tweaks
+pip install django-db-file-storage
+pip install pandas
+pip install python-dotenv
+python -m pip install --upgrade pip
+mod_wsgi-express module-config
+
+Copiar dlls desde %username%\AppData\Local\Programs\Python\Python38
+hasta \venv\Scripts 
+
+
+agregar a Hosts:
+127.0.0.2    www.cbr.com    cbr.com
+
+[Si la database no esta creada en POSTGRES ejecutar]
+
+CREATE DATABASE dbrdb;
+
+[CREAR EN POSTGRES LA BASE DE DATOS cbrdb]
+
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+
+

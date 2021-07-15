@@ -1,0 +1,67 @@
+{% extends "index.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block content %}
+
+    <div class="container">
+
+        <form method="post" action="." enctype="multipart/form-data">
+            <div class="card card-primary">
+                <div class="card-header">
+
+                    <h3 class="card-title">
+{#                        {% if action == 'add' %}#}
+{#                            <i class="fas fa-plus"></i>#}
+{#                        {% else %}#}
+{#                            <i class="fas fa-edit"></i>#}
+{#                        {% endif %}#}
+
+                        {{ title }}
+                    </h3>
+                </div>
+                <div class="card-body">
+
+                    <a href="{% url return_url %}?idrenc={{ idrenc }}" class="btn btn-primary btn-flat mb-3">
+                        <i class="fas fa-arrow-circle-left"></i>
+                    </a>
+                    <input type="hidden" name="action" value="{{ action }}">
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                         
+                            <ul>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <label class="ml-2">{{ nombre_id }}: <input value="{{ id }}" class="w-50" readonly> </input></label>
+                    {% for field in form.visible_fields %}
+                        <div class="form-group">
+                            <label for="email">{{ field.label }}:</label>
+                            {{ field|add_class:'form-control-sm'|attr:'autocomplete:off' }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ list_url }}?idrenc={{ idrenc }}" class="btn btn-secondary btn-flat">
+                        <i class="fas fa-times"></i> Cerrar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+
+
+{% block scripts %}
+    <script src="{% static 'lib/jquery-3.6.0.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'lib/jquery-confirm-v3.3.4/jquery-confirm.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+{% endblock %}
+
+
