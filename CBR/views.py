@@ -1280,7 +1280,7 @@ def getanomes(request):
         maxAno=maxAno['ano__max']
         if maxAno is None:
             aCbtcta=Cbtcta.objects.filter( codbco=codbco, nrocta=nrocta ).first()
-            if aCbtcta in None:
+            if aCbtcta is None:
                 data={'ano': 0, 'mes': 0}
             maxAno = aCbtcta.ano
             maxMes = aCbtcta.mes
