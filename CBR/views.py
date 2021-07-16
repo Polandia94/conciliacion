@@ -813,6 +813,35 @@ class CbsresviewListView( ListView ):
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['editable']= "No Editable"
+        debeerp = 0
+        habererp = 0
+        debebco = 0
+        haberbco = 0
+        try:
+            listado = Cbsres.objects.filter(idrenc = self.request.GET.get( 'idrenc' ))
+            for registro in listado:
+                try:
+                    debeerp = debeerp + registro.debeerp
+                except:
+                    pass
+                try:
+                    habererp = habererp + registro.habererp
+                except:
+                    pass
+                try:
+                    debebco = debebco + registro.debebco
+                except:
+                    pass
+                try:
+                    haberbco = haberbco + registro.haberbco
+                except:
+                    pass
+        except Exception as e:
+            print(e)
+        context['habererp']="$"+'{:,}'.format(habererp)
+        context['debeerp']="$"+'{:,}'.format(debeerp)
+        context ['debebco']="$"+'{:,}'.format(debebco)
+        context ['haberbco']="$"+'{:,}'.format(haberbco)
 
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
 
@@ -946,7 +975,11 @@ def conciliarSaldos(request):
                     saldoacu_Mes_Erp=0
 
                     rowInicialbco=Cbrbcod.objects.filter( idrbcoe=idrenc).order_by( 'fechatra', 'horatra' ).first()
-                    currentDaybco=rowInicialbco.fechatra
+                    try:
+                        saldoacu_Mes_Bco=rowInicialbco.saldo-rowInicialbco.haber+rowInicialbco.debe
+                    except Exception as e:
+                        print(e)
+                        saldoacu_Mes_Bco=rowInicialbco.saldo
                     rowInicialerp=Cbrerpd.objects.filter( idrerpe=idrenc ).order_by( 'fechatra').first()
                     currentDay=rowInicialbco.fechatra
                     currentDayE=rowInicialerp.fechatra
@@ -960,12 +993,12 @@ def conciliarSaldos(request):
                         for vwRow in bcoDataSet:
                             if vwRow.fechatra.day == dia:
                                 fechatrabco=vwRow.fechatra
-                                saldoacu_Mes_Bco+=vwRow.saldo-saldoacu_Mes_Bco
                                 if (vwRow.fechatra is None):
                                     if (currentDay != vwRow.fechatra):
                                         currentDay=vwRow.fechatra
                                         saldoacum_Dia_Bco=0
                                 saldoacum_Dia_Bco+= vwRow.haber - vwRow.debe
+                                saldoacu_Mes_Bco+= vwRow.haber - vwRow.debe
                                 try:
                                     saldoacu_Mes_Erp = Cbsres.objects.filter(idrenc=idrenc).order_by("-idsres").first().saldoacumeserp
                                 except:
@@ -1246,7 +1279,15 @@ def getanomes(request):
         maxAno=Cbrenc.objects.exclude(estado = "3").filter( codbco=codbco, nrocta=nrocta ).aggregate( Max( 'ano' ) )
         maxAno=maxAno['ano__max']
         if maxAno is None:
-            data={'ano': 0, 'mes': 0}
+            aCbtcta=Cbtcta.objects.filter( codbco=codbco, nrocta=nrocta ).first()
+            if aCbtcta in None:
+                data={'ano': 0, 'mes': 0}
+            maxAno = aCbtcta.ano
+            maxMes = aCbtcta.mes
+            if maxMes < 12:
+                data={'ano': maxAno, 'mes': maxMes + 1}
+            else:
+                data={'ano': maxAno + 1, 'mes': 1}            
         else:
             maxMes=Cbrenc.objects.exclude(estado = "3").filter( codbco=codbco, nrocta=nrocta, ano=maxAno ).aggregate(
                 Max( 'mes' ) )

@@ -2,6 +2,10 @@
     background-color: rgb(5, 75, 40) !important;
   }
 
+.dt-button-collection{
+    margin-left: -20% !important;
+    width: 40% !important;
+}
 
 .grd-conciliaciones {
     height: 100% !important; 

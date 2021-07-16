@@ -14,7 +14,6 @@
     $("#btnSalir").on('click', function (e) {
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
-        if (globalVariableUltimoModificado.idsres != 0){alert("explique la modificacion")}else{
         if (globalVariable.editado == 1){
             ajax_confirm("../verificar/eliminar/?idrenc="+idrenc, 'Notificación',
                 'Se han modificado datos en la grilla, ¿desea salir sin guardar?', parameters,
@@ -27,16 +26,16 @@
                     location.href = `../`;
                     return false;
                 };
-            }
+            
     });
 
 
         /******************************************************************************************************************/
     /******************************************************************************************************************/
-    $("#btnGuardar").on('click', function () {
-        globalVariable.editado = 0;
+    $("#btnGuardar").on('click', function () {        
         const idrenc = urlParams.get('idrenc');
-        if (globalVariableUltimoModificado.idsres != 0){alert("explique la modificacion")}else{
+        if (globalVariableUltimoModificado.idsres != 0){alert("Complete el código de conciliacion para poder guardar" )}else{
+            globalVariable.editado = 0;
             location.href = "../verificar/conservar/?idrenc=" + idrenc;
         }
     });
@@ -49,7 +48,7 @@
         var parameters = {'idrenc': idrenc};
         if (globalVariable.editado == 1){
             ajax_confirm("../verificar/eliminar/?idrenc="+idrenc, 'Notificación',
-                'Ud. Perderá las modificaciones de conciliación realizadas"; desea continuar ?', parameters,
+                'Ud. Perderá las modificaciones de conciliación realizadas, desea continuar ?', parameters,
                 function () {
                     globalVariable.editado = 0
                     location.href = `/cbsres/?idrenc=`+idrenc;

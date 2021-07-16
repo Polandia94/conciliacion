@@ -21,7 +21,9 @@ $(function () { "use strict"
             deferRender: true,
             colReorder: true,
             stateSave: true,
-            fixedHeader: true,
+            fixedHeader:{            
+                header: true,
+                footer: true},
             dom: 'lBfrtip',
             language: {
                 url: '../static/lib/datatables-es.json'

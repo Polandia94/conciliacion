@@ -4,7 +4,9 @@ var globalVariable={
  var globalVariableSaldo={
     saldo: 0
  };
-
+ var globalVariableUltimoModificado={
+    idsres: 0
+ };
 
 $(function () { "use strict"
     $(document).ready(function() {
@@ -16,12 +18,12 @@ $(function () { "use strict"
         const urlParams = new URLSearchParams(window.location.search);
         const idrenc = urlParams.get('idrenc');
         let table = $('#data').DataTable({
-            scrollX: true,
-            order: [[0, 'asc']],
             deferRender: true,
             colReorder: true,
             stateSave: true,
-            fixedHeader: true,
+            fixedHeader:{            
+                header: true,
+                footer: true},
             dom: 'lBfrtip',
             language: {
                 url: '../static/lib/datatables-es.json'
@@ -36,7 +38,6 @@ $(function () { "use strict"
             ],
 
             stripeClasses: [],
-            responsive: true,
             autoWidth: false,
             destroy: true,
             hover: true,
@@ -55,22 +56,28 @@ $(function () { "use strict"
             },
             columns: [
                 {"data": "idsres"},
-                {"data": "fechatrabco", name: "fechatrabco"},
-                {"data": "horatrabco"},
-                {"data": "debebco", name: "debebco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-                {"data": "haberbco", name: "haberbco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-                {"data": "saldobco", name: "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+                {"data": "fechatrabco", name: "fechatrabco", className: "dt-bancoColor" },
+                {"data": "horatrabco", className: "dt-bancoColor" },
+                {"data": "debebco", name: "debebco", render: $.fn.dataTable.render.number(',', '.', 2, '$'), className: "dt-bancoColor" },
+                {"data": "haberbco", name: "haberbco", render: $.fn.dataTable.render.number(',', '.', 2, '$'), className: "dt-bancoColor" },
+                {"data": "saldobco", name: "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$'), className: "dt-bancoColor" },
                 {
                     "data": "saldoacumesbco",
                     name: "saldoacumesbco",
-                    render: $.fn.dataTable.render.number(',', '.', 2, '$')
+                    render: $.fn.dataTable.render.number(',', '.', 2, '$'), 
+                    className: "dt-bancoColor" 
                 },
                 {
                     "data": "saldoacumdiabco",
                     name: "saldoacumdiabco",
-                    render: $.fn.dataTable.render.number(',', '.', 2, '$')
+                    render: $.fn.dataTable.render.number(',', '.', 2, '$'), 
+                    className: "dt-bancoColor" 
                 },
-                {"data": 'idrbcod'},
+                {"data": 'idrbcod', className: "dt-bancoColor" },
+                {"data": 'oficinabco', className: "dt-bancoColor" },
+                {"data": 'desctrabco', className: "dt-bancoColor" },
+                {"data": 'reftrabco', className: "dt-bancoColor" },
+                {"data": 'codtrabco', className: "dt-bancoColor" },
                 {"data": 'isconciliado'},
                 {"data": "fechatraerp", name: "fechatraerp"},
                 {"data": "debeerp", name: "debeerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
@@ -88,10 +95,6 @@ $(function () { "use strict"
                 },
                 {"data": "saldodiferencia", name: "saldodiferencia", render: $.fn.dataTable.render.number( ',', '.', 2, '$' )},
                 {"data": 'idrerpd'},
-                {"data": 'oficinabco'},
-                {"data": 'desctrabco'},
-                {"data": 'reftrabco'},
-                {"data": 'codtrabco'},
                 {"data": 'nrotraerp'},
                 {"data": 'nrocomperp'},
                 {"data": 'auxerp'},
@@ -129,13 +132,13 @@ $(function () { "use strict"
                 {
                     targets: [3],
                     createdCell: function (cell) {
-                        $(cell).attr("data-look", 'debeerp');
+                        $(cell).attr("data-look", 'habererp');
                     }
                 },
                 {
                     targets: [4],
                     createdCell: function (cell) {
-                        $(cell).attr("data-look", 'habererp');
+                        $(cell).attr("data-look", 'debeerp');
                     }
                 },
                 {
@@ -158,20 +161,29 @@ $(function () { "use strict"
                 },
 
                 {
-                    targets: [10],
+                    targets: [14],
                     createdCell: function (cell) {
                         $(cell).attr("data-look", 'fechatrabco');
                     }
                 },
                 {
-                    targets: [11],
+                    targets: [15],
                     createdCell: function (cell) {
 
-                        $(cell).attr("data-look", 'debebco');
+                        $(cell).attr("data-look", 'haberbco');
                         let original
                         let saldo = parseFloat(0);
+                        var row = table.row(cell)
 
-                        saldo = parseFloat(table.cell( 0,14 ).data())-parseFloat(table.cell( 0,11 ).data())+parseFloat(table.cell( 0,12 ).data())
+                        if((table.cell(row,28).data() == "1" || table.cell(row,28).data() == "4")&& table.cell(row,15).data()>0){
+                        var tr = $(cell);
+                        tr.css('color', '#ff0000');
+                        }
+                        
+                        saldo = parseFloat(table.cell( 0,18 ).data())-parseFloat(table.cell( 0,15 ).data())+parseFloat(table.cell( 0,16 ).data())
+                        for (let fila = 1; isNaN(saldo); fila++) {
+                            saldo = parseFloat(table.cell( fila,18 ).data())-parseFloat(table.cell( fila,15 ).data())+parseFloat(table.cell( fila,16 ).data())
+                        }
                         globalVariableSaldo.saldo = saldo
 
                         cell.setAttribute('spellcheck', false)
@@ -183,17 +195,21 @@ $(function () { "use strict"
                         })
 
                         cell.addEventListener('blur', function(e) {
-                            if ( original == 0 || original == null || original == "$0.00"){
+                            if ( original == 0 || original == null || original == "$0.00" || globalVariableUltimoModificado.idsres != 0){
                                 e.target.textContent = original
+                                if(globalVariableUltimoModificado.idsres != 0){
+                                    alert("explique la modificación")
+                                }
                             }
                             else if (original !== e.target.textContent) {
-
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
                                 var row = table.row(e.target.parentElement)
-
-                                row.data()['debeerp']=e.target.textContent
+                                if (row.data()['tipoconciliado'] == " " || row.data()['tipoconciliado'] == null|| row.data()['tipoconciliado'] == undefined){
+                                globalVariableUltimoModificado.idsres = table.cell(row,0).data()
+                                }
+                                row.data()['debeerp']=e.target.textContent.replace("$","")
 
 
                                 /*  
@@ -211,9 +227,8 @@ $(function () { "use strict"
                                 let saldodia = parseFloat(0)
                                 let saldoi = parseFloat(0)
                                 saldoi = parseFloat(globalVariableSaldo.saldo)
-
                                 if (table.cell(row,4).data() != null){
-                                    if(parseFloat(table.cell(row,11).data().replace("$",""))==parseFloat(table.cell(row,4).data().replace("$","")) &&  parseFloat(table.cell(row,3).data().replace("$",""))==parseFloat(table.cell(row,12).data().replace("$",""))){
+                                    if(parseFloat(table.cell(row,15).data().replace("$",""))==parseFloat(table.cell(row,4).data().replace("$","")) &&  parseFloat(table.cell(row,3).data().replace("$",""))==parseFloat(table.cell(row,16).data().replace("$",""))){
                                         row.data()['isconciliado']=2}else if(row.data()['linkconciliado']==undefined || row.data()['linkconciliado']==null || row.data()['linkconciliado']==""){ 
                                         row.data()['isconciliado']=1}else{row.data()['isconciliado']=2}
                                 }else if(row.data()['linkconciliado']==undefined || row.data()['linkconciliado']==null || row.data()['linkconciliado']==""){
@@ -224,86 +239,96 @@ $(function () { "use strict"
 
 
                                 if (row.data()['isconciliado'] == 1){
-                                    historial.data( "1").draw();
+                                    historial.data( "1");
                                 }else{
-                                    historial.data( "4").draw();
+                                    historial.data( "4");
                                 }
 
-
-                                for (let fila = 0; fila < table.rows().count()+1; fila++) {
+                                var datasend = []
+                                for (let fila = 0; fila < table.rows().count(); fila++) {
 
                                 let totalmas = parseFloat(0)
 
 
-                                if(table.cell(fila,11).data() == null){
+                                if(table.cell(fila,15).data() == null){
                                     totalmas = parseFloat(0)
                                     total = total + totalmas   
                                 } else{
-                                    totalmas = parseFloat(table.cell(fila,11).data().replace("$",""))
+                                    totalmas = parseFloat(table.cell(fila,15).data().replace("$",""))
                                     total = total + totalmas
                                 }
 
 
 
                                 let saldomas = parseFloat(0)
-                                if (table.cell(fila,11).data()==null){
+                                if (table.cell(fila,15).data()==null){
                                     saldomas = parseFloat(0)
-                                }else{saldomas = parseFloat(table.cell(fila,11).data())}
+                                }else{saldomas = parseFloat(table.cell(fila,15).data())}
 
                                 let saldomenos = parseFloat(0)
 
-                                if (table.cell(fila,12).data()==null){
+                                if (table.cell(fila,16).data()==null){
                                     saldomenos = parseFloat(0)
-                                }else{saldomenos = parseFloat(table.cell(fila,12).data())}
+                                }else{saldomenos = parseFloat(table.cell(fila,16).data())}
 
 
                                 
                                 saldoi =  saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
                                 
-                                table.cell( fila,14 ).data(saldoi).draw();
+                                table.cell( fila,18 ).data(saldoi);
 
 
+                                table.cell( row,20 ).data(parseFloat(table.cell(row,6).data().replace("$","")) - parseFloat(table.cell(row,18).data()));
 
-
-                                table.cell( row,16 ).data(parseFloat(table.cell(row,6).data().replace("$","")) - parseFloat(table.cell(row,14).data())).draw();
-
-                                if (table.cell(fila-1,10).data()==table.cell(fila,10).data()){
+                                if (table.cell(fila-1,14).data()==table.cell(fila,14).data()){
                                     saldodia = saldodia + saldomas - saldomenos
                                 }else{
                                     saldodia = saldomas - saldomenos
                                 }
-                                table.cell( fila,15 ).data(saldodia).draw();
+                                table.cell( fila,19 ).data(saldodia);
                                 var rows = table.row(fila)
-                                
 
-
-                                debeerp.innerHTML = total;
+                              
+                                debeerp.innerHTML = Number(total).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
  
-                                table.rows().invalidate().draw();
-
-
                                 
-
-                                
-                                
-                                  
-                              }
- 
+                                datasend.push(rows.data());
+                                }
+                            table.rows().invalidate().draw(false);
+                        
                             }
                           })
                     }
                 },
-                {
-                    targets: [12],
+                {targets: [29],
                     createdCell: function (cell) {
-                        $(cell).attr("data-look", 'haberbco');
+                        cell.addEventListener('mouseenter', function(e) {
+                            var row = table.row(e.target.parentElement)
+                            var valor = document.getElementById('option-'+row.data()['idsres']);
+                            var value = valor.value
+                            if(globalVariableUltimoModificado.idsres == table.cell(row,0).data() && value != " "){
+                            globalVariableUltimoModificado.idsres = 0
+                            }
+                            
+                            var datasend = []
+                            row.data()['tipoconciliado']= value                           
+                            datasend.push(row.data());
+
+                        })}
+                    },
+                {
+                    targets: [16],
+                    createdCell: function (cell) {
+                        $(cell).attr("data-look", 'debebco');
                         let original
                         let saldo = parseFloat(0);
 
-                        saldo = parseFloat(table.cell( 0,14 ).data())-parseFloat(table.cell( 0,11 ).data())+parseFloat(table.cell( 0,12 ).data())
-                        globalVariableSaldo.saldo = saldo
+                        var row = table.row(cell)
 
-
+                        if((table.cell(row,28).data() == "1" || table.cell(row,28).data() == "4")&& table.cell(row,16).data()>0){
+                        var tr = $(cell);
+                        tr.css('color', '#ff0000');
+                        }
                         cell.setAttribute('spellcheck', false)
 
                         cell.addEventListener('focus', function(e) {
@@ -313,8 +338,11 @@ $(function () { "use strict"
                         })
 
                         cell.addEventListener('blur', function(e) {
-                            if ( original == 0 || original == null || original == "$0.00"){
+                            if ( original == 0 || original == null || original == "$0.00" || globalVariableUltimoModificado.idsres != 0){
                                 e.target.textContent = original
+                                if(globalVariableUltimoModificado.idsres != 0){
+                                    alert("explique la modificación")
+                                }
                             }
                             else if (original !== e.target.textContent) {
 
@@ -322,8 +350,11 @@ $(function () { "use strict"
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
                                 var row = table.row(e.target.parentElement)
+                                if (row.data()['tipoconciliado'] == " " || row.data()['tipoconciliado'] == null || row.data()['tipoconciliado'] == undefined){
+                                    globalVariableUltimoModificado.idsres = table.cell(row,0).data()
+                                    }
 
-                                row.data()['habererp']=e.target.textContent
+                                row.data()['habererp']=e.target.textContent.replace("$","")
 
 
                                 /*  
@@ -344,7 +375,7 @@ $(function () { "use strict"
 
 
                                 if (table.cell(row,4).data() != null){
-                                    if(parseFloat(table.cell(row,11).data().replace("$",""))==parseFloat(table.cell(row,4).data().replace("$","")) &&  parseFloat(table.cell(row,3).data().replace("$",""))==parseFloat(table.cell(row,12).data().replace("$",""))){
+                                    if(parseFloat(table.cell(row,15).data().replace("$",""))==parseFloat(table.cell(row,4).data().replace("$","")) &&  parseFloat(table.cell(row,3).data().replace("$",""))==parseFloat(table.cell(row,16).data().replace("$",""))){
                                         row.data()['isconciliado']=2}else if(row.data()['linkconciliado']==undefined || row.data()['linkconciliado']==null || row.data()['linkconciliado']==""){ 
                                         row.data()['isconciliado']=1}else{row.data()['isconciliado']=2}
                                 }else if(row.data()['linkconciliado']==undefined || row.data()['linkconciliado']==null || row.data()['linkconciliado']==""){
@@ -354,86 +385,83 @@ $(function () { "use strict"
 
 
                                 if (row.data()['isconciliado'] == 1){
-                                    historial.data( "1").draw();
+                                    historial.data( "1");
                                 }else{
-                                    historial.data( "4").draw();
+                                    historial.data( "4");
                                 }
 
-
-                                for (let fila = 0; fila < table.rows().count()+1; fila++) {
+                                var datasend = []
+                                for (let fila = 0; fila < table.rows().count(); fila++) {
 
                                 let totalmas = parseFloat(0)
 
 
-                                if(table.cell(fila,11).data() == null){
+                                if(table.cell(fila,16).data() == null){
                                     totalmas = parseFloat(0)
                                     total = total + totalmas   
                                 } else{
-                                    totalmas = parseFloat(table.cell(fila,11).data().replace("$",""))
+                                    totalmas = parseFloat(table.cell(fila,16).data().replace("$",""))
                                     total = total + totalmas
                                 }
 
 
 
                                 let saldomas = parseFloat(0)
-                                if (table.cell(fila,11).data()==null){
+                                if (table.cell(fila,15).data()==null){
                                     saldomas = parseFloat(0)
-                                }else{saldomas = parseFloat(table.cell(fila,11).data())}
+                                }else{saldomas = parseFloat(table.cell(fila,15).data())}
 
                                 let saldomenos = parseFloat(0)
 
-                                if (table.cell(fila,12).data()==null){
+                                if (table.cell(fila,16).data()==null){
                                     saldomenos = parseFloat(0)
-                                }else{saldomenos = parseFloat(table.cell(fila,12).data())}
+                                }else{saldomenos = parseFloat(table.cell(fila,16).data())}
 
 
                                 
                                 saldoi =  saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
                                 
-                                table.cell( fila,14 ).data(saldoi).draw();
+                                table.cell( fila,18 ).data(saldoi);
 
 
 
 
-                                table.cell( row,16 ).data(parseFloat(table.cell(row,6).data().replace("$","")) - parseFloat(table.cell(row,14).data())).draw();
+                                table.cell( row,20 ).data(parseFloat(table.cell(row,6).data().replace("$","")) - parseFloat(table.cell(row,18).data()));
 
-                                if (table.cell(fila-1,10).data()==table.cell(fila,10).data()){
+                                if (table.cell(fila-1,14).data()==table.cell(fila,14).data()){
                                     saldodia = saldodia + saldomas - saldomenos
                                 }else{
                                     saldodia = saldomas - saldomenos
                                 }
-                                table.cell( fila,15 ).data(saldodia).draw();
+                                table.cell( fila,19 ).data(saldodia);
                                 var rows = table.row(fila)
                                 
 
-                                habererp.innerHTML = total;
-                                table.rows().invalidate().draw();                                
-
-                                
-
-                                
-                                  
+                                habererp.innerHTML = Number(total).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2});                                                           
+                                datasend.push(rows.data());
                                 }
+                            table.rows().invalidate().draw(false);    
+
                             }
                           })
                     }
                 },
 
                 {
-                    targets: [13],
+                    targets: [17],
                     createdCell: function (cell) {
                         $(cell).attr("data-look", 'saldobco');
                     }
                 },
 
                 {
-                    targets: [14],
+                    targets: [18],
                     createdCell: function (cell) {
                         $(cell).attr("data-look", 'saldoacumesbco');
                     }
                 },
                 {
-                    targets: [15],
+                    targets: [19],
                     createdCell: function (cell) {
                         $(cell).attr("data-look", 'saldoacumdiabco');
                     }
@@ -462,17 +490,17 @@ $(function () { "use strict"
                                 */
                                 var historial = table.cell( row,28 );
                                 if (row.data['isconciliado'] == 1){
-                                    historial.data( "1").draw();
+                                    historial.data( "1");
                                 }else{
-                                    historial.data( "4").draw();
+                                    historial.data( "4");
                                 }                                
   
-                                if(table.cell(row,4).data() == null || table.cell(row,11).data() == null || table.cell(row,12).data() == null || table.cell(row,3).data() == null){
+                                if(table.cell(row,4).data() == null || table.cell(row,15).data() == null || table.cell(row,16).data() == null || table.cell(row,3).data() == null){
                                     if(row.data()['linkconciliado']==undefined || row.data()['linkconciliado']==null || row.data()['linkconciliado']=="") {
                                         row.data()['isconciliado']=1
                                         }else{row.data()['isconciliado']=2}
                                 }else{
-                                    if(parseFloat(table.cell(row,11).data().replace("$",""))==parseFloat(table.cell(row,4).data().replace("$","")) &&  parseFloat(table.cell(row,3).data().replace("$",""))==parseFloat(table.cell(row,12).data().replace("$",""))){
+                                    if(parseFloat(table.cell(row,15).data().replace("$",""))==parseFloat(table.cell(row,4).data().replace("$","")) &&  parseFloat(table.cell(row,3).data().replace("$",""))==parseFloat(table.cell(row,16).data().replace("$",""))){
                                     row.data()['isconciliado']=2
                                     }else if(row.data()['linkconciliado']==undefined || row.data()['linkconciliado']==null || row.data()['linkconciliado']=="") {
                                         row.data()['isconciliado']=1
@@ -485,17 +513,11 @@ $(function () { "use strict"
                                         }                   
                                 });
 
-                                table.rows().invalidate().draw();
+                                table.rows().invalidate().draw(false);
+                                var datasend = []
+                                datasend.push(row.data());
                                 
-
-                                  
-                                
-  
-                                
-                                
-  
-                                
-                                
+   
                             }
                           })
                     }
@@ -507,21 +529,19 @@ $(function () { "use strict"
                     // createdCell: function (td,value, data){
                     //     /* CELDA POR CELDA DE LAS COLUMNAS EN targets */
                     // }
-                },
-                
-                
+                },                
                 {
                     targets: [8],
                     render: function (data, type, row) {
-                        return `${data} <a href="../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list" > <i class="fas fa-search-plus"></i></a>`
+                        return `${data} <a href="../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list" target="_blank" rel="noopener noreferrer"> <i class="fas fa-search-plus"></i></a>`
                     }
 
                 },
                 {
-                    targets: [17],
+                    targets: [21],
                     render: function (data, type, row) {
 
-                        return `${data} <a href="../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list" > <i class="fas fa-search-plus"></i></a>`
+                        return `${data} <a href="../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list" target="_blank" rel="noopener noreferrer"> <i class="fas fa-search-plus"></i></a>`
                     }
 
                 },
@@ -583,13 +603,14 @@ $(function () { "use strict"
                         }
                         $Etiqueta.attr('style', "width: 100px; height: 16px");
                         $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0">  </div>').append($Etiqueta));
-                        $elDiv.children().addClass('callout callout-conc m-0 pt-2 h-100 w-100' + classBackground);
+                        $elDiv.children().removeClass();
+                        $elDiv.children().addClass('callout callout-conc m-0 pt-2 h-100 w-100 ' + classBackground);
                         return $elDiv.clone().html();
                     }
                 },
                 
                 {
-                    targets: [16],
+                    targets: [20],
                     createdCell: function (td, cellData, rowData, row, col) {
 
                         if (rowData['saldodiferencia'] != '0.00') {
@@ -634,13 +655,11 @@ $(function () { "use strict"
                 $(row).children().addClass('texto-cbsres');
             },
             initComplete: function (settings, json) {
-
             },
         });
         const createdCell = function(cell) {
             let original
           
-            cell.setAttribute('contenteditable', true)
             cell.setAttribute('spellcheck', false)
           
             cell.addEventListener('focus', function(e) {
@@ -656,6 +675,7 @@ $(function () { "use strict"
             })
           }
         table = $('#data').DataTable();
+
 
         $('#data tbody')
             .on( 'mouseenter', 'td', function () {
