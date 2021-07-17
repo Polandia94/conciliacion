@@ -626,7 +626,12 @@ $(function () { "use strict"
                 {
                     targets: [8],
                     render: function (data, type, row) {
-                        return `${data} <a href="../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list" target="_blank" rel="noopener noreferrer"> <i class="fas fa-search-plus"></i></a>`
+                        return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>
+                    <script>
+                    function ventanaSecundaria (URL){ 
+                            window.open(URL,"Lupa","width=320,height=850,scrollbars=NO") 
+                         } 
+                    </script>`
                     }
 
                 },
@@ -634,7 +639,12 @@ $(function () { "use strict"
                     targets: [21],
                     render: function (data, type, row) {
 
-                        return `${data} <a href="../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list" target="_blank" rel="noopener noreferrer"> <i class="fas fa-search-plus"></i></a>`
+                        return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>
+                    <script>
+                    function ventanaSecundaria (URL){ 
+                            window.open(URL,"Lupa","width=320,height=850,scrollbars=NO") 
+                         } 
+                    </script>`
                     }
 
                 },

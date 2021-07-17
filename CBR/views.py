@@ -147,8 +147,17 @@ class CbrencCreateView( CreateView ):
                     error=True
                 except:
                     error=False
+                if error == True:
+                    return JsonResponse(data)
                 if archivoerp != '' and error == False:
                     UploadFileErpDB( request, self.CbrencNew, data, saldoerpanterior )
+                try:
+                    print( data['error'])
+                    error=True
+                except:
+                    error=False
+                if error == True:
+                    return JsonResponse(data)
                 aCbrencl = Cbrencl(
                     idrenc = self.CbrencNew,
                     status = 0,
@@ -365,6 +374,7 @@ def UploadFileBcoDB(request, aCbrenc, data, saldobcoanterior):
             return False
 
     try:
+        error = False
         dataBco=pd.read_csv( str( aCbrenc.archivobco ), delimiter=";", header=0, index_col=False )
         for i in range( len( dataBco ) ):
             s_date=dataBco.loc[i, dataBco.columns[0]]
@@ -386,16 +396,18 @@ def UploadFileBcoDB(request, aCbrenc, data, saldobcoanterior):
                 debe = float(0)
         except:
             debe = float(0)
-        if float(str(dataBco.loc[0, dataBco.columns[9]]).replace( ',', '' ))+ haber - debe != saldobcoanterior:
+        if float(str(dataBco.loc[0, dataBco.columns[9]]).replace( ',', '' ))+ haber - debe != float(saldobcoanterior):
+            print(float(str(dataBco.loc[0, dataBco.columns[9]]).replace( ',', '' ))+ haber - debe)
+            print(saldobcoanterior)
             aCbrenc.delete()
             data['error']="Saldos de Banco no Coinciden"
             error = True
-            return JsonResponse( data, safe=False)
+            return JsonResponse( data)
         respuesta={}
         try:
             Cbrbcod.objects.filter(idrbcoe=Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).first().idrbcoe).delete()
-        except:
-            pass
+        except Exception as e:
+            print(e)
         Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
         tableBcoEnc = Cbrbcoe(
             idrbcoe=aCbrenc.idrenc,
@@ -403,7 +415,8 @@ def UploadFileBcoDB(request, aCbrenc, data, saldobcoanterior):
             fechact1 = dt.datetime.now(tz=timezone.utc)+huso,
             idusu1 = request.user.username
             )
-        tableBcoEnc.save()
+        if error == False:
+            tableBcoEnc.save()
         for i in range( len( dataBco ) ):
             respuesta['codtra']=dataBco.loc[i, dataBco.columns[5]]
             if respuesta['codtra']:
@@ -433,11 +446,15 @@ def UploadFileBcoDB(request, aCbrenc, data, saldobcoanterior):
                     idrbcoe=tableBcoEnc,
                 )
                 saldo = float(str(dataBco.loc[i, dataBco.columns[9]]).replace( ',', '' ))
-                tableBco.save( aCbrenc )
+                if error == False:
+                    tableBco.save( aCbrenc )
         aCbrenc.recordbco = len( dataBco )
         aCbrenc.saldobco = saldo
         aCbrenc.idusubco=request.user.username
-        return True
+        if error == False:
+            return True
+        else:
+            return False
     except Exception as e:
         try:
             data['msgInfo']='Se registró correctamante el encabezado para (' \
@@ -489,7 +506,7 @@ def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
                 debe = 0
         except:
             debe = float(0)
-        if float(str(dataErp.loc[0, dataErp.columns[8]]).replace( ',', '' )) + debe -  haber != saldoerpanterior:
+        if float(str(dataErp.loc[0, dataErp.columns[8]]).replace( ',', '' )) + debe -  haber != float(saldoerpanterior):
             try:
                 Cbrbcod.objects.filter(idrbcoe=aCbrenc.idrenc).delete()
             except:

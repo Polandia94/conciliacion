@@ -21,9 +21,7 @@
                 </div>
                 <div class="card-body">
 
-                    <a href="{% url return_url %}?idrenc={{ idrenc }}" class="btn btn-primary btn-flat mb-3">
-                        <i class="fas fa-arrow-circle-left"></i>
-                    </a>
+
                     <input type="hidden" name="action" value="{{ action }}">
                     {% if form.errors %}
                         <div class="alert alert-danger alert-dismissible">
