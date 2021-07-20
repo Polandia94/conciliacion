@@ -199,7 +199,7 @@ $(function () { "use strict"
                             if ( original == 0 || original == null || original == "$0.00" || globalVariableUltimoModificado.idsres != 0){
                                 e.target.textContent = original
                                 if(globalVariableUltimoModificado.idsres != 0){
-                                    alert("explique la modificación")
+                                    alert("Llene el código de modificación")
                                 }
                             }
                             else if (original !== e.target.textContent) {
@@ -308,12 +308,15 @@ $(function () { "use strict"
                 },
                 {targets: [29],
                     createdCell: function (cell) {
-                        cell.addEventListener('mouseenter', function(e) {
+                        cell.addEventListener('mouseleave', function(e) {
                             var row = table.row(e.target.parentElement)
                             var valor = document.getElementById('option-'+row.data()['idsres']);
                             var value = valor.value
                             if(globalVariableUltimoModificado.idsres == table.cell(row,0).data() && value != " "){
                             globalVariableUltimoModificado.idsres = 0
+                            }
+                            if(value != " "){
+                                globalVariable.editado = 1
                             }
                             
                             var datasend = []
@@ -352,7 +355,7 @@ $(function () { "use strict"
                             if ( original == 0 || original == null || original == "$0.00" || globalVariableUltimoModificado.idsres != 0){
                                 e.target.textContent = original
                                 if(globalVariableUltimoModificado.idsres != 0){
-                                    alert("explique la modificación")
+                                    alert("Llene el código de modificación")
                                 }
                             }
                             else if (original !== e.target.textContent) {
@@ -626,25 +629,23 @@ $(function () { "use strict"
                 {
                     targets: [8],
                     render: function (data, type, row) {
-                        return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>
-                    <script>
-                    function ventanaSecundaria (URL){ 
-                            window.open(URL,"Lupa","width=320,height=850,scrollbars=NO") 
-                         } 
-                    </script>`
+                        if(((data != "0") && (data != null) && (data != undefined) && (data != '')) ){
+                        return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>`
+                    }else{return""}
                     }
 
                 },
                 {
                     targets: [21],
                     render: function (data, type, row) {
-
+                        if(((data != "0") && (data != null) && (data != undefined) && (data != '')) ){
                         return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>
                     <script>
                     function ventanaSecundaria (URL){ 
-                            window.open(URL,"Lupa","width=320,height=850,scrollbars=NO") 
+                            window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=420,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
                          } 
                     </script>`
+                        }else{return""}
                     }
 
                 },

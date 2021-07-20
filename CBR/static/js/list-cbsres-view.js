@@ -533,15 +533,23 @@ $(function () { "use strict"
                 {
                     targets: [8],
                     render: function (data, type, row) {
-                        return `${data} <a href="../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list" target="_blank" rel="noopener noreferrer"> <i class="fas fa-search-plus"></i></a>`
+                        if(((data != "0") && (data != null) && (data != undefined) && (data != '')) ){
+                        return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>`
+                    }else{return""}
                     }
 
                 },
                 {
                     targets: [21],
                     render: function (data, type, row) {
-
-                        return `${data} <a href="../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list" target="_blank" rel="noopener noreferrer"> <i class="fas fa-search-plus"></i></a>`
+                        if(((data != "0") && (data != null) && (data != undefined) && (data != '')) ){
+                        return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>
+                    <script>
+                    function ventanaSecundaria (URL){ 
+                            window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=420,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                         } 
+                    </script>`
+                        }else{return""}
                     }
 
                 },
