@@ -23,9 +23,9 @@ agregar a Hosts:
 
 [Si la database no esta creada en POSTGRES ejecutar]
 
-CREATE DATABASE dbrdb;
+CREATE DATABASE contag;
 
-[CREAR EN POSTGRES LA BASE DE DATOS cbrdb]
+[CREAR EN POSTGRES LA BASE DE DATOS contag]
 
 python manage.py makemigrations
 python manage.py migrate

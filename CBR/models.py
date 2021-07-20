@@ -105,6 +105,7 @@ class Cbttco(models.Model):
     idttco = models.AutoField(db_column='idttco', primary_key=True)
     indtco = models.CharField(verbose_name='Tipo de conciliación', db_column='indtc', max_length=1)
     codtco = models.CharField(verbose_name='Codtco', db_column='codtco', max_length=4)
+    destco = models.CharField(verbose_name='Descripcion tipo de conciliacion', db_column='destco', max_length=80)
     masmenos = models.SmallIntegerField(db_column='masmenos', blank=True, null=True)
     ordencb010 = models.SmallIntegerField(db_column='ordencbo10', blank=True, null=True)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)

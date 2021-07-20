@@ -95,7 +95,7 @@ window.onbeforeunload = function(){
     </tr>
 {% endblock %}
 {% block rows %}
-<tr><th></th><th></th><th> </th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th>a</th><th></th></tr>
+<tr><th></th><th></th><th> </th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
 {% endblock %}
 {% block foot %}
 
@@ -109,10 +109,28 @@ window.onbeforeunload = function(){
 {% endblock %}
 {% block scripts_cbr %}
     {% if editable == 'Editable' %} 
+    <script>
+        var globalVariableIndtco={
+            indtco_erp: "{{indtco_erp}}".split(","),
+            indtco_bco: "{{indtco_bco}}".split(",")
+        };
+    </script>
     <script src="{% static 'js/list-cbsres.js' %}"></script>
     {% else %}
     <script src="{% static 'js/list-cbsres-view.js' %}"></script>
 
     {% endif %}
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+                          <script>
+    function alertaa() {
+                    alert("{{alertaa}}");
+                    }
+    function alertab() {
+                    alert("{{alertab}}");
+                    }
+    function alertac() {
+                    alert("{{alertac}}");
+                    }
+
+                    </script>
 {% endblock %}

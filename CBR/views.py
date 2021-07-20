@@ -1,5 +1,5 @@
 from django.db.models.aggregates import Count
-from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci
+from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco
 import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
 import pandas as pd
@@ -745,6 +745,48 @@ class CbsresListView( ListView ):
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['editable']= "Editable"
+        from CBR.models import Cbttco
+        n = 0
+        indtco_erp = ""
+        for i in Cbttco.objects.filter(indtco = "1").all():
+            if n>0:
+                indtco_erp = indtco_erp +","
+            indtco_erp = indtco_erp + i.codtco
+            n= n+1
+        context['indtco_erp'] = indtco_erp
+        indtco_bco = ""        
+        n= 0
+        n = 0
+        for i in Cbttco.objects.filter(indtco = "2").all():
+            if n>0:
+                indtco_bco = indtco_bco +","
+            indtco_bco = indtco_bco + i.codtco
+            n = n+1
+        alertaa = ""
+        n = 0
+        for i in Cbttco.objects.filter(indtco = "1").all():
+            if n>0:
+                alertaa = alertaa +"\\n"
+            alertaa = alertaa  + i.codtco + " : " + i.destco
+            n= n+1
+        context['alertaa'] = alertaa
+        alertab = ""
+        n = 0
+        for i in Cbttco.objects.filter(indtco = "2").all():
+            if n>0:
+                alertab = alertab +"\\n"
+            alertab = alertab  + i.codtco + " : " + i.destco
+            n= n+1
+        context['alertab'] = alertab
+        alertac = ""
+        for i in Cbttco.objects.filter().all():
+            if n>0:
+                alertac = alertac +"\\n"
+            alertac = alertac + i.codtco + " : " + i.destco
+
+            n= n+1
+        context['alertac'] = alertac
+        context['indtco_bco'] = indtco_bco         
         debeerp = 0
         habererp = 0
         debebco = 0
@@ -830,6 +872,14 @@ class CbsresviewListView( ListView ):
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['editable']= "No Editable"
+        alertac = ""
+        for i in Cbttco.objects.filter().all():
+            if n>0:
+                alertac = alertac +"\\n"
+            alertac = alertac + i.codtco + " : " + i.destco
+
+            n= n+1
+        context['alertac'] = alertac
         debeerp = 0
         habererp = 0
         debebco = 0
@@ -998,6 +1048,11 @@ def conciliarSaldos(request):
                         print(e)
                         saldoacu_Mes_Bco=rowInicialbco.saldo
                     rowInicialerp=Cbrerpd.objects.filter( idrerpe=idrenc ).order_by( 'fechatra').first()
+                    try:
+                        saldoacu_Mes_Erp=rowInicialerp.saldo-rowInicialerp.haber+rowInicialerp.debe
+                    except Exception as e:
+                        print(e)
+                        saldoacu_Mes_Erp=rowInicialerp.saldo
                     currentDay=rowInicialbco.fechatra
                     currentDayE=rowInicialerp.fechatra
                     Cbsres.objects.filter( idrenc=idrenc ).delete()
@@ -1019,7 +1074,7 @@ def conciliarSaldos(request):
                                 try:
                                     saldoacu_Mes_Erp = Cbsres.objects.filter(idrenc=idrenc).order_by("-idsres").first().saldoacumeserp
                                 except:
-                                    saldoacu_Mes_Erp = 0
+                                    pass
                                 insCbsres=Cbsres(
                                     idrenc=Cbrenc.objects.get( idrenc=idrenc ),
                                     cliente=Cbrenc.objects.get( idrenc=idrenc).cliente,
@@ -1056,7 +1111,7 @@ def conciliarSaldos(request):
                                 cambio = True
                         for vwRow in erpDataSet:
                             if vwRow.fechatra.day == dia:
-                                saldoacu_Mes_Erp+=vwRow.saldo
+                                saldoacu_Mes_Erp= saldoacu_Mes_Erp + vwRow.debe - vwRow.haber
                                 saldoacum_Dia_Erp+=vwRow.debe - vwRow.haber
                                 try:
                                     saldoacu_Mes_Bco = Cbsres.objects.filter(idrenc=idrenc).order_by("-idsres").first().saldoacumesbco
@@ -1109,6 +1164,7 @@ def conciliarSaldos(request):
                                     # --------------------
                                 insCbsres.save()
                                 cambio = True
+                        saldoacum_Dia_Erp=0
                         dia = dia +1
                         if cambio == True:
                             if color == 0:

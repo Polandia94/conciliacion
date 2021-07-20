@@ -300,22 +300,7 @@ $(function () { "use strict"
                           })
                     }
                 },
-                {targets: [29],
-                    createdCell: function (cell) {
-                        cell.addEventListener('mouseenter', function(e) {
-                            var row = table.row(e.target.parentElement)
-                            var valor = document.getElementById('option-'+row.data()['idsres']);
-                            var value = valor.value
-                            if(globalVariableUltimoModificado.idsres == table.cell(row,0).data() && value != " "){
-                            globalVariableUltimoModificado.idsres = 0
-                            }
-                            
-                            var datasend = []
-                            row.data()['tipoconciliado']= value                           
-                            datasend.push(row.data());
 
-                        })}
-                    },
                 {
                     targets: [16],
                     createdCell: function (cell) {
@@ -529,6 +514,16 @@ $(function () { "use strict"
                     // createdCell: function (td,value, data){
                     //     /* CELDA POR CELDA DE LAS COLUMNAS EN targets */
                     // }
+                },
+                {
+                targets: [29],
+                    render: function (data, type, row,meta) {
+                        console.log($(table.row(meta.row).data()["tipoconciliado"])["selector"])
+                        if($(table.row(meta.row).data()["tipoconciliado"])["selector"] != " "){
+                    return `${table.row(meta.row).data()["tipoconciliado"]} 
+                    <a onclick="alertac()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info"></a>
+                    <i class="fas fa-question fa-xs"></i></a> `
+                    }else{return ""}}
                 },                
                 {
                     targets: [8],

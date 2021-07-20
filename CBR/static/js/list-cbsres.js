@@ -196,13 +196,14 @@ $(function () { "use strict"
                         })
 
                         cell.addEventListener('blur', function(e) {
-                            if ( original == 0 || original == null || original == "$0.00" || globalVariableUltimoModificado.idsres != 0){
+                            if ( original == 0 || original == null || original == "$0.00"){
                                 e.target.textContent = original
-                                if(globalVariableUltimoModificado.idsres != 0){
-                                    alert("Llene el código de modificación")
-                                }
                             }
                             else if (original !== e.target.textContent) {
+                                if(globalVariableUltimoModificado.idsres != 0){
+                                    e.target.textContent = original
+                                    alert("Llene el código de modificación")
+                                }else{
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
@@ -303,6 +304,7 @@ $(function () { "use strict"
                             })
                         
                             }
+                        }
                           })
                     }
                 },
@@ -352,13 +354,15 @@ $(function () { "use strict"
                         })
 
                         cell.addEventListener('blur', function(e) {
-                            if ( original == 0 || original == null || original == "$0.00" || globalVariableUltimoModificado.idsres != 0){
+                            if ( original == 0 || original == null || original == "$0.00"){
                                 e.target.textContent = original
-                                if(globalVariableUltimoModificado.idsres != 0){
-                                    alert("Llene el código de modificación")
-                                }
+
                             }
                             else if (original !== e.target.textContent) {
+                                if(globalVariableUltimoModificado.idsres != 0){
+                                    e.target.textContent = original
+                                    alert("Llene el código de modificación")
+                                }else{
 
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
@@ -461,6 +465,7 @@ $(function () { "use strict"
                                 contentType: 'application/json'
                             })
                             }
+                        }
                           })
                     }
                 },
@@ -499,6 +504,10 @@ $(function () { "use strict"
 
                         cell.addEventListener('blur', function(e) {
                             if (original !== e.target.textContent) {
+                                if(globalVariableUltimoModificado.idsres != 0){
+                                    e.target.textContent = original
+                                    alert("Llene el código de modificación")
+                                }else{
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
@@ -542,6 +551,7 @@ $(function () { "use strict"
                                 contentType: 'application/json'
                             })    
                             }
+                        }
                           })
                     }
                 },
@@ -558,70 +568,57 @@ $(function () { "use strict"
                     render: function (data, type, row,meta) {
                         if (row['historial']== 1 ||row['historial']== 4){
                         if (row['haberbco'] == null || row['haberbco'] == undefined){
-                        return `
+                            let agregar = ""
+                            for(let opcion = 0; opcion < globalVariableIndtco.indtco_erp.length; opcion++){
+                                agregar = agregar + '<option value="'+globalVariableIndtco.indtco_erp[opcion]+'">'+globalVariableIndtco.indtco_erp[opcion]+'</option>'
+                            }
+                            let texto= `
                         <td><nobr>
                         <select name="tipo" id="option-${row['idsres']}">
                         <option value="${table.row(meta.row).data()['tipoconciliado']}">${table.row(meta.row).data()['tipoconciliado']}</option>
-                        <option value=" "></option>
-                        <option value="CHTR">CHTR</option>
-                        <option value="DPTR">DPTR</option>
-                        <option value="NCTR">NCTR</option>
-                        <option value="NDTR">NDTR</option>
-                      </select>
+                        <option value=" "></option>`
+                            +agregar+
+                            `</select>
                       <a onclick="alertaa()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
                       <i class="fas fa-question fa-xs"></i></a>
-                      <script>
-                    function alertaa() {
-                    alert("CHTR Cheques en Tránsito \\nDPTR Depósitos en Tránsito \\nNotas de Crédito en Tránsito \\nNotas de Débito en Tránsito");
-                    }
-                    </script>
                       </nobr></td>`
+                      return texto
                         }else if (row['fechatraerp'] == null || row['fechatraerp'] == undefined){
-                            return`
+                            let agregarb = ""
+                            for(let opcion = 0; opcion < globalVariableIndtco.indtco_bco.length; opcion++){
+                                agregarb = agregarb + '<option value="'+globalVariableIndtco.indtco_bco[opcion]+'">'+globalVariableIndtco.indtco_bco[opcion]+'</option>'
+                            }
+                            let texto= `
                             <td><nobr>
                             <select name="tipo" id="option-${row['idsres']}">
                             <option value="${table.row(meta.row).data()['tipoconciliado']}">${table.row(meta.row).data()['tipoconciliado']}</option>
-                            <option value=" "></option>
-                            <option value="DNC">DNC</option>
-                            <option value="NCNC">NCNC</option>
-                            <option value="NDNC">NDNC</option>
-                            <option value="CHNC">CHNC</option>
-                            <option value="CERR">CERR</option>
-                            <option value="AERR">AERR</option>
-                          </select>
+                            <option value=" "></option>`
+                            +agregarb+
+                            `</select>
                           <a onclick="alertab()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
                           <i class="fas fa-question fa-xs"></i></a>
-                          <script>
-                        function alertab() {
-                        alert("DNC:Débito no Contabilizado \\nNCNC Notas de Créditos no contabilizadas\\nNDNC Notas de Débito no Contabilizadas \\nCHNC Cheques No Contabilizados \\nCERR Cargos Erróneos \\nAERR Abonos Erróneos");
-                        }
-                        </script>
                           </nobr></td>`
-                                
-                        }else{return `
+                                return texto
+                        }else{
+                            let agregar = ""
+                            for(let opcion = 0; opcion < globalVariableIndtco.indtco_erp.length; opcion++){
+                                agregar = agregar + '<option value="'+globalVariableIndtco.indtco_erp[opcion]+'">'+globalVariableIndtco.indtco_erp[opcion]+'</option>'
+                            }
+                            let agregarb = ""
+                            for(let opcion = 0; opcion < globalVariableIndtco.indtco_bco.length; opcion++){
+                                agregarb = agregarb + '<option value="'+globalVariableIndtco.indtco_bco[opcion]+'">'+globalVariableIndtco.indtco_bco[opcion]+'</option>'
+                            }
+                            let texto= `
                         <td><nobr>
                         <select name="tipo" id="option-${row['idsres']}">
                         <option value="${table.row(meta.row).data()['tipoconciliado']}">${table.row(meta.row).data()['tipoconciliado']}</option>
-                        <option value=" "></option>
-                        <option value="CHTR">CHTR</option>
-                        <option value="DPTR">DPTR</option>
-                        <option value="NCTR">NCTR</option>
-                        <option value="NDTR">NDTR</option>
-                        <option value="DNC">DNC</option>
-                        <option value="NCNC">NCNC</option>
-                        <option value="NDNC">NDNC</option>
-                        <option value="CHNC">CHNC</option>
-                        <option value="CERR">CERR</option>
-                        <option value="AERR">AERR</option>
-                      </select>
+                        <option value=" "></option>`
+                        +agregar+agregarb+
+                        `</select>
                       <a onclick="alertac()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
                       <i class="fas fa-question fa-xs"></i></a>
-                      <script>
-                    function alertac() {
-                    alert("CHTR Cheques en Tránsito \\nDPTR Depósitos en Tránsito \\nNotas de Crédito en Tránsito \\nNotas de Débito en Tránsito\\nDNC:Débito no Contabilizado \\nNCNC Notas de Créditos no contabilizadas\\nNDNC Notas de Débito no Contabilizadas \\nCHNC Cheques No Contabilizados \\nCERR Cargos Erróneos \\nAERR Abonos Erróneos");
-                    }
-                    </script>
-                      </nobr></td>`}
+                      </nobr></td>`
+                    return texto}
                     }else{return ""}
                 }
                 },
