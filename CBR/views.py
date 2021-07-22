@@ -608,6 +608,25 @@ class CbrencListView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        if Cbttco.objects.filter(codtco = "DPTR").exists() == False:
+            aCbttco= Cbttco(2,1,"DPTR","Depositos en Transito (+)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(9,2,"CERR","Cargos Erroneos",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(8,2,"CHNC","Cheques no Contabilizados (-)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(7,2,"NDNC","Notas de Debito no Contabilizadas (-)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(6,2,"NCNC","Notas de Credito no Contabilizadas (+)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(5,2,"DNC","Deposito no Contabilizado (+)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(4,1,"NDTR","Notas de Debito en Transito (-)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(3,1,"NCTR","Notas de Credito en Transito (+)",0,0)
+            aCbttco.save()
+            aCbttco= Cbttco(10,2,"AERR","Abonos Erroneos",0,0)
+            aCbttco.save()     
         data={}
         try:
             action=request.POST['action']
@@ -1274,7 +1293,7 @@ def editCbwres(request):
             else:
                 aCbsres = Cbsres.objects.filter(idsres=int(idsres)).first()
             if tipoconciliado == " ":
-                tipoconciliado = aCbsres.tipoconciliado
+                tipoconciliado = ""
             cliente= aCbsres.cliente
             empresa= aCbsres.empresa
             codbco= aCbsres.codbco

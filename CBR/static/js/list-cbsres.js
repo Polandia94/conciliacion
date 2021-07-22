@@ -317,18 +317,19 @@ $(function () { "use strict"
                             if(globalVariableUltimoModificado.idsres == table.cell(row,0).data() && value != " "){
                             globalVariableUltimoModificado.idsres = 0
                             }
-                            if(value != " "){
+                            if(value != row.data()['tipoconciliado']){
                                 globalVariable.editado = 1
+                                var datasend = []
+                                row.data()['tipoconciliado']= value                           
+                                datasend.push(row.data());
+                                $.ajax({
+                                    url: '/updateScript/',
+                                    data: JSON.stringify(datasend).replace(/["']/g, ""),
+                                    contentType: 'application/json'
+                            })
                             }
                             
-                            var datasend = []
-                            row.data()['tipoconciliado']= value                           
-                            datasend.push(row.data());
-                            $.ajax({
-                                url: '/updateScript/',
-                                data: JSON.stringify(datasend).replace(/["']/g, ""),
-                                contentType: 'application/json'
-                            })
+                            
                         })}
                     },
                 {
@@ -639,7 +640,7 @@ $(function () { "use strict"
                         return `${data} <a href="#" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> <i class="fas fa-search-plus"></i></a>
                     <script>
                     function ventanaSecundaria (URL){ 
-                            window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=420,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                            window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
                          } 
                     </script>`
                         }else{return""}
