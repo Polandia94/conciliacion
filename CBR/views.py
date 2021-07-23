@@ -798,6 +798,7 @@ class CbsresListView( ListView ):
             n= n+1
         context['alertab'] = alertab
         alertac = ""
+        n=0
         for i in Cbttco.objects.filter().all():
             if n>0:
                 alertac = alertac +"\\n"
@@ -892,11 +893,11 @@ class CbsresviewListView( ListView ):
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['editable']= "No Editable"
         alertac = ""
+        n = 0
         for i in Cbttco.objects.filter().all():
             if n>0:
                 alertac = alertac +"\\n"
             alertac = alertac + i.codtco + " : " + i.destco
-
             n= n+1
         context['alertac'] = alertac
         debeerp = 0

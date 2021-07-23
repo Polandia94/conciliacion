@@ -519,9 +519,9 @@ $(function () { "use strict"
                 targets: [29],
                     render: function (data, type, row,meta) {
                         console.log($(table.row(meta.row).data()["tipoconciliado"])["selector"])
-                        if($(table.row(meta.row).data()["tipoconciliado"])["selector"] != " "){
+                        if($(table.row(meta.row).data()["tipoconciliado"])["selector"] != null && $(table.row(meta.row).data()["tipoconciliado"])["selector"] != ""){
                     return `${table.row(meta.row).data()["tipoconciliado"]} 
-                    <a onclick="alertac()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info"></a>
+                    <a onclick="alertac()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
                     <i class="fas fa-question fa-xs"></i></a> `
                     }else{return ""}}
                 },                

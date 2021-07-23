@@ -196,7 +196,8 @@ $(function () { "use strict"
                         })
 
                         cell.addEventListener('blur', function(e) {
-                            if ( original == 0 || original == null || original == "$0.00"){
+                            var row = table.row(e.target.parentElement)
+                            if ( original == 0 || original == null || row.data()['habererp'] != 0){
                                 e.target.textContent = original
                             }
                             else if (original !== e.target.textContent) {
@@ -207,9 +208,10 @@ $(function () { "use strict"
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
-                                var row = table.row(e.target.parentElement)
-                                if (row.data()['tipoconciliado'] == " " || row.data()['tipoconciliado'] == null|| row.data()['tipoconciliado'] == undefined){
+                                console.log(row.data()['tipoconciliado'])
+                                if (row.data()['tipoconciliado'] == "" || row.data()['tipoconciliado'] == " " || row.data()['tipoconciliado'] == null|| row.data()['tipoconciliado'] == undefined){
                                 globalVariableUltimoModificado.idsres = table.cell(row,0).data()
+                                console.log(globalVariableUltimoModificado.idsres)
                                 }
                                 row.data()['debeerp']=e.target.textContent.replace("$","")
 
@@ -311,16 +313,20 @@ $(function () { "use strict"
                 {targets: [29],
                     createdCell: function (cell) {
                         cell.addEventListener('mouseleave', function(e) {
+                            
                             var row = table.row(e.target.parentElement)
                             var valor = document.getElementById('option-'+row.data()['idsres']);
-                            var value = valor.value
-                            if(globalVariableUltimoModificado.idsres == table.cell(row,0).data() && value != " "){
-                            globalVariableUltimoModificado.idsres = 0
-                            }
+                            try{var value = valor.value}
+                            finally{}
+                            setTimeout(() => {                              if(globalVariableUltimoModificado.idsres == table.cell(row,0).data() && row.data()['tipoconciliado'] != "" && row.data()['tipoconciliado'] != "" && valor != null){
+                                globalVariableUltimoModificado.idsres = 0
+                                console.log(globalVariableUltimoModificado.idsres)
+                                }; }, 2000); 
+
                             if(value != row.data()['tipoconciliado']){
                                 globalVariable.editado = 1
+                                row.data()['tipoconciliado']= value
                                 var datasend = []
-                                row.data()['tipoconciliado']= value                           
                                 datasend.push(row.data());
                                 $.ajax({
                                     url: '/updateScript/',
@@ -355,7 +361,8 @@ $(function () { "use strict"
                         })
 
                         cell.addEventListener('blur', function(e) {
-                            if ( original == 0 || original == null || original == "$0.00"){
+                            var row = table.row(e.target.parentElement)
+                            if ( original == 0 || original == null || row.data()['debeerp'] != 0){
                                 e.target.textContent = original
 
                             }
@@ -368,9 +375,9 @@ $(function () { "use strict"
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
-                                var row = table.row(e.target.parentElement)
-                                if (row.data()['tipoconciliado'] == " " || row.data()['tipoconciliado'] == null || row.data()['tipoconciliado'] == undefined){
+                                if (row.data()['tipoconciliado'] == " " || row.data()['tipoconciliado'] == "" || row.data()['tipoconciliado'] == null || row.data()['tipoconciliado'] == undefined){
                                     globalVariableUltimoModificado.idsres = table.cell(row,0).data()
+                                    console.log(globalVariableUltimoModificado.idsres)
                                     }
 
                                 row.data()['habererp']=e.target.textContent.replace("$","")
@@ -518,6 +525,7 @@ $(function () { "use strict"
                                   Cambia los valores del resto de las celdas
                                 */
                                 var historial = table.cell( row,28 );
+
                                 if (row.data['isconciliado'] == 1){
                                     historial.data( "1");
                                 }else{
@@ -577,7 +585,7 @@ $(function () { "use strict"
                         <td><nobr>
                         <select name="tipo" id="option-${row['idsres']}">
                         <option value="${table.row(meta.row).data()['tipoconciliado']}">${table.row(meta.row).data()['tipoconciliado']}</option>
-                        <option value=" "></option>`
+                        `
                             +agregar+
                             `</select>
                       <a onclick="alertaa()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
@@ -593,7 +601,7 @@ $(function () { "use strict"
                             <td><nobr>
                             <select name="tipo" id="option-${row['idsres']}">
                             <option value="${table.row(meta.row).data()['tipoconciliado']}">${table.row(meta.row).data()['tipoconciliado']}</option>
-                            <option value=" "></option>`
+                            `
                             +agregarb+
                             `</select>
                           <a onclick="alertab()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
@@ -613,7 +621,7 @@ $(function () { "use strict"
                         <td><nobr>
                         <select name="tipo" id="option-${row['idsres']}">
                         <option value="${table.row(meta.row).data()['tipoconciliado']}">${table.row(meta.row).data()['tipoconciliado']}</option>
-                        <option value=" "></option>`
+                        `
                         +agregar+agregarb+
                         `</select>
                       <a onclick="alertac()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
