@@ -4,6 +4,7 @@ import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
 import pandas as pd
 from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm
+from CBR.homologacion import HomologacionBcoBOD
 import datetime as dt
 import base64
 import json
@@ -140,7 +141,7 @@ class CbrencCreateView( CreateView ):
                     pass
                 #Crea la variable error, para evitar el guardado en caso de que sea verdadera por un error
                 if archivobco != '':
-                    UploadFileBcoDB( request, self.CbrencNew, data,saldobcoanterior )
+                    HomologacionBcoBOD(request, self.CbrencNew, data,saldobcoanterior )
                 archivoerp=request.POST.get( 'archivoerp', None )
                 try:
                     print( data['error'])
@@ -148,6 +149,7 @@ class CbrencCreateView( CreateView ):
                 except:
                     error=False
                 if error == True:
+                    self.CbrencNew.delete()
                     return JsonResponse(data)
                 if archivoerp != '' and error == False:
                     UploadFileErpDB( request, self.CbrencNew, data, saldoerpanterior )
@@ -477,12 +479,14 @@ def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
 
 
     respuesta={}
+    print("a")
     try:
         try:
             Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
         except:
             pass
         Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
+        print("b")
         dataErp=pd.read_csv( str( aCbrenc.archivoerp ), header=0, delimiter = ";", index_col=False )
         for i in range( len( dataErp ) ):
             s_date=dataErp.loc[i, dataErp.columns[1]]
@@ -494,12 +498,14 @@ def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
                 data['error']="Archivo ERP contiene movimiento de otro mes."
                 return JsonResponse( data, safe=False)
         #Define el Debe y Haber para el calculo de saldo inicial
+        print("c")
         try:
             haber = float(dataErp.loc[0, dataErp.columns[6]])
             if haber != haber:
                 debe = 0
         except:
             haber = float(0)
+        print("d")
         try:
             debe = float(dataErp.loc[0, dataErp.columns[7]])
             if debe != debe:
@@ -521,6 +527,7 @@ def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
                 pass
             data['error']="Saldos de ERP no Coinciden"
             return JsonResponse( data, safe=False)
+        print("e")
         tableErpEnc = Cbrerpe(
             idrerpe=aCbrenc.idrenc,
             idrenc=aCbrenc,
@@ -528,10 +535,14 @@ def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
             idusu = request.user.username
             )
         try:
-            aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa,).order_by('-corr')[0].corr + 1
+            aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa).order_by('-corr')[0].corr + 1
         except:
             aCbrenc.corr = 1
-        aCbrenc.save()
+        try:
+            aCbrenc.save()
+        except:
+            aCbrenc.corr = 1
+            aCbrenc.save()
         tableErpEnc.save()
         for i in range( len( dataErp ) ):
             respuesta['nrotra']=dataErp.loc[i, dataErp.columns[0]]

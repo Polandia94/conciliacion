@@ -132,6 +132,40 @@ class Cbttco(models.Model):
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
 
+class Cbrbod(models.Model):
+    idrbod = models.IntegerField(db_column='idrbod', primary_key=True)
+    idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
+    diatra = models.SmallIntegerField(verbose_name='Dia de Transaccion', db_column='diatra')
+    oficina = models.TextField(verbose_name='Oficina', db_column='oficina')
+    desctra = models.TextField(verbose_name='Descripcion de la transaccion', db_column='desctra')
+    debe = models.DecimalField(db_column='debe', max_digits=16, decimal_places=2)
+    haber = models.DecimalField(db_column='haber', max_digits=16, decimal_places=2)
+    saldo = models.DecimalField(db_column='saldo', max_digits=16, decimal_places=2)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
+    error = models.SmallIntegerField(verbose_name='Codigo de Error', db_column='error', default=0)
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrbod'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        self.idrbod = Cbrbod.objects.order_by('-idrbod')[0].idrbod + 1
+        super( Cbrbod, self ).save( *args, **kwargs )
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - #
+
+
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
 
 class Cbtbco(models.Model):
     idtbco = models.AutoField(db_column='idtbco', primary_key=True)
@@ -273,7 +307,9 @@ class Cbrenc(models.Model):
     def toJSON(self):
         item = model_to_dict(self)
         return item
-
+    def delete(self):
+        Cbrbod.objects.filter(idrenc=self.idrenc).delete()
+        super( Cbrenc, self ).delete()
     # def __str__(self):
     #     return str(self.idrenc)
     def save(self, *args, **kwargs):
@@ -286,7 +322,7 @@ class Cbrenc(models.Model):
         #     self.idusumod = User.username
         
         self.cliente = "PMA"
-
+        self.corr = Cbrenc.objects.filter(codbco=self.codbco,nrocta=self.nrocta,ano=self.ano, mes=self.mes,empresa=self.empresa).order_by('-corr')[0].corr + 1
         super( Cbrenc, self ).save( *args, **kwargs )
 
 
