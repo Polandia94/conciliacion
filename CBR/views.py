@@ -4,7 +4,7 @@ import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
 import pandas as pd
 from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm
-from CBR.homologacion import HomologacionBcoBOD
+from CBR.homologacion import *
 import datetime as dt
 import base64
 import json
@@ -152,7 +152,8 @@ class CbrencCreateView( CreateView ):
                     self.CbrencNew.delete()
                     return JsonResponse(data)
                 if archivoerp != '' and error == False:
-                    UploadFileErpDB( request, self.CbrencNew, data, saldoerpanterior )
+                    #UploadFileErpDB( request, self.CbrencNew, data, saldoerpanterior )
+                    HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
                 try:
                     print( data['error'])
                     error=True
@@ -479,14 +480,12 @@ def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
 
 
     respuesta={}
-    print("a")
     try:
         try:
             Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
         except:
             pass
         Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
-        print("b")
         dataErp=pd.read_csv( str( aCbrenc.archivoerp ), header=0, delimiter = ";", index_col=False )
         for i in range( len( dataErp ) ):
             s_date=dataErp.loc[i, dataErp.columns[1]]

@@ -1,5 +1,5 @@
 
-from CBR.models import Cbrbod, Cbrbcoe, Cbrbcod
+from CBR.models import Cbrbod, Cbrbcoe, Cbrbcod, Cbrerpe, Cbrerpd, Cbrgal, Cbterr, Cbrenc
 import pandas as pd
 from django.utils import timezone
 import datetime as dt
@@ -11,42 +11,46 @@ def es_decimal(value):
         except:
             return False
 
-def FueradeCalendario(dia,mes):
+def FueradeCalendario(dia,mes,ano):
     if dia > 31:
         return True
     if dia == 31 and (mes == 2 or mes == 4 or mes == 6 or mes == 9 or mes == 11):
         return True
     if dia == 30 and mes == 2:
         return True
+    if dia == 29 and mes == 2 and ano % 4 != 0:
+        return True
     return False
 
 def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
     #Lee el archivo del banco y cre al Cbrbod respectivo
     dataBco=pd.read_csv( str( aCbrenc.archivobco ), delimiter="|", header=0, index_col=False )
+    fallo = False
     for i in range( len( dataBco ) ):
         mes = int(aCbrenc.mes)
+        ano = int(aCbrenc.ano)
         try:
-            aCbrobod = Cbrbod()
+            aCbrbod = Cbrbod()
             error = 0
-            aCbrobod.idrenc = aCbrenc
+            aCbrbod.idrenc = aCbrenc
             dia = dataBco.loc[i, dataBco.columns[0]]
             try:
                 dia = int(dia)
-                if FueradeCalendario(dia,mes):
+                if FueradeCalendario(dia,mes,ano):
                     error = 1
             except:
                 error = 1
                 dia = 0
-            aCbrobod.diatra = dia
+            aCbrbod.diatra = dia
             #Si el día esta fuera del calendario o no es un numero devuelve error 1
 
-            aCbrobod.oficina = dataBco.loc[i, dataBco.columns[1]]
+            aCbrbod.oficina = dataBco.loc[i, dataBco.columns[1]]
             #Si la oficina está en blanco devuelve error 2
-            if aCbrobod.oficina == "" or pd.isnull(dataBco.loc[i, dataBco.columns[1]]):
+            if aCbrbod.oficina == "" or pd.isnull(dataBco.loc[i, dataBco.columns[1]]):
                 error = 2
-            aCbrobod.desctra = dataBco.loc[i, dataBco.columns[2]]
+            aCbrbod.desctra = dataBco.loc[i, dataBco.columns[2]]
             try:
-                debe = dataBco.loc[i, dataBco.columns[3]].replace(".","").replace(",",".")
+                debe = dataBco.loc[i, dataBco.columns[3]].replace(".","").replace(",","")
             except:
                 debe = 0
                 if pd.isnull(dataBco.loc[i, dataBco.columns[3]]) == False:
@@ -58,9 +62,9 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 debe = 0
                 error = 3
                 # si el debe no es un numero devuelve error 3
-            aCbrobod.debe = debe
+            aCbrbod.debe = float(debe)/100
             try:
-                haber = dataBco.loc[i, dataBco.columns[4]].replace(".","").replace(",",".")
+                haber = dataBco.loc[i, dataBco.columns[4]].replace(".","").replace(",","")
             except:
                 if pd.isnull(dataBco.loc[i, dataBco.columns[4]]) == False:
                     error=4
@@ -70,8 +74,8 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 haber = 0
                 error = 4
                 # si el haber no es un numero devuelve error 4
-            aCbrobod.haber = haber
-            saldo = dataBco.loc[i, dataBco.columns[5]].replace(".","").replace(",",".")
+            aCbrbod.haber = float(haber)/100
+            saldo = dataBco.loc[i, dataBco.columns[5]].replace(".","").replace(",","")
             try:
                 if saldo[-1]=="-":
                     saldo = float(saldo[0:-1])*-1
@@ -82,21 +86,26 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 error = 5
                 saldo = 0
             # si el saldo no es un numero devuelve error 5
-            aCbrobod.saldo = saldo
-            aCbrobod.fechact = dt.datetime.now(tz=timezone.utc)
-            aCbrobod.idusu=request.user.username
-            aCbrobod.error = error
-            aCbrobod.save(aCbrobod)
+            aCbrbod.saldo = float(saldo)/100
+            aCbrbod.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbrbod.idusu=request.user.username
+            if error == 0:
+                aCbrbod.save(aCbrbod)                
+            else:
+                fallo = True
+                aCbterr = Cbterr(tabla="CBRBOD", coderr = error)
+                aCbterr.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbterr.idusu=request.user.username
+                aCbterr.save()
+
         except Exception as e:
-            Cbrbod.objects.filter(idrenc=aCbrobod.idrenc).delete()
+            Cbrbod.objects.filter(idrenc=aCbrbod.idrenc).delete()
             data["error"] = e
+            fallo = True
         #En caso de errores deja solo los errores en la tabla
-    if Cbrbod.objects.exclude(error=0).filter(idrenc=aCbrobod.idrenc).exists():
-        Cbrbod.objects.filter(idrenc=aCbrobod.idrenc, error=0).delete()
-        for registro in Cbrbod.objects.filter(idrenc=aCbrobod.idrenc).all():
-            registro.idrenc = None
-            registro.save(registro)
-        data["error"] = "Existieron problemas en la carga de archivo. Verifique el formulario CBF10 en "
+    if fallo:
+        Cbrbod.objects.filter(idrenc=aCbrbod.idrenc).delete()
+        data["error"] = "Existieron problemas en la carga de archivo BCO. Verifique el formulario CBF10 en "
     #Caso contrario carga el cbrbcoe
     else:
         Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
@@ -112,7 +121,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
             )
         Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
         tableBcoEnc.save()
-        for registro in Cbrbod.objects.filter(idrenc=aCbrobod.idrenc).all():
+        for registro in Cbrbod.objects.filter(idrenc=aCbrbod.idrenc).all():
             tableBco=Cbrbcod(
             fechatra=dt.datetime(aCbrenc.ano, aCbrenc.mes, registro.diatra),
             horatra="00:00:00",
@@ -131,4 +140,133 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
         aCbrenc.saldobco = saldo
         aCbrenc.idusubco=request.user.username
         return True
+
+def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
+    try:
+        Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
+    except:
+        pass
+    Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
+    dataErp=pd.read_csv( str( aCbrenc.archivoerp ), header=0, delimiter = "|", index_col=False )
+    iniciado = False
+    pausa = False
+    fallo = False
+    for i in range( len( dataErp ) ):
+        try:
+            if dataErp.loc[i, dataErp.columns[0]].find("/")>-1:
+                error = 0
+                pausa = False
+                iniciado = True
+                aCbrgal = Cbrgal()
+                aCbrgal.idrenc = aCbrenc
+                s_date=dataErp.loc[i, dataErp.columns[0]]
+                fechatra=dt.datetime.strptime( s_date, '%d/%m/%Y' )
+                if fechatra.year != aCbrenc.ano or fechatra.month != aCbrenc.mes:
+                    error = 1
+                aCbrgal.fechatra = fechatra
+                aCbrgal.nrocomp = dataErp.loc[i, dataErp.columns[1]]
+                if pd.isnull(dataErp.loc[i, dataErp.columns[2]]):
+                    aux = 0
+                else:
+                    aux = dataErp.loc[i, dataErp.columns[2]]
+                aCbrgal.aux = aux
+                aCbrgal.ref = dataErp.loc[i, dataErp.columns[3]]
+                aCbrgal.glosa = dataErp.loc[i, dataErp.columns[4]]
+                try:
+                    float(dataErp.loc[i, dataErp.columns[5]].replace(",",""))
+                    debe = aCbrgal.debe = dataErp.loc[i, dataErp.columns[5]].replace(",","")
+                except:
+                    error = 2
+                    debe = 0
+                aCbrgal.debe = debe
+                try:
+                    float(dataErp.loc[i, dataErp.columns[6]].replace(",",""))
+                    haber = dataErp.loc[i, dataErp.columns[6]].replace(",","")
+                except:
+                    error = 3
+                    haber = 0
+                aCbrgal.haber = haber
+                try:
+                    float(dataErp.loc[i, dataErp.columns[7]].replace(",",""))
+                    saldo = dataErp.loc[i, dataErp.columns[7]].replace(",","")
+                except:
+                    error = 4
+                    saldo = 0
+                aCbrgal.saldo = saldo
+                s_date=dataErp.loc[i, dataErp.columns[8]]
+                fechacon = dt.datetime.strptime( s_date, '%d/%m/%Y' )
+                aCbrgal.fechacon = fechacon
+                aCbrgal.idusu=request.user.username
+                aCbrgal.fechact=dt.datetime.now(tz=timezone.utc)
+                if error == 0: 
+                    aCbrgal.save(aCbrgal)
+                else:
+                    print(error)
+                    fallo = True
+                    aCbterr = Cbterr(tabla="CBRGAL", coderr = error)
+                    aCbterr.fechact = dt.datetime.now(tz=timezone.utc)
+                    aCbterr.idusu=request.user.username
+                    aCbterr.save()
+            else:
+                print(dataErp.loc[i, dataErp.columns[0]])
+        except Exception as e:
+            print(e)
+            if dataErp.loc[i, dataErp.columns[4]] != " Van:" and dataErp.loc[i, dataErp.columns[4]] != " TOTALES . . . . . . ." and pausa == False and iniciado:
+                aCbrgal.glosa = str(aCbrgal.glosa) + str(dataErp.loc[i, dataErp.columns[4]])
+                aCbrgal.actualizar(aCbrgal)
+                pausa = True
+            if dataErp.loc[i, dataErp.columns[4]] != "Vienen:":
+                pausa = False
+    if fallo:
+        Cbrgal.objects.filter(idrenc=aCbrgal.idrenc).delete()
+        data["error"] = "Existieron problemas en la carga de archivo ERP. Verifique el formulario CBF11 en "    
+    else:
+        try:
+            Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
+        except:
+            pass
+        Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
+        tableErpEnc = Cbrerpe(
+            idrerpe=aCbrenc.idrenc,
+            idrenc=aCbrenc,
+            fechact = dt.datetime.now(tz=timezone.utc),
+            idusu = request.user.username
+            )
+        try:
+            aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa).order_by('-corr')[0].corr + 1
+        except:
+            aCbrenc.corr = 1
+        try:
+            aCbrenc.save()
+        except:
+            aCbrenc.corr = 1
+            aCbrenc.save()
+        tableErpEnc.save()
+        for registro in Cbrgal.objects.filter(idrenc=aCbrenc.idrenc).all():
+            tableErp=Cbrerpd(
+            nrotra = 0,
+            fechatra=registro.fechatra,
+            nrocomp=registro.nrocomp,
+            aux = registro.aux,
+            ref= registro.ref,
+            glosa = registro.glosa, 
+            debe=registro.debe,
+            haber=registro.haber,
+            saldo=registro.saldo,
+            fechacon=registro.fechacon,
+            idrerpe=tableErpEnc,
+                )
+            saldo = registro.saldo
+            tableErp.save( aCbrenc )
+        aCbrenc.recorderp = len( dataErp )
+        aCbrenc.saldoerp = saldo
+        try:
+            aCbrenc.difbcoerp = aCbrenc.saldobco - saldo
+        except:
+            aCbrenc.difbcoerp = 0
+        aCbrenc.estado = "0"
+        aCbrenc.idusuerp=request.user.username
+        aCbrenc.save()
+        return True
+
 

@@ -143,7 +143,6 @@ class Cbrbod(models.Model):
     saldo = models.DecimalField(db_column='saldo', max_digits=16, decimal_places=2)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
     idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
-    error = models.SmallIntegerField(verbose_name='Codigo de Error', db_column='error', default=0)
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs )
         # self.fields['names'].widget.attrs['autofocus']=True
@@ -159,6 +158,54 @@ class Cbrbod(models.Model):
     def save(self, *args, **kwargs):
         self.idrbod = Cbrbod.objects.order_by('-idrbod')[0].idrbod + 1
         super( Cbrbod, self ).save( *args, **kwargs )
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - #
+
+
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
+class Cbrgal(models.Model):
+    idrgal = models.IntegerField(db_column='idrgal', primary_key=True)
+    idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
+    fechatra = models.DateField(db_column='fechatra', blank=True, null=True)
+    nrocomp = models.TextField(verbose_name='Numero de Comprobante', db_column='nrocomp')
+    aux = models.TextField(verbose_name='Auxiliar', db_column='aux')
+    ref = models.TextField(verbose_name='Referencia', db_column='ref')
+    glosa = models.TextField(verbose_name='Glosa', db_column='glosa')
+    debe = models.DecimalField(db_column='debe', max_digits=16, decimal_places=2)
+    haber = models.DecimalField(db_column='haber', max_digits=16, decimal_places=2)
+    saldo = models.DecimalField(db_column='saldo', max_digits=16, decimal_places=2)
+    fechacon = models.DateField(verbose_name='Fecha de contabilizacion', db_column='fechacon', blank=True, null=True)
+    fechact = models.DateField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrgal'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        try:
+            self.idrgal = Cbrgal.objects.order_by('-idrgal')[0].idrgal + 1
+        except:
+            self.idrgal=1
+        super( Cbrgal, self ).save( *args, **kwargs )
+
+    def actualizar(self, *args, **kwargs):
+
+        Cbrgal.objects.filter(idrgal=self.idrgal).delete()
+        try:
+            self.idrgal = Cbrgal.objects.order_by('-idrgal')[0].idrgal + 1
+        except:
+            self.idrgal=1
+        super( Cbrgal, self ).save( *args, **kwargs )
 
         # - - - - - - - - - - - - - - - - - - - - - - - - #
 
@@ -196,6 +243,36 @@ class Cbtbco(models.Model):
 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
+
+
+class Cbterr(models.Model):
+    idterr = models.AutoField(db_column='idterr', primary_key=True)
+    coderr = models.IntegerField(verbose_name='codigo de error', db_column='coderr')
+    tabla = models.CharField(verbose_name='Tabla donde sucedió el error', db_column='tabla', max_length=6)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
+    idusu = models.CharField( verbose_name='Usuario de archivo', db_column='idusu', max_length=16, null=True )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbterr'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbterr, self ).save( *args, **kwargs )
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - #
+
+
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
 
 class Cbrbcod(models.Model):
     idrbcod = models.AutoField(db_column='idrbcod', primary_key=True)
