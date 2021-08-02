@@ -67,6 +67,15 @@ td {
     border-left: 10px solid !important;
 }
 
+.callout-success {
+    border-left-color: #5cb85c !important;
+}
+
+.callout-warning  {
+    border-left-color: #9c2b2b !important;
+}
+
+
 td.current {
     background-color: #9facc8 !important;
 

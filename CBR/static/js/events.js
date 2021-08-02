@@ -34,7 +34,7 @@
     /******************************************************************************************************************/
     $("#btnGuardar").on('click', function () {        
         const idrenc = urlParams.get('idrenc');
-        if (globalVariableUltimoModificado.idsres != 0){alert("Complete el código de conciliacion para poder guardar" )}else{
+        if (globalVariableUltimoModificadoBco.idsres != 0 || globalVariableUltimoModificadoErp.idsres != 0){alert("Complete el código de conciliacion para poder guardar" )}else{
             globalVariable.editado = 0;
             location.href = "../verificar/conservar/?idrenc=" + idrenc;
         }
@@ -72,7 +72,7 @@
     $("#btnCerrarConciliacion").on('click', function (e) {
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
-        if (globalVariableUltimoModificado.idsres != 0){alert("explique la modificacion")}else{
+        if (globalVariableUltimoModificadoBco.idsres != 0 || globalVariableUltimoModificadoErp.idsres != 0){alert("explique la modificacion")}else{
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
             function (response) {

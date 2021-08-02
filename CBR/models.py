@@ -156,7 +156,10 @@ class Cbrbod(models.Model):
         return item
 
     def save(self, *args, **kwargs):
-        self.idrbod = Cbrbod.objects.order_by('-idrbod')[0].idrbod + 1
+        try:
+            self.idrbod = Cbrbod.objects.order_by('-idrbod')[0].idrbod + 1
+        except:
+            self.idrbod = 0
         super( Cbrbod, self ).save( *args, **kwargs )
 
         # - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -399,7 +402,10 @@ class Cbrenc(models.Model):
         #     self.idusumod = User.username
         
         self.cliente = "PMA"
-        self.corr = Cbrenc.objects.filter(codbco=self.codbco,nrocta=self.nrocta,ano=self.ano, mes=self.mes,empresa=self.empresa).order_by('-corr')[0].corr + 1
+        try:
+            self.corr = Cbrenc.objects.filter(codbco=self.codbco,nrocta=self.nrocta,ano=self.ano, mes=self.mes,empresa=self.empresa).order_by('-corr')[0].corr + 1
+        except:
+            self.corr = 0
         super( Cbrenc, self ).save( *args, **kwargs )
 
 
@@ -503,32 +509,37 @@ class Cbsres(models.Model):
     saldobco = models.DecimalField(db_column='saldobco', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoacumesbco = models.DecimalField( db_column='saldoacumesbco', max_digits=16, decimal_places=2, blank=True, null=True )
     saldoacumdiabco = models.DecimalField( db_column='saldoacumdiabco', max_digits=16, decimal_places=2, blank=True, null=True )
-    oficinabco = models.CharField(db_column='oficinabco', max_length=30, blank=True, null=True)
-    desctrabco = models.CharField(db_column='desctrabco', max_length=30, blank=True, null=True)
-    reftrabco = models.CharField(db_column='reftrabco', max_length=30, blank=True, null=True)
-    codtrabco = models.CharField(db_column='codtrabco', max_length=30, blank=True, null=True)
+    oficina = models.CharField(db_column='oficina', max_length=30, blank=True, null=True)
+    desctra = models.CharField(db_column='desctra', max_length=30, blank=True, null=True)
+    reftra = models.CharField(db_column='reftra', max_length=30, blank=True, null=True)
+    codtra = models.CharField(db_column='codtra', max_length=30, blank=True, null=True)
+    estadobco=models.SmallIntegerField( verbose_name='Estado Banco', db_column='estadobco', null=True)
+    codtcobco = models.CharField(db_column='codtcobco', blank=True, null=True, max_length=4)
+    linkconciliadobco = models.IntegerField(db_column='linkconciliadobco', blank=True, null=True)
     idrbcod = models.IntegerField( db_column='idrbcod', blank=True, null=True, default=0 )
+    
     # -----------------------------------------------------------------------------------------------------------------
     nrotraerp = models.IntegerField(db_column='nrotraerp', blank=True, null=True)
     fechatraerp = models.DateField(db_column='fechatraerp', blank=True, null=True)
-    nrocomperp = models.IntegerField(db_column='nrocomperp', blank=True, null=True)
+    nrocomperp = models.TextField(db_column='nrocomperp', blank=True, null=True)
     auxerp = models.IntegerField(db_column='auxerp', blank=True, null=True)
     referp = models.CharField(db_column='referp', max_length=30, blank=True, null=True)
-    glosaerp = models.CharField(db_column='glosaerp', max_length=30, blank=True, null=True)
+    glosaerp = models.TextField(db_column='glosaerp', blank=True, null=True)
     debeerp = models.DecimalField(db_column='debeerp', max_digits=16, decimal_places=2, blank=True, null=True)
     habererp = models.DecimalField(db_column='habererp', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoerp = models.DecimalField(db_column='saldoerp', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoacumeserp = models.DecimalField( db_column='saldoacumeserp', max_digits=16, decimal_places=2, blank=True, null=True )
     saldoacumdiaerp = models.DecimalField( db_column='saldoacumdiaerp', max_digits=16, decimal_places=2, blank=True, null=True )       
     fechaconerp = models.DateField(db_column='fechaconerp', blank=True, null=True)
+    estadoerp=models.SmallIntegerField( verbose_name='Estado Erp', db_column='estado', null=True)
+    codtcoerp = models.CharField(db_column='codtcoerp', blank=True, null=True, max_length=4)
+    linkconciliadoerp = models.IntegerField(db_column='linkconciliadoerp', blank=True, null=True)    
     idrerpd = models.IntegerField( db_column='idrerpd', blank=True, null=True, default=0  )
-    isconciliado = models.BigIntegerField(db_column='isconciliado', blank=True, null=True)
+    
     saldodiferencia = models.DecimalField( db_column='saldodiferencia', max_digits=16, decimal_places=2, blank=True, null=True )
-    estado=models.CharField( verbose_name='Estado', db_column='estado', max_length=2 )
     historial=models.CharField( verbose_name='Historial', db_column='historial', max_length=1, default = "0" )
-    linkconciliado = models.IntegerField(db_column='linkconciliado', blank=True, null=True)
-    tipoconciliado = models.CharField(db_column='tipoconciliado', blank=True, null=True, max_length=4)
     blockcolor = models.IntegerField(db_column='blockcolor', blank=True, null=True)
+    
     def toJSON(self):
         item = model_to_dict(self)
         return item
@@ -555,38 +566,43 @@ class Cbwres(models.Model):
     saldobco = models.DecimalField(db_column='saldobco', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoacumesbco = models.DecimalField( db_column='saldoacumesbco', max_digits=16, decimal_places=2, blank=True, null=True )
     saldoacumdiabco = models.DecimalField( db_column='saldoacumdiabco', max_digits=16, decimal_places=2, blank=True, null=True )
-    oficinabco = models.CharField(db_column='oficinabco', max_length=30, blank=True, null=True)
-    desctrabco = models.CharField(db_column='desctrabco', max_length=30, blank=True, null=True)
-    reftrabco = models.CharField(db_column='reftrabco', max_length=30, blank=True, null=True)
-    codtrabco = models.CharField(db_column='codtrabco', max_length=30, blank=True, null=True)
+    oficina = models.CharField(db_column='oficina', max_length=30, blank=True, null=True)
+    desctra = models.CharField(db_column='desctra', max_length=30, blank=True, null=True)
+    reftra = models.CharField(db_column='reftra', max_length=30, blank=True, null=True)
+    codtra = models.CharField(db_column='codtra', max_length=30, blank=True, null=True)
+    estadobco=models.SmallIntegerField( verbose_name='Estado Banco', db_column='estadobco', null=True)
+    codtcobco = models.CharField(db_column='codtcobco', blank=True, null=True, max_length=4)
+    linkconciliadobco = models.IntegerField(db_column='linkconciliadobco', blank=True, null=True)
     idrbcod = models.IntegerField( db_column='idrbcod', blank=True, null=True, default=0 )
+    
     # -----------------------------------------------------------------------------------------------------------------
     nrotraerp = models.IntegerField(db_column='nrotraerp', blank=True, null=True)
     fechatraerp = models.DateField(db_column='fechatraerp', blank=True, null=True)
-    nrocomperp = models.IntegerField(db_column='nrocomperp', blank=True, null=True)
+    nrocomperp = models.TextField(db_column='nrocomperp', blank=True, null=True)
     auxerp = models.IntegerField(db_column='auxerp', blank=True, null=True)
     referp = models.CharField(db_column='referp', max_length=30, blank=True, null=True)
-    glosaerp = models.CharField(db_column='glosaerp', max_length=30, blank=True, null=True)
+    glosaerp = models.TextField(db_column='glosaerp', blank=True, null=True)
     debeerp = models.DecimalField(db_column='debeerp', max_digits=16, decimal_places=2, blank=True, null=True)
     habererp = models.DecimalField(db_column='habererp', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoerp = models.DecimalField(db_column='saldoerp', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoacumeserp = models.DecimalField( db_column='saldoacumeserp', max_digits=16, decimal_places=2, blank=True, null=True )
     saldoacumdiaerp = models.DecimalField( db_column='saldoacumdiaerp', max_digits=16, decimal_places=2, blank=True, null=True )       
     fechaconerp = models.DateField(db_column='fechaconerp', blank=True, null=True)
+    estadoerp=models.SmallIntegerField( verbose_name='Estado Erp', db_column='estado', null=True)
+    codtcoerp = models.CharField(db_column='codtcoerp', blank=True, null=True, max_length=4)
+    linkconciliadoerp = models.IntegerField(db_column='linkconciliadoerp', blank=True, null=True)    
     idrerpd = models.IntegerField( db_column='idrerpd', blank=True, null=True, default=0  )
-
-    isconciliado = models.BigIntegerField(db_column='isconciliado', blank=True, null=True)
+    
     saldodiferencia = models.DecimalField( db_column='saldodiferencia', max_digits=16, decimal_places=2, blank=True, null=True )
-    estado=models.CharField( verbose_name='Estado', db_column='estado', max_length=2 )
     historial=models.CharField( verbose_name='Historial', db_column='historial', max_length=1, default = "0" )
-    linkconciliado = models.IntegerField(db_column='linkconciliado', blank=True, null=True)
-    tipoconciliado = models.CharField(db_column='tipoconciliado', blank=True, null=True, max_length=4)
     blockcolor = models.IntegerField(db_column='blockcolor', blank=True, null=True)
+    
     def toJSON(self):
         item = model_to_dict(self)
         return item
     class Meta:
         managed = True
         db_table = 'cbwres'  # Para que en la migracion no ponga el prefijo de la app
+
 #**********************************************************************************************************************#
 
