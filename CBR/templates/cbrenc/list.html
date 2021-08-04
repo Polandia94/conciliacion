@@ -48,6 +48,29 @@
 {% endblock %}
 {% block rows %}
 {% endblock %}
+{% block footer %}
+<a  style="padding: 2px 7px !important; 
+                                    margin-bottom: 2px !important; 
+                                    height: 25% !important; 
+                                    font-size: large !important; 
+                                    color: #727272 !important; 
+                                    width: 20%; " 
+                                    class="btn btn-block btn-outline-info btn-sm" 
+                                    href="cbterr/?tabla=CBRBOD">
+                                <i style="color: #4f4f4f!important;"  
+                                          class="fas fa-exclamation-triangle mr-2"></i> Errores Banco BOD </a>
+<a  style="padding: 2px 7px !important; 
+                                    margin-bottom: 2px !important; 
+                                    height: 25% !important; 
+                                    font-size: large !important; 
+                                    color: #727272 !important; 
+                                    width: 20%; " 
+                                    class="btn btn-block btn-outline-info btn-sm" 
+                                    href="cbterr/?tabla=CBRGAL">
+                                <i style="color: #4f4f4f!important;"  
+                                          class="fas fa-exclamation-triangle mr-2"></i> Errores ERP GAL </a>
+
+{% endblock %}
 {% block javascript %}
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
 {% endblock %}

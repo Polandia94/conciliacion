@@ -18,6 +18,8 @@ urlpatterns=[
     path( 'cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del' ),
     #path( 'cbtcta/del/', views.cbtctaDelete, name='cbtcta_delete_cuenta' ),
     path( 'cerrarConciliacion/', views.cerrarConciliacion, name='cerrarConciliacion' ),
+    path( 'cbterr/', views.DetalleErroresListView.as_view(), name='DetalleErroresListView' ),
+
 
     path( '', views.CbrencListView.as_view(), name='index' ),
     path( '', views.CbrencListView.as_view(), name='cbrenc-list' ),

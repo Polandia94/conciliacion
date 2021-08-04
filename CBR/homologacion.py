@@ -65,7 +65,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         debe = 0
                         error = 3
                         # si el debe no es un numero devuelve error 3
-                    print("3")
                     aCbrbod.debe = float(debe)/100
                     try:
                         haber = dataBco.loc[i, dataBco.columns[4]].replace(".","").replace(",","")
@@ -79,11 +78,10 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         error = 4
                         # si el haber no es un numero devuelve error 4
                     aCbrbod.haber = float(haber)/100
-                    print("4")
                     try:
                         saldo = dataBco.loc[i, dataBco.columns[5]].replace(".","").replace(",","")
                     except:
-                        print(dataBco.loc[i, dataBco.columns[5]])
+                        pass
                     try:
                         if saldo[-1]=="-":
                             saldo = float(saldo[0:-1])*-1
@@ -93,7 +91,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     if es_decimal(saldo) == False:
                         error = 5
                         saldo = 0
-                    print("5")
                     # si el saldo no es un numero devuelve error 5
                     aCbrbod.saldo = float(saldo)/100
                     aCbrbod.fechact = dt.datetime.now(tz=timezone.utc)
@@ -102,19 +99,17 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         aCbrbod.save(aCbrbod)                
                     else:
                         fallo = True
-                        print(error)
                         aCbterr = Cbterr(tabla="CBRBOD", coderr = error)
                         aCbterr.fechact = dt.datetime.now(tz=timezone.utc)
                         aCbterr.idusu=request.user.username
                         aCbterr.save()
-                        print("bas")
 
                 except Exception as e:
-                    print(e)
+                    pass
                 #En caso de errores deja solo los errores en la tabla
         if fallo:
             Cbrbod.objects.filter(idrenc=aCbrbod.idrenc).delete()
-            data["error"] = "Existieron problemas en la carga de archivo BCO. Verifique el formulario CBF10 en "
+            data["error"] = 'Existieron problemas en la carga de archivo BCO. Verifique el formulario CBF10 en <a href=" ../../cbterr/?tabla=CBRBOD"> la Tabla de Errores</a> '
     #Caso contrario carga el cbrbcoe
         else:
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
@@ -182,6 +177,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         print(s_date)
                     if fechatra.year != aCbrenc.ano or fechatra.month != aCbrenc.mes:
                         error = 1
+                        print(str(fechatra.month) + "/" +str(fechatra.year)  + " distinto a " + str(aCbrenc.ano) + "/"+ str(aCbrenc.mes))
                     aCbrgal.fechatra = fechatra
                     aCbrgal.nrocomp = dataErp.loc[i, dataErp.columns[1]]
                     if pd.isnull(dataErp.loc[i, dataErp.columns[2]]):

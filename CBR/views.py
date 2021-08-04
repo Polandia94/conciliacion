@@ -1,7 +1,8 @@
 from django.db.models.aggregates import Count
-from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco
+from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco,Cbterr
 import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
+from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
 from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm
 from CBR.homologacion import *
@@ -15,6 +16,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render, HttpResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
+import requests
 huso = dt.timedelta(hours=0)
 
 
@@ -57,6 +59,7 @@ class CbrencCreateView( CreateView ):
             nrocta=request.POST['nrocta']
             ano=request.POST['ano']
             mes=request.POST['mes']
+            #verifica que el registro anterior sea del mes y año correspondiente(o del siguiente a cbttca)
             if mes == 1:
                 mesanterior = 12
                 anoanterior = int(ano)-1
@@ -79,7 +82,7 @@ class CbrencCreateView( CreateView ):
                               + ' Cuenta: ' + nrocta \
                               + ' Año: ' + ano \
                               + ' Mes: ' + mes + ')'
-            # Si existe la conciliación del mes anterior o no existe la cuenta(posteriormente eliminar esto) sigue
+            # Si existe la conciliación del mes anterior o no existe la cuenta sigue
             elif Cbrenc.objects.filter( codbco=codbco,
                                        nrocta=nrocta,
                                        ano=anoanterior,
@@ -112,14 +115,15 @@ class CbrencCreateView( CreateView ):
                             return JsonResponse( data )
 
                 else: 
-                    saldobcoanterior = Cbrenc.objects.get( codbco=codbco,
+                    #Verifica el saldo anterior
+                    saldobcoanterior = Cbrenc.objects.exclude(estado = "3").get( codbco=codbco,
                         nrocta=nrocta,
                         ano=anoanterior,
                         mes=mesanterior,
                         #cliente=cliente,
                         empresa=empresa,
                         ).saldobco
-                    saldoerpanterior = Cbrenc.objects.get( codbco=codbco,
+                    saldoerpanterior = Cbrenc.objects.exclude(estado = "3").get( codbco=codbco,
                         nrocta=nrocta,
                         ano=anoanterior,
                         mes=mesanterior,
@@ -128,32 +132,28 @@ class CbrencCreateView( CreateView ):
                         ).saldoerp
 
                 
-                # CREATE
+                # Crea el CBRENC
                 form=self.get_form()
                 form.fechact=dt.datetime.now(tz=timezone.utc)+huso
                 form.idusualt=request.user.username
                 self.CbrencNew=form.save()
-                print(self.CbrencNew)
                 archivobco=request.POST.get( 'archivobco', None )
                 #Elimina el CBRENCI base por si hubo un error previo
                 try:
                     Cbrenci.objects.filter(idrenc = 1005).delete()
                 except:
                     pass
-                #Crea la variable error, para evitar el guardado en caso de que sea verdadera por un error
-                if archivobco != '':
-                    HomologacionBcoBOD(request, self.CbrencNew, data,saldobcoanterior )
+                #Homologa el Banco BOD, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'codbco') para saber que homologacion usar
+                HomologacionBcoBOD(request, self.CbrencNew, data,saldobcoanterior )
                 archivoerp=request.POST.get( 'archivoerp', None )
                 try:
+                    #Verifica la existencia de errores, si los hubiera elimina todas las bases, si no carga el erp
                     print( data['error'])
                     error=True
                 except:
                     error=False
-                if error == True:
-                    self.CbrencNew.delete()
-                    return JsonResponse(data)
-                if archivoerp != '' and error == False:
-                    #UploadFileErpDB( request, self.CbrencNew, data, saldoerpanterior )
+                #Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
+                if error == False:
                     HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
                 try:
                     print( data['error'])
@@ -169,6 +169,7 @@ class CbrencCreateView( CreateView ):
                     Cbrerpe.objects.filter(idrenc=self.CbrencNew.idrenc).delete()
                     Cbrenc.objects.filter(idrenc=self.CbrencNew.idrenc).delete()
                     return JsonResponse(data)
+                #Crea el log correspondiente
                 aCbrencl = Cbrencl(
                     idrenc = self.CbrencNew,
                     status = 0,
@@ -179,6 +180,7 @@ class CbrencCreateView( CreateView ):
                 
                 aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrencl.save(aCbrencl)
+                #Crea el archivo de tiempo correspondiente
                 if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
                     bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
                     bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
@@ -189,7 +191,7 @@ class CbrencCreateView( CreateView ):
                 aCbrenct.accion = 1
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
-                
+                # Crea la imagen de banco correspondiente
                 try:
                     aCbrenci = Cbrenci.objects.filter(imgbconame=self.CbrencNew.imgbcoroute).first() 
                     self.CbrencNew.imgbcoroute = str(self.CbrencNew.imgbcoroute)[:-4] + str(self.CbrencNew.idrenc) + ".pdf"
@@ -371,248 +373,6 @@ class CbtctaEditView( CreateView ):
         context['list_url']=reverse_lazy( 'CBR:cbtcta-list' )
         return context
 
-
-# ******************************************************************************************************************** #
-# ******************************************************************************************************************** #
-
-@login_required
-def UploadFileBcoDB(request, aCbrenc, data, saldobcoanterior):
-    def es_decimal(value):
-        try:
-            float( value )
-            return True
-        except:
-            return False
-
-    try:
-        error = False
-        dataBco=pd.read_csv( str( aCbrenc.archivobco ), delimiter=";", header=0, index_col=False )
-        for i in range( len( dataBco ) ):
-            s_date=dataBco.loc[i, dataBco.columns[0]]
-            fechatra=dt.datetime.strptime( s_date, '%d/%m/%Y' )
-            if fechatra.year != aCbrenc.ano or fechatra.month != aCbrenc.mes:
-                aCbrenc.delete()
-                error = True
-                data['error']="Archivo Banco contiene movimiento de otro mes."
-                return JsonResponse( data, safe=False)
-        try:
-            haber = float(dataBco.loc[0, dataBco.columns[8]])
-            if haber != haber:
-                haber = float(0)
-        except:
-            haber = float(0)
-        try:
-            debe = float(dataBco.loc[0, dataBco.columns[7]])
-            if debe != debe:
-                debe = float(0)
-        except:
-            debe = float(0)
-        if float(str(dataBco.loc[0, dataBco.columns[9]]).replace( ',', '' ))+ haber - debe != float(saldobcoanterior):
-            print(float(str(dataBco.loc[0, dataBco.columns[9]]).replace( ',', '' ))+ haber - debe)
-            print(saldobcoanterior)
-            aCbrenc.delete()
-            data['error']="Saldos de Banco no Coinciden"
-            error = True
-            return JsonResponse( data)
-        respuesta={}
-        try:
-            Cbrbcod.objects.filter(idrbcoe=Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).first().idrbcoe).delete()
-        except Exception as e:
-            print(e)
-        Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
-        tableBcoEnc = Cbrbcoe(
-            idrbcoe=aCbrenc.idrenc,
-            idrenc=aCbrenc,
-            fechact1 = dt.datetime.now(tz=timezone.utc)+huso,
-            idusu1 = request.user.username
-            )
-        if error == False:
-            tableBcoEnc.save()
-        for i in range( len( dataBco ) ):
-            respuesta['codtra']=dataBco.loc[i, dataBco.columns[5]]
-            if respuesta['codtra']:
-                s_date=dataBco.loc[i, dataBco.columns[0]]
-                fechatra=dt.datetime.strptime( s_date, '%d/%m/%Y' )
-                debeStr=dataBco.loc[i, dataBco.columns[7]].replace( ',', '' )
-                if not es_decimal( debeStr ):
-                    debe=0.0
-                else:
-                    debe=debeStr
-                haberStr=dataBco.loc[i, dataBco.columns[8]].replace( ',', '' )
-                if not es_decimal( haberStr ):
-                    haber=0.0
-                else:
-                    haber=haberStr
-
-                tableBco=Cbrbcod(
-                    fechatra=fechatra.strftime( "%Y-%m-%d" ),
-                    horatra=dataBco.loc[i, dataBco.columns[1]],
-                    oficina=dataBco.loc[i, dataBco.columns[2]],
-                    desctra=dataBco.loc[i, dataBco.columns[3]],
-                    reftra=dataBco.loc[i, dataBco.columns[4]],
-                    codtra=dataBco.loc[i, dataBco.columns[5]],
-                    debe=debe,
-                    haber=haber,
-                    saldo=float(str(dataBco.loc[i, dataBco.columns[9]]).replace( ',', '' )),
-                    idrbcoe=tableBcoEnc,
-                )
-                saldo = float(str(dataBco.loc[i, dataBco.columns[9]]).replace( ',', '' ))
-                if error == False:
-                    tableBco.save( aCbrenc )
-        aCbrenc.recordbco = len( dataBco )
-        aCbrenc.saldobco = saldo
-        aCbrenc.idusubco=request.user.username
-        if error == False:
-            return True
-        else:
-            return False
-    except Exception as e:
-        try:
-            data['msgInfo']='Se registró correctamante el encabezado para (' \
-                        + ' Banco: ' + aCbrenc.codbco \
-                        + ' Cuenta: ' + aCbrenc.nrocta \
-                        + ' Año: ' + str( aCbrenc.ano ) \
-                        + ' Mes: ' + str( aCbrenc.mes ) + ')\n' \
-                        + ' Sin embargo hubo una excepcion en la carga del archivo de banco en la transaccion: ' \
-                        + respuesta['codtra'] + ' Info: ' + str( e ) + '\n' \
-                        + 'Puede volver intentar cargar el archivo editando el registro'
-        except:
-            return JsonResponse( data )
-        return False
-
-
-# ******************************************************************************************************************** #
-# ******************************************************************************************************************** #
-@login_required
-def UploadFileErpDB(request, aCbrenc, data, saldoerpanterior):
-
-
-    respuesta={}
-    try:
-        try:
-            Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
-        except:
-            pass
-        Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
-        dataErp=pd.read_csv( str( aCbrenc.archivoerp ), header=0, delimiter = ";", index_col=False )
-        for i in range( len( dataErp ) ):
-            s_date=dataErp.loc[i, dataErp.columns[1]]
-            fechatra=dt.datetime.strptime( s_date, '%d/%m/%Y' )
-            if fechatra.year != aCbrenc.ano or fechatra.month != aCbrenc.mes:
-                Cbrbcod.objects.filter(idrbcoe=aCbrenc.idrenc).delete()
-                Cbrbcoe.objects.filter(idrenc=aCbrenc.idrenc).delete()
-                aCbrenc.delete()
-                data['error']="Archivo ERP contiene movimiento de otro mes."
-                return JsonResponse( data, safe=False)
-        #Define el Debe y Haber para el calculo de saldo inicial
-        print("c")
-        try:
-            haber = float(dataErp.loc[0, dataErp.columns[6]])
-            if haber != haber:
-                debe = 0
-        except:
-            haber = float(0)
-        print("d")
-        try:
-            debe = float(dataErp.loc[0, dataErp.columns[7]])
-            if debe != debe:
-                debe = 0
-        except:
-            debe = float(0)
-        if float(str(dataErp.loc[0, dataErp.columns[8]]).replace( ',', '' )) + debe -  haber != float(saldoerpanterior):
-            try:
-                Cbrbcod.objects.filter(idrbcoe=aCbrenc.idrenc).delete()
-            except:
-                pass
-            try:
-                Cbrbcoe.objects.filter(idrenc=aCbrenc.idrenc).delete()
-            except:
-                pass
-            try:
-                aCbrenc.delete()
-            except:
-                pass
-            data['error']="Saldos de ERP no Coinciden"
-            return JsonResponse( data, safe=False)
-        print("e")
-        tableErpEnc = Cbrerpe(
-            idrerpe=aCbrenc.idrenc,
-            idrenc=aCbrenc,
-            fechact = dt.datetime.now(tz=timezone.utc)+huso,
-            idusu = request.user.username
-            )
-        try:
-            aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa).order_by('-corr')[0].corr + 1
-        except:
-            aCbrenc.corr = 1
-        try:
-            aCbrenc.save()
-        except:
-            aCbrenc.corr = 1
-            aCbrenc.save()
-        tableErpEnc.save()
-        for i in range( len( dataErp ) ):
-            respuesta['nrotra']=dataErp.loc[i, dataErp.columns[0]]
-            if respuesta['nrotra']:
-                s_date=dataErp.loc[i, dataErp.columns[1]]
-                fechatra=dt.datetime.strptime( s_date, '%d/%m/%Y' )
-
-                s_date=dataErp.loc[i, dataErp.columns[9]]
-                fechacon=dt.datetime.strptime( s_date, '%d/%m/%Y' )
-
-                if pd.isna( dataErp.loc[i, dataErp.columns[6]] ):
-                    debe=0.0
-                else:
-                    debe=float(dataErp.loc[i, dataErp.columns[6]])
-
-                if pd.isna( dataErp.loc[i, dataErp.columns[7]] ):
-                    haber=0.0
-                else:
-                    haber=float(dataErp.loc[i, dataErp.columns[7]])
-                tableErp=Cbrerpd(
-                    nrotra=dataErp.loc[i, dataErp.columns[0]],
-                    fechatra=fechatra.strftime( "%Y-%m-%d" ),
-                    nrocomp=dataErp.loc[i, dataErp.columns[2]],
-                    aux=dataErp.loc[i, dataErp.columns[3]],
-                    ref=dataErp.loc[i, dataErp.columns[4]],
-                    glosa=dataErp.loc[i, dataErp.columns[5]],
-                    debe=debe,
-                    haber=haber,
-                    saldo=dataErp.loc[i, dataErp.columns[8]].replace( ',', '' ),
-                    fechacon=fechacon,
-                    idrerpe=tableErpEnc
-                )
-                saldo = float(str(dataErp.loc[i, dataErp.columns[8]]).replace( ',', '' ))
-                tableErp.save( aCbrenc )
-
-        aCbrenc.recorderp = len( dataErp )
-        aCbrenc.saldoerp = saldo
-        try:
-            aCbrenc.difbcoerp = aCbrenc.saldobco - saldo
-        except:
-            aCbrenc.difbcoerp = 0
-
-        aCbrenc.estado = "0"
-
-        aCbrenc.idusuerp=request.user.username
-        aCbrenc.save()
-        return True
-
-    except Exception as e:
-        try:
-            data['msgInfo']='Se registró correctamante el encabezado para (' \
-                            + ' Banco: ' + aCbrenc.codbco \
-                            + ' Cuenta: ' + aCbrenc.nrocta \
-                            + ' Año: ' + str( aCbrenc.ano ) \
-                            + ' Mes: ' + str( aCbrenc.mes ) + ')\n' \
-                            + ' Sin embargo hubo una excepcion en la carga del archivo de banco en la transaccion: ' \
-                            + ' Info: ' + str( e ) + '\n' \
-                            + 'Puede volver intentar cargar el archivo editando el registro'
-        except:
-            return JsonResponse( data )
-        return False
-
-
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 
@@ -626,6 +386,7 @@ class CbrencListView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        # si no existe la base de datos de CBTTCO la crea, esto solo para pruebas, no mantener en produccion
         if Cbttco.objects.filter(codtco = "DPTR").exists() == False:
             aCbttco= Cbttco(2,1,"DPTR","Depositos en Transito (+)",0,0)
             aCbttco.save()
@@ -741,7 +502,14 @@ class CbsresListView( ListView ):
                 return redirect('/verificar/?idrenc='+idrenca, idrenc= idrenca )
             else:
                 if Cbsres.objects.filter(idrenc=idrenca).exists() == False:
-                    conciliarSaldos(request)
+                    print("automatico")
+                    try:
+                        conciliarSaldos(request)
+                    except Exception as e:
+                        print()
+                        print(e)
+                    print("hola")
+                    
                 return super().dispatch( request, *args, **kwargs )
         except:
             return super().dispatch( request, *args, **kwargs )
@@ -784,6 +552,7 @@ class CbsresListView( ListView ):
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['editable']= "Editable"
+        # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         from CBR.models import Cbttco
         n = 0
         indtco_erp = ""
@@ -1060,8 +829,10 @@ def cbtctaDelete(request):
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
-@login_required
+@csrf_exempt
 def conciliarSaldos(request):
+    print(request)
+    print(request.POST)
     if request.method == 'POST':
         try:
             idrenc=request.POST.get( 'idrenc' )
@@ -1069,11 +840,11 @@ def conciliarSaldos(request):
             if (int(estado) < 2):
                 existe=Cbsres.objects.filter( idrenc=idrenc ).count()
                 sobreescribir=request.POST['sobreescribir']
-
+                #Define si es posible conciliar(es primera vez, se acepto la sobreescritura y el estado no es conciliado ni eliminado)
                 if ((sobreescribir == 'true') or (existe == 0)):
 
                     data={}
-                    
+                    #Define los objetos a cargar y los saldos iniciales
                     bcoDataSet=Cbrbcod.objects.filter( idrbcoe=idrenc ).order_by( 'fechatra', 'horatra' )
                     erpDataSet=Cbrerpd.objects.filter( idrerpe=idrenc ).order_by( 'fechatra')
                     saldoacum_Dia_Bco=0
@@ -1102,6 +873,7 @@ def conciliarSaldos(request):
                     color = 0
                     cambio = False
                     while dia < 32:
+                        #Para cada dia carga los registros del banco en orden, calculando los saldos
                         saldoacum_Dia_Bco = 0
                         fechatrabco = 0
                         for vwRow in bcoDataSet:
@@ -1151,12 +923,14 @@ def conciliarSaldos(request):
                                 insCbsres.save()
                                 cambio = True
                         for vwRow in erpDataSet:
+                            #Para cada dia carga los registros del erp que coincilian
                             if vwRow.fechatra.day == dia:
                                     if Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).exists():
                                         insCbsres=Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).first()
                                         Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color)
                                         erpDataSet = erpDataSet.exclude(idrerpd=vwRow.idrerpd)
                         for vwRow in erpDataSet:
+                            #Para cada dia carga los registros del erp que no concilian en  orden de cercania
                             if vwRow.fechatra.day == dia:
                                 if fechatrabco != 0 and Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco ).exists():
                                     insCbsres=Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco ).first()
@@ -1212,6 +986,7 @@ def conciliarSaldos(request):
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 def Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color):
+    #sistema que une el cbsres con banco cargado con un registro del cbrerpd
     saldoacu_Mes_Erp= saldoacu_Mes_Erp + vwRow.debe - vwRow.haber
     saldoacum_Dia_Erp+=vwRow.debe - vwRow.haber
     try:
@@ -1798,3 +1573,40 @@ def eliminarGuardado(request):
 
 
     return redirect("../../cbsres/?idrenc="+idrenc)
+
+class DetalleErroresListView(ListView):
+    model=Cbterr
+    template_name= 'cbterr/list.html'
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+
+    def post(self, request, *args, **kwargs):
+        data={}
+        try:
+            action=request.POST['action']
+            tabla=request.POST['tabla']
+
+            if action == 'searchdata':
+                data=[]
+                position=1
+                for i in Cbterr.objects.filter( tabla=tabla ):
+                    item=i.toJSON()
+                    item['position']=position
+                    item['ID']=position
+                    data.append( item )
+                    position+=1
+            else:
+                data['error']='Ha ocurrido un error'
+        except Exception as e:
+            data['error']=str( e )
+            print(e)
+        return JsonResponse( data, safe=False )
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        context['title']='Detalle de Errores'
+        context['codigo']='CBF10'
+        context['tabla']=self.request.GET.get( 'tabla' )
+        context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
+        return context

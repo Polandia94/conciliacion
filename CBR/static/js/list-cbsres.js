@@ -25,6 +25,9 @@ $(function () { "use strict"
             fixedHeader:{            
                 header: true,
                 footer: true},
+            fixedColumns:   {
+                    heightMatch: 'none'
+                },
             dom: 'lBfrtip',
             language: {
                 url: '../static/lib/datatables-es.json'
@@ -75,7 +78,16 @@ $(function () { "use strict"
                     className: "dt-bancoColor" 
                 },
                 {"data": 'oficina', className: "dt-bancoColor" },
-                {"data": 'desctra', className: "dt-bancoColor" },
+                {"data": 'desctra', className: "dt-bancoColor", "render": function (data, type, full, meta) {
+                    var zone_html = "";
+                    if (data != null && data.length > 25) {
+                        console.log(data)
+                        console.log(data.length)
+                        zone_html = data.substring(0,15)+"..."+data.substring(data.length -5)
+                    }
+                    else if (data != null){zone_html = data} 
+                    return "<td><nobr>" +zone_html+ "</nobr></td>";
+                    }},
                 {"data": 'reftra', className: "dt-bancoColor" },
                 {"data": 'codtra', className: "dt-bancoColor" },
                 {"data": 'idrbcod', className: "dt-bancoColor" },
@@ -89,7 +101,10 @@ $(function () { "use strict"
                     else{zone_html = data} 
                     return zone_html;
                     }},
-                {"data": "fechatraerp", name: "fechatraerp"},
+                {"data": "fechatraerp", name: "fechatraerp", "render": function (data, type, full, meta) {
+                    if(data!=null){
+                    return "<td><nobr>" + data + "</nobr></td>"}else{return""}
+                    }},
                 {"data": "debeerp", name: "debeerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
                 {"data": "habererp", name: "habererp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
                 {"data": "saldoerp", name: "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
@@ -106,11 +121,26 @@ $(function () { "use strict"
                 {"data": "saldodiferencia", name: "saldodiferencia", render: $.fn.dataTable.render.number( ',', '.', 2, '$' )},
                 {"data": 'idrerpd'},
                 {"data": 'nrotraerp'},
-                {"data": 'nrocomperp'},
+                {"data": 'nrocomperp', "render": function (data, type, full, meta) {
+                    if(data!=null){
+                    return "<td><nobr>" + data + "</nobr></td>"}else{return""}
+                    }},
                 {"data": 'auxerp'},
                 {"data": 'referp'},
-                {"data": 'glosaerp'},
-                {"data": 'fechaconerp'},
+                {"data": 'glosaerp', "render": function (data, type, full, meta) {
+                    var zone_html = "";
+                    if (data != null && data.length > 25) {
+                        console.log(data)
+                        console.log(data.length)
+                        zone_html = data.substring(0,15)+"..."+data.substring(data.length -5)
+                    }
+                    else if (data != null){zone_html = data} 
+                    return "<td><nobr>" +zone_html+ "</nobr></td>";
+                    }},
+                {"data": 'fechaconerp', "render": function (data, type, full, meta) {
+                    if(data!=null){
+                    return "<td><nobr>" + data + "</nobr></td>"}else{return""}
+                    }},
                 {"data": 'estadoerp'},
                 {"data": 'codtcoerp'},
                 {"data": 'linkconciliadoerp', "render": function (data, type, full, meta) {
@@ -672,7 +702,7 @@ $(function () { "use strict"
                                     } 
                         }
                         
-                        $Etiqueta.attr('style', "width: 100px; height: 16px");
+                        $Etiqueta.attr('style', "width: 100px; height: 8px");
                         $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0">  </div>').append($Etiqueta));
                         $elDiv.children().removeClass();
                         $elDiv.children().addClass('callout callout-conc m-0 pt-2 h-100 w-100 ' + classBackground);
@@ -742,7 +772,7 @@ $(function () { "use strict"
                                     } 
                         }
                         
-                        $Etiqueta.attr('style', "width: 100px; height: 16px");
+                        $Etiqueta.attr('style', "width: 100px; height: 8px");
                         $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0">  </div>').append($Etiqueta));
                         $elDiv.children().removeClass();
                         $elDiv.children().addClass('callout callout-conc m-0 pt-2 h-100 w-100 ' + classBackground);
