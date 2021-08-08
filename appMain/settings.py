@@ -79,18 +79,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'appMain.wsgi.application'
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'contag',
-        'USER': config['USUARIO_POSTGRES'],
-        'PASSWORD': config['PASSWORD_POSTGRES'],
-        'HOST': 'localhost',
-        'PORT': '5432',
+try:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'contag',
+            'USER': config['USUARIO_POSTGRES'],
+            'PASSWORD': config['PASSWORD_POSTGRES'],
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    
     }
-   
-}
+except:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'contag',
+            'USER': "pestevez",
+            'PASSWORD': "pestevez123",
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
