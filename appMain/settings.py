@@ -126,7 +126,7 @@ FILE_UPLOAD_TEMP_DIR = '/tmp'
 
 
 STATIC_URL = '/static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticdef')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')   
 ]

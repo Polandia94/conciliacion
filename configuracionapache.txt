@@ -1,0 +1,34 @@
+<VirtualHost *:80>
+        ServerAdmin info@appMain.com
+        ServerName 190.92.148.128
+        DocumentRoot /var/www/
+
+        Alias /static /var/www/appMain/staticdef
+        <Directory "/var/www/appMain/staticdef">
+                Options FollowSymLinks
+                Order allow,deny
+                Allow from all
+                Require all granted
+        </Directory>
+
+        Alias /media /var/www/appMain/media
+        <Directory "/var/www/appMain/media">
+                Options FollowSymLinks
+                Order allow,deny
+                Allow from all
+                Require all granted
+        </Directory>
+        ErrorLog /var/www/appMain/logs/apis_error.log
+        CustomLog /var/www/appMain/logs/apis_access.log combined
+
+        WSGIPassAuthorization On
+        WSGIDaemonProcess appMain python-path=/var/www/appMain:/var/www/appMain/venv/lib/python3.6/site-packages
+        WSGIProcessGroup appMain
+        WSGIScriptAlias / /var/www/appMain/v/wsgi.py
+
+        <Directory /var/www/appMain/appMain>
+                <Files wsgi.py>
+                        Require all granted
+                </Files>
+        </Directory>
+</VirtualHost>
