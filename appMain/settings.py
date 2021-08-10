@@ -15,8 +15,6 @@ from dotenv import dotenv_values
 
 #importa las variables de .env
 config = dotenv_values(".env")
-print(config)
-print("imprimio")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

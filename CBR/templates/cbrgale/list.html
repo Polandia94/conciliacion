@@ -1,7 +1,7 @@
 {% extends 'Classes/list.html' %}
 {% load static %}
 {% block head_list %}
-    <script src="{% static 'js/list-cbterr.js' %}"></script>
+    <script src="{% static 'js/list-cbrgale.js' %}"></script>
 {% endblock %}
     {% block botones %}
 {#        <a href="{{ create_url }}" class="btn btn-primary btn-flat mb-3">#}
@@ -21,11 +21,16 @@
 
 
     <tr>
-
-        <th scope="col" style="width: 2%;">ID DE ERROR</th>
-        <th scope="col" style="width: 3%;">CODIGO DE ERROR</th>
-        <th scope="col" style="width: 5%;">FECHA</th>
-        <th scope="col" style="width: 5%;">USUARIO</th>
+        <th scope="col" style="width: 2%;">IDRGALE</th>
+        <th scope="col" style="width: 3%;">FECHA ERROR</th>
+        <th scope="col" style="width: 3%;">FECHATRA</th>
+        <th scope="col" style="width: 5%;">REF</th>
+        <th scope="col" style="width: 5%;">GLOSA</th>
+        <th scope="col" style="width: 3%;">DEBE</th>
+        <th scope="col" style="width: 3%;">HABER</th>
+        <th scope="col" style="width: 3%;">SALDO</th>
+        <th scope="col" style="width: 3%;">FECHACON</th>
+        <th scope="col" style="width: 3%;">CODERR</th>
 
 
 {#        <th scope="col" style="width: 20%; min-width: 20%" class="acciones-header" >Acción</th>#}

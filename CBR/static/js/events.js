@@ -32,6 +32,13 @@
 
         /******************************************************************************************************************/
     /******************************************************************************************************************/
+    $("#btnCargar").on('click', function () {
+        cargando.innerHTML = "Cargando, Espere un Segundo" 
+    });
+
+            /******************************************************************************************************************/
+    /******************************************************************************************************************/
+ 
     $("#btnGuardar").on('click', function () {        
         const idrenc = urlParams.get('idrenc');
         if (globalVariableUltimoModificadoBco.idsres != 0 || globalVariableUltimoModificadoErp.idsres != 0){alert("Complete el código de conciliacion para poder guardar" )}else{

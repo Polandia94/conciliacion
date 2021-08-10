@@ -18,7 +18,8 @@ urlpatterns=[
     path( 'cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del' ),
     #path( 'cbtcta/del/', views.cbtctaDelete, name='cbtcta_delete_cuenta' ),
     path( 'cerrarConciliacion/', views.cerrarConciliacion, name='cerrarConciliacion' ),
-    path( 'cbterr/', views.DetalleErroresListView.as_view(), name='DetalleErroresListView' ),
+    path( 'cbrgale/', views.DetalleErroresGalListView.as_view(), name='DetalleErroresGalListView' ),
+    path( 'cbrbode/', views.DetalleErroresBodListView.as_view(), name='DetalleErroresBodListView' ),
 
 
     path( '', views.CbrencListView.as_view(), name='index' ),
@@ -27,6 +28,8 @@ urlpatterns=[
     path( 'cbtcta/edit/', views.CbtctaEditView.as_view(), name='cbtcta_edit_cuenta' ),
     path( 'cbsres/', views.CbsresListView.as_view(), name='cbsres-list' ),
     path( 'cbsresview/', views.CbsresviewListView.as_view(), name='cbsresview-list' ),
+    path( 'verificarcarga/', views.verificarCarga, name='cbrenc-car' ),
+    path( 'verificarcarga/eliminar/', views.eliminarCarga, name='cbrenc-elicar' ),
 
     path( 'verificar/', views.verificarGuardado, name='cbrenc-ver' ),
     path( 'verificar/conservar/', views.conservarGuardado, name='cbrenc-con' ),

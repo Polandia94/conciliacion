@@ -1,5 +1,5 @@
 from django.db.models.aggregates import Count
-from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco,Cbterr
+from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco,Cbterr,Cbrbode,Cbrgale
 import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
@@ -146,23 +146,17 @@ class CbrencCreateView( CreateView ):
                 #Homologa el Banco BOD, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'codbco') para saber que homologacion usar
                 HomologacionBcoBOD(request, self.CbrencNew, data,saldobcoanterior )
                 archivoerp=request.POST.get( 'archivoerp', None )
-                try:
-                    #Verifica la existencia de errores, si los hubiera elimina todas las bases, si no carga el erp
-                    print( data['error'])
-                    error=True
-                except:
-                    error=False
                 #Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
-                if error == False:
-                    HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
+                HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
                 try:
                     print( data['error'])
                     error=True
                 except:
                     error=False
+
                 if error == True:
-                    Cbrbod.objects.filter(idrenc=self.CbrencNew.idrenc).delete()
-                    Cbrgal.objects.filter(idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrbod.objects.filter(idrenc = self.CbrencNew.idrenc).delete()
+                    Cbrgal.objects.filter(idrenc = self.CbrencNew.idrenc).delete()
                     Cbrbcod.objects.filter(idrbcoe=self.CbrencNew.idrenc).delete()
                     Cbrerpd.objects.filter(idrerpe=self.CbrencNew.idrenc).delete()
                     Cbrbcoe.objects.filter(idrenc=self.CbrencNew.idrenc).delete()
@@ -405,7 +399,21 @@ class CbrencListView( ListView ):
             aCbttco= Cbttco(3,1,"NCTR","Notas de Credito en Transito (+)",0,0)
             aCbttco.save()
             aCbttco= Cbttco(10,2,"AERR","Abonos Erroneos",0,0)
-            aCbttco.save()     
+            aCbttco.save()
+        if Cbterr.objects.filter(idterr = 99).exists() == False:
+            aCbterr = Cbterr(idterr = 1, descerr = "Día Fuera de Calendario")
+            aCbterr.save()
+            aCbterr = Cbterr(idterr = 2, descerr = "Sin Código de Oficina")
+            aCbterr.save()
+            aCbterr = Cbterr(idterr = 3, descerr = "Debe Inválido")
+            aCbterr.save()
+            aCbterr = Cbterr(idterr = 4, descerr = "Haber Inválido")
+            aCbterr.save()
+            aCbterr = Cbterr(idterr = 5, descerr = "Saldo Invalido")
+            aCbterr.save()
+            aCbterr = Cbterr(idterr = 99, descerr = "Error Desconocido")
+            aCbterr.save()
+
         data={}
         try:
             action=request.POST['action']
@@ -1483,9 +1491,57 @@ def verificarGuardado(request):
     return render(request, "cbrenc/confirmation-form.html")
 
 
+def verificarCarga(request):
+    aCbrenc = Cbrenc.objects.order_by('-idrenc').first()
+    idrenc = aCbrenc.idrenc
+    ano=aCbrenc.ano
+    mes=aCbrenc.mes
+    nrocta = aCbrenc.nrocta
+    empresa = aCbrenc.empresa
+    codbco = aCbrenc.codbco
+    #verifica que el registro anterior sea del mes y año correspondiente(o del siguiente a cbttca)
+    if mes == 1:
+        mesanterior = 12
+        anoanterior = int(ano)-1
+    else:
+        mesanterior = int(mes) -1
+        anoanterior = int(ano)
+    aCberencAnterior =Cbrenc.objects.filter( codbco=codbco,
+                        nrocta=nrocta,
+                        ano=anoanterior,
+                        mes=mesanterior,
+                        #cliente=cliente,
+                        empresa=empresa,
+                        ).first()
+    if aCberencAnterior == None:
+        aCbtcta = Cbtcta.objects.filter(codbco=codbco, nrocta=nrocta, empresa=empresa).first()
+        saldobcoanterior = aCbtcta.saldoinibco
+        saldoerpanterior = aCbtcta.saldoinierp
+    else:
+        saldobcoanterior = aCberencAnterior.saldobco
+        saldoerpanterior = aCberencAnterior.saldoerp
+    aCbrbcod = Cbrbcod.objects.filter(idrbcoe = aCbrenc.idrenc).first()
+    saldobco = aCbrbcod.saldo - aCbrbcod.debe + aCbrbcod.haber
+    aCbrerpd = Cbrerpd.objects.filter(idrerpe = aCbrenc.idrenc).first()
+    saldoerp = aCbrerpd.saldo - aCbrerpd.debe + aCbrerpd.haber
+    if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:
+        return redirect("../../")
+    return render(request, "cbrenc/confirmarcarga.html",{"saldobcoanterior":saldobcoanterior,  "saldoerpanterior": saldoerpanterior, "saldobco": saldobco, "saldoerp":saldoerp})
 
-
-
+def eliminarCarga(request):
+    aCbrenc = Cbrenc.objects.order_by('-idrenc').first()
+    idrenc = aCbrenc.idrenc
+    Cbrbod.objects.filter(idrenc = idrenc).delete()
+    Cbrgal.objects.filter(idrenc = idrenc).delete()
+    Cbrbcod.objects.filter(idrbcoe=idrenc).delete()
+    Cbrerpd.objects.filter(idrerpe=idrenc).delete()
+    Cbrbcoe.objects.filter(idrenc=idrenc).delete()
+    Cbrerpe.objects.filter(idrenc=idrenc).delete()
+    Cbrencl.objects.filter(idrenc=idrenc).delete()
+    Cbrenct.objects.filter(idrenc=idrenc).delete()
+    Cbrenc.objects.filter(idrenc=idrenc).delete()
+    return redirect("../../")
+    
 def conservarGuardado(request):
     idrenca = request.GET['idrenc']
     if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
@@ -1574,9 +1630,9 @@ def eliminarGuardado(request):
 
     return redirect("../../cbsres/?idrenc="+idrenc)
 
-class DetalleErroresListView(ListView):
-    model=Cbterr
-    template_name= 'cbterr/list.html'
+class DetalleErroresBodListView(ListView):
+    model=Cbrbode
+    template_name= 'cbrbode/list.html'
 
     @method_decorator( login_required )
     def dispatch(self, request, *args, **kwargs):
@@ -1585,28 +1641,77 @@ class DetalleErroresListView(ListView):
     def post(self, request, *args, **kwargs):
         data={}
         try:
+            print("a")
             action=request.POST['action']
-            tabla=request.POST['tabla']
-
-            if action == 'searchdata':
-                data=[]
-                position=1
-                for i in Cbterr.objects.filter( tabla=tabla ):
-                    item=i.toJSON()
-                    item['position']=position
-                    item['ID']=position
-                    data.append( item )
-                    position+=1
-            else:
-                data['error']='Ha ocurrido un error'
+            print(action)
+            data=[]
+            position=1
+            for i in Cbrbode.objects.all():
+                detalle = i.idrbod
+                item=i.toJSON()
+                item['diatra'] = detalle.diatra
+                item['oficina'] = detalle.oficina
+                item['desctra'] = detalle.desctra
+                item['debe'] = detalle.debe
+                item['haber'] = detalle.haber
+                item['saldo'] = detalle.saldo
+                item['position']=position
+                item['coderr']= i.idterr.descerr
+                item['fechact']= detalle.fechact
+                item['ID']=position
+                data.append( item )
+                position+=1
         except Exception as e:
-            data['error']=str( e )
             print(e)
         return JsonResponse( data, safe=False )
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
-        context['title']='Detalle de Errores'
+        context['title']='Detalle de Errores BOD'
         context['codigo']='CBF10'
-        context['tabla']=self.request.GET.get( 'tabla' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         return context
+
+
+class DetalleErroresGalListView(ListView):
+    model=Cbrgale
+    template_name= 'cbrgale/list.html'
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+
+    def post(self, request, *args, **kwargs):
+        data={}
+        try:
+            print("a")
+            action=request.POST['action']
+            print(action)
+            data=[]
+            position=1
+            for i in Cbrgale.objects.all():
+                detalle = i.idrgal
+                item=i.toJSON()
+                item['aux'] = detalle.aux
+                item['fechatra'] = detalle.fechatra
+                item['ref'] = detalle.ref
+                item['glosa'] = detalle.glosa
+                item['debe'] = detalle.debe
+                item['haber'] = detalle.haber
+                item['saldo'] = detalle.saldo
+                item['fechacon'] = detalle.fechacon
+                item['position']=position
+                item['coderr']= i.idterr.descerr
+                item['fechact']= detalle.fechact
+                item['ID']=position
+                data.append( item )
+                position+=1
+        except Exception as e:
+            print(e)
+        return JsonResponse( data, safe=False )
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        context['title']='Detalle de Errores GAL'
+        context['codigo']='CBF11'
+        context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
+        return context
+

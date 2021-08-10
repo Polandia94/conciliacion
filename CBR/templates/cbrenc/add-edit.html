@@ -121,7 +121,7 @@
                     </div>
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Cargar</button>
+                        <button id="btnCargar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Cargar</button>
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_url }}'">Cancelar</button>
                     <div id="cargando"></div>
@@ -140,12 +140,12 @@
             e.preventDefault();
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                cargando.innerHTML = "Cargando, Espere un Segundo"
-                location.href = "{% url 'CBR:index' %}";
+                cargando.innerHTML = "Cargando, Espere un Segundo";
+                location.href = "{% url 'CBR:cbrenc-car' %}";
             });
         });
         $('.form-control').on("change", function(e){
-             $('#btnGuardar').attr('disabled', false);
+             $('#btnCargar').attr('disabled', false);
         });
     </script>
 {% endblock %}

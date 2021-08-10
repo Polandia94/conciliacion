@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models, connection
+from django.db.models.fields import NullBooleanField
 from django.forms import model_to_dict
 import datetime as dt
 from db_file_storage.storage import DatabaseFileStorage
@@ -202,13 +203,14 @@ class Cbrgal(models.Model):
         super( Cbrgal, self ).save( *args, **kwargs )
 
     def actualizar(self, *args, **kwargs):
+        if Cbrgal.objects.filter(idrgal=self.idrgal).first().idrenc != None and Cbrgal.objects.filter(idrgal=self.idrgal).first().idrenc != "null":
+            Cbrgal.objects.filter(idrgal=self.idrgal).delete()
+            try:
+                self.idrgal = Cbrgal.objects.order_by('-idrgal')[0].idrgal + 1
+            except:
+                self.idrgal=1
+            super( Cbrgal, self ).save( *args, **kwargs )
 
-        Cbrgal.objects.filter(idrgal=self.idrgal).delete()
-        try:
-            self.idrgal = Cbrgal.objects.order_by('-idrgal')[0].idrgal + 1
-        except:
-            self.idrgal=1
-        super( Cbrgal, self ).save( *args, **kwargs )
 
         # - - - - - - - - - - - - - - - - - - - - - - - - #
 
@@ -247,11 +249,57 @@ class Cbtbco(models.Model):
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
 
+class Cbrgale(models.Model):
+    idrgale = models.AutoField(db_column='idrgale', primary_key=True)
+    idrgal = models.ForeignKey( 'Cbrgal', models.DO_NOTHING, db_column='idrgal', default=0, null=True )
+    idterr = models.ForeignKey( 'Cbterr', models.DO_NOTHING, db_column='idterr', default=0 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrgale'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbrgale, self ).save( *args, **kwargs )
+
+        # 
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+class Cbrbode(models.Model):
+    idrbode = models.AutoField(db_column='idrbode', primary_key=True)
+    idrbod = models.ForeignKey( 'Cbrbod', models.DO_NOTHING, db_column='idrbod', default=0, null=True )
+    idterr = models.ForeignKey( 'Cbterr', models.DO_NOTHING, db_column='idterr', default=0 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrbode'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbrbode, self ).save( *args, **kwargs )
+
+        # 
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
 
 class Cbterr(models.Model):
-    idterr = models.AutoField(db_column='idterr', primary_key=True)
-    coderr = models.IntegerField(verbose_name='codigo de error', db_column='coderr')
-    tabla = models.CharField(verbose_name='Tabla donde sucedió el error', db_column='tabla', max_length=6)
+    idterr = models.IntegerField(db_column='idterr', primary_key=True)
+    descerr = models.CharField(verbose_name='Descripcion', db_column='descerr', max_length=30)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
     idusu = models.CharField( verbose_name='Usuario de archivo', db_column='idusu', max_length=16, null=True )
     
