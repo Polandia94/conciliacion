@@ -31,14 +31,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
         fallo = False
         print(len( dataBco ))
         sobreescribir=request.POST['sobreescribir']
-        try:
-            saldoInicial = dataBco.loc[0, dataBco.columns[5]].replace(".","").replace(",","")
-        except:
-            saldoInicial = dataBco.loc[1, dataBco.columns[5]].replace(".","").replace(",","")
-        if saldoInicial[-1]=="-":
-            saldoInicial = float(saldoInicial[0:-1])*-1
-        else:
-            saldoInicial = float(saldoInicial)
         for i in range( len( dataBco ) ):
             if pd.isnull(dataBco.loc[i, dataBco.columns[0]]) == False:
                 mes = int(aCbrenc.mes)
@@ -169,10 +161,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 registro.idrenc = None
                 registro.save()
         except:
-            pass
-
-
-        
+            pass        
 
 def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
     try:

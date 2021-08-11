@@ -441,14 +441,6 @@ class Cbrenc(models.Model):
     # def __str__(self):
     #     return str(self.idrenc)
     def save(self, *args, **kwargs):
-
-        # if self:
-        #     self.fechalt = dt.datetime.today()
-        #     self.idusualt = User.username
-        # else:
-        #     self.fechmod = dt.datetime.today()
-        #     self.idusumod = User.username
-        
         self.cliente = "PMA"
         try:
             self.corr = Cbrenc.objects.filter(codbco=self.codbco,nrocta=self.nrocta,ano=self.ano, mes=self.mes,empresa=self.empresa).order_by('-corr')[0].corr + 1
