@@ -6,6 +6,7 @@ $(function () {
         destroy: true,
         hover: true,
         deferRender: true,
+        orderFixed: [ 0, 'asc' ],
         colReorder: true,
         stateSave: true,
         fixedHeader: true,
@@ -21,9 +22,9 @@ $(function () {
             dataSrc: ""
         },
         columns: [
-            {"data": "idrgale"},
-            {"data": "fechact"},
             {"data": "fechatra"},
+            {"data": "nrocomp"},
+            {"data": "aux"},
             {"data": "ref"},
             {"data": "glosa"},
             {"data": "debe"},

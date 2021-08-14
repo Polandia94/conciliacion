@@ -54,6 +54,7 @@ class CbrencaForm( ModelForm ):
             else:
                 print("forma invalida")
                 data['error']=form.errors
+                print(form.errors)
         except Exception as e:
             print(e)
             data['error']=str( e )

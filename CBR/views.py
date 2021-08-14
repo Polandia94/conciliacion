@@ -34,6 +34,10 @@ class CbrbcodView( View ):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch( request, *args, **kwargs )
 
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        context['title']='Detalle de Anotación en Banco'
+
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
@@ -409,11 +413,13 @@ class CbrencListView( ListView ):
             aCbterr.save()
             aCbterr = Cbterr(idterr = 4, descerr = "Haber Inválido")
             aCbterr.save()
-            aCbterr = Cbterr(idterr = 5, descerr = "Saldo Invalido")
+            aCbterr = Cbterr(idterr = 5, descerr = "Saldo Inválido")
             aCbterr.save()
             aCbterr = Cbterr(idterr = 99, descerr = "Error Desconocido")
             aCbterr.save()
-
+        if Cbterr.objects.filter(idterr = 6).exists() == False:
+            aCbterr = Cbterr(idterr = 6, descerr = "Incumple Lógica de aplicación")
+            aCbterr.save()
         data={}
         try:
             action=request.POST['action']
@@ -855,48 +861,27 @@ def conciliarSaldos(request):
                     #Define los objetos a cargar y los saldos iniciales
                     bcoDataSet=Cbrbcod.objects.filter( idrbcoe=idrenc ).order_by( 'fechatra', 'horatra' )
                     erpDataSet=Cbrerpd.objects.filter( idrerpe=idrenc ).order_by( 'fechatra')
-                    saldoacum_Dia_Bco=0
-                    saldoacu_Mes_Bco=0
-                    saldoacum_Dia_Erp=0
-                    saldoacu_Mes_Erp=0
+
 
                     rowInicialbco=Cbrbcod.objects.filter( idrbcoe=idrenc).order_by( 'fechatra', 'horatra' ).first()
-                    try:
-                        saldoacu_Mes_Bco=rowInicialbco.saldo-rowInicialbco.haber+rowInicialbco.debe
-                    except Exception as e:
-                        print(e)
-                        saldoacu_Mes_Bco=rowInicialbco.saldo
-                    print("a")
+
                     rowInicialerp=Cbrerpd.objects.filter( idrerpe=idrenc ).order_by( 'fechatra').first()
-                    try:
-                        saldoacu_Mes_Erp=rowInicialerp.saldo-rowInicialerp.haber+rowInicialerp.debe
-                    except Exception as e:
-                        print(e)
-                        saldoacu_Mes_Erp=rowInicialerp.saldo
-                    print("b")
+
                     currentDay=rowInicialbco.fechatra
-                    currentDayE=rowInicialerp.fechatra
                     Cbsres.objects.filter( idrenc=idrenc ).delete()
                     dia = 1
                     color = 0
                     cambio = False
                     while dia < 32:
                         #Para cada dia carga los registros del banco en orden, calculando los saldos
-                        saldoacum_Dia_Bco = 0
-                        fechatrabco = 0
+                        fechatrabco = None
                         for vwRow in bcoDataSet:
                             if vwRow.fechatra.day == dia:
                                 fechatrabco=vwRow.fechatra
                                 if (vwRow.fechatra is None):
                                     if (currentDay != vwRow.fechatra):
                                         currentDay=vwRow.fechatra
-                                        saldoacum_Dia_Bco=0
-                                saldoacum_Dia_Bco+= vwRow.haber - vwRow.debe
-                                saldoacu_Mes_Bco+= vwRow.haber - vwRow.debe
-                                try:
-                                    saldoacu_Mes_Erp = Cbsres.objects.filter(idrenc=idrenc).order_by("-idsres").first().saldoacumeserp
-                                except:
-                                    pass
+
                                 insCbsres=Cbsres(
                                     idrenc=Cbrenc.objects.get( idrenc=idrenc ),
                                     cliente=Cbrenc.objects.get( idrenc=idrenc).cliente,
@@ -907,10 +892,6 @@ def conciliarSaldos(request):
                                     desctra=vwRow.desctra,
                                     reftra=vwRow.reftra,
                                     codtra=vwRow.codtra,
-                                    saldodiferencia =saldoacu_Mes_Bco - saldoacu_Mes_Erp,
-                                    saldoacumesbco=saldoacu_Mes_Bco,
-                                    saldoacumeserp=saldoacu_Mes_Erp,
-                                    saldoacumdiabco=saldoacum_Dia_Bco,
                                     #isconciliado=vwRow.isconciliado,
                                     # estado=vwRow.esta,
                                     # historial=vwRow.,
@@ -935,7 +916,7 @@ def conciliarSaldos(request):
                             if vwRow.fechatra.day == dia:
                                     if Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).exists():
                                         insCbsres=Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).first()
-                                        Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color)
+                                        Unir(vwRow,insCbsres,idrenc,color)
                                         erpDataSet = erpDataSet.exclude(idrerpd=vwRow.idrerpd)
                         for vwRow in erpDataSet:
                             #Para cada dia carga los registros del erp que no concilian en  orden de cercania
@@ -945,11 +926,10 @@ def conciliarSaldos(request):
                                     insCbsres = Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco).annotate(abs_diff=Func(F('debebco') - vwRow.haber + F('haberbco') - vwRow.debe, function='ABS')).order_by('abs_diff').first()
                                 else:
                                     try:
-                                        insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ), saldoacumesbco = saldoacu_Mes_Bco, blockcolor = color)
+                                        insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ), blockcolor = color)
                                     except:
                                         insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ))
-                                Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color)
-                        saldoacum_Dia_Erp=0
+                                Unir(vwRow,insCbsres,idrenc,color)
                         dia = dia +1
                         if cambio == True:
                             if color == 0:
@@ -957,6 +937,44 @@ def conciliarSaldos(request):
                             else:
                                 color = 0
                             cambio = False
+                    n = 0
+                    for aCbsres in Cbsres.objects.filter(idrenc=idrenc).order_by('idsres').all():
+                        if n == 0:
+                            n = 1
+                            
+                            saldoacumesbco=float(aCbsres.saldobco or 0)
+                            saldoacumdiabco=float(aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
+                            saldoacumeserp=float(aCbsres.saldoerp or 0)
+                            saldoacumdiaerp=float(aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
+                            saldodiferencia= saldoacumesbco - saldoacumeserp
+                            diabcoant=aCbsres.fechatrabco
+                            diaerpant=aCbsres.fechatraerp     
+                            aCbsres.saldodiferencia = saldodiferencia                     
+                            aCbsres.saldoacumesbco=saldoacumesbco
+                            aCbsres.saldoacumdiabco=saldoacumdiabco
+                            aCbsres.saldoacumeserp=saldoacumeserp
+                            aCbsres.saldoacumdiaerp=saldoacumdiaerp
+                            aCbsres.save()
+                        else:
+                            diabco=aCbsres.fechatrabco
+                            diaerp=aCbsres.fechatraerp    
+                            saldoacumesbco= saldoacumesbco + float(aCbsres.haberbco or 0)- float(aCbsres.debebco or 0)
+                            if diabco == diabcoant or diaerp ==diaerpant:
+                                saldoacumdiabco=saldoacumdiabco + float(aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
+                                saldoacumdiaerp=float(saldoacumdiaerp or 0)+float(aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
+                            else:
+                                saldoacumdiabco = float(aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
+                                saldoacumdiaerp=float(aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
+                            saldoacumeserp= saldoacumeserp + float(aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)  
+                            saldodiferencia= saldoacumesbco - saldoacumeserp
+                            aCbsres.saldoacumesbco=saldoacumesbco
+                            aCbsres.saldoacumdiabco=saldoacumdiabco
+                            aCbsres.saldoacumeserp=saldoacumeserp
+                            aCbsres.saldoacumdiaerp=saldoacumdiaerp
+                            aCbsres.saldodiferencia= saldodiferencia
+                            diabcoant=diabco
+                            diaerpant=diaerp
+                            aCbsres.save()
 
                     CbrencUpd=Cbrenc.objects.get( idrenc=idrenc )
                     CbrencUpd.fechacons=dt.datetime.now(tz=timezone.utc)+huso
@@ -985,6 +1003,8 @@ def conciliarSaldos(request):
             else:
                 data={"info": "La conciliación ya fue cerrada"}
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(e)
             data['error']=str( e )
         return JsonResponse( data )
@@ -993,19 +1013,11 @@ def conciliarSaldos(request):
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
-def Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color):
+def Unir(vwRow,insCbsres,idrenc,color):
     #sistema que une el cbsres con banco cargado con un registro del cbrerpd
-    saldoacu_Mes_Erp= saldoacu_Mes_Erp + vwRow.debe - vwRow.haber
-    saldoacum_Dia_Erp+=vwRow.debe - vwRow.haber
-    try:
-        saldoacu_Mes_Bco = Cbsres.objects.filter(idrenc=idrenc).order_by("-idsres").first().saldoacumesbco
-    except: 
-        saldoacu_Mes_Bco = 0
 
     insCbsres.idrerpd=vwRow.idrerpd
-    insCbsres.saldoacumeserp=saldoacu_Mes_Erp
 
-    insCbsres.saldoacumdiaerp=saldoacum_Dia_Erp
     insCbsres.saldoerp=vwRow.saldo
 
         # estado=vwRow.esta,
@@ -1015,10 +1027,6 @@ def Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color):
     insCbsres.debeerp=vwRow.debe
     insCbsres.habererp=vwRow.haber
     insCbsres.codtcoerp = " "
-    try:
-        insCbsres.saldodiferencia= insCbsres.saldoacumesbco - insCbsres.saldoacumeserp
-    except:
-        insCbsres.saldodiferencia= insCbsres.saldoacumeserp
     if insCbsres.saldodiferencia == 0:
         insCbsres.historial = 3
     insCbsres.nrotraerp = vwRow.nrotra
@@ -1034,8 +1042,8 @@ def Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color):
     if insCbsres.debeerp == insCbsres.haberbco and insCbsres.debebco == insCbsres.habererp:
         insCbsres.estadobco = 1
         insCbsres.estadoerp = 1
-        insCbsres.linkconciliadobco = -2
-        insCbsres.linkconciliadoerp = -2
+        insCbsres.linkconciliadobco = insCbsres.idrerpd
+        insCbsres.linkconciliadoerp = insCbsres.idrbcod
 
     else:
         insCbsres.estadobco = 0
@@ -1050,86 +1058,87 @@ def Unir(vwRow,insCbsres,saldoacu_Mes_Erp,saldoacum_Dia_Erp,idrenc,color):
 def editCbwres(request):
         
         print(request)
-        tabla = list(dict(request.POST).keys())[0][1:-1]
-        while True:
-            fila = tabla[:tabla.find("}")+1]
-            comienzo = tabla[10:].find("{")
-            if comienzo == -1:
-                break
-            tabla = tabla[comienzo+10:]
-            print(fila)
-            fila = json.loads(fila)
-            print(fila["idsres"])
+        try:
+            tabla = list(dict(request.POST).keys())[0][1:-1]
+            while True:
+                fila = tabla[:tabla.find("}")+1]
+                comienzo = tabla[10:].find("{")
+                if comienzo == -1:
+                    break
+                tabla = tabla[comienzo+10:]
+                fila = json.loads(fila)
 
-            idsres = fila["idsres"]
-            idrenc = float(fila["idrenc"])
-            try:
-                debeerp = float(fila["debeerp"])
-            except:
-                debeerp = float(0)
-            try:
-                habererp = float(fila["habererp"])
-            except:
-                habererp = float(0)
-            try:
-                saldoacumeserp = float(fila["saldoacumeserp"])
-            except:
-                saldoacumeserp = float(0)
-            try:
-                saldoacumdiaerp = float(fila["saldoacumdiaerp"])
-            except:
-                saldoacumdiaerp = float(0)
-            saldodiferencia = float(fila["saldodiferencia"])
-            historial = int(fila["historial"]) 
-            try:
-                linkconciliadobco = int(fila["linkconciliadobco"])
-            except:
-                linkconciliadobco = int(0)
-            try:
-                linkconciliadoerp = int(fila["linkconciliadoerp"])
-            except:
-                linkconciliadoerp = int(0)
-            codtcobco = fila["codtcobco"]
-            codtcoerp = fila["codtcoerp"]          
-            idrenc= Cbrenc.objects.filter(idrenc = idrenc).first()
-            if Cbwres.objects.filter(idsres=int(idsres)).exists():
-                aCbsres = Cbwres.objects.filter(idsres=int(idsres)).first()
-            else:
-                aCbsres = Cbsres.objects.filter(idsres=int(idsres)).first()
-            estadobco= fila["estadobco"]
-            estadoerp= fila["estadoerp"]
-            cliente= aCbsres.cliente
-            empresa= aCbsres.empresa
-            codbco= aCbsres.codbco
-            nrocta= aCbsres.nrocta
-            ano= aCbsres.ano
-            mes= aCbsres.mes
-            fechatrabco= aCbsres.fechatrabco
-            horatrabco= aCbsres.horatrabco
-            blockcolor= aCbsres.blockcolor
-            debebco= aCbsres.debebco
-            haberbco= aCbsres.haberbco
-            saldobco= aCbsres.saldobco
-            saldoacumesbco= aCbsres.saldoacumesbco
-            saldoacumdiabco= aCbsres.saldoacumdiabco
-            oficina= aCbsres.oficina
-            desctra= aCbsres.desctra
-            reftra= aCbsres.reftra
-            codtra= aCbsres.codtra
-            idrbcod= aCbsres.idrbcod
-            nrotraerp= aCbsres.nrotraerp
-            fechatraerp= aCbsres.fechatraerp
-            nrocomperp= aCbsres.nrocomperp
-            auxerp= aCbsres.auxerp
-            referp= aCbsres.referp
-            glosaerp= aCbsres.glosaerp
-            saldoerp= aCbsres.saldoerp
-            fechaconerp= aCbsres.fechaconerp
-            idrerpd= aCbsres.idrerpd   
-            Cbwres.objects.filter( idsres = idsres ).delete()
-            aCbwres = Cbwres(linkconciliadobco=linkconciliadobco,linkconciliadoerp=linkconciliadoerp,idsres=idsres, idrenc= idrenc, cliente=cliente, empresa=empresa, codbco=codbco, nrocta=nrocta, ano=ano, mes=mes, fechatrabco=fechatrabco, horatrabco=horatrabco, debebco=debebco, haberbco=haberbco, saldobco=saldobco, saldoacumesbco=saldoacumesbco, saldoacumdiabco=saldoacumdiabco, oficina=oficina, desctra=desctra, reftra=reftra, codtra=codtra, idrbcod=idrbcod,nrotraerp=nrotraerp,fechatraerp=fechatraerp,nrocomperp=nrocomperp, auxerp=auxerp, referp=referp,glosaerp=glosaerp,debeerp=debeerp,habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp,fechaconerp=fechaconerp,idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco,estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp)
-            aCbwres.save()
-        return HttpResponse("")
+                idsres = fila["idsres"]
+                idrenc = float(fila["idrenc"])
+                try:
+                    debeerp = float(fila["debeerp"])
+                except:
+                    debeerp = None
+                try:
+                    habererp = float(fila["habererp"])
+                except:
+                    habererp = None
+                try:
+                    saldoacumeserp = float(fila["saldoacumeserp"])
+                except:
+                    saldoacumeserp = float(0)
+                try:
+                    saldoacumdiaerp = float(fila["saldoacumdiaerp"])
+                except:
+                    saldoacumdiaerp = float(0)
+                saldodiferencia = float(fila["saldodiferencia"])
+                historial = int(fila["historial"]) 
+                try:
+                    linkconciliadobco = int(fila["linkconciliadobco"])
+                except:
+                    linkconciliadobco = int(0)
+                try:
+                    linkconciliadoerp = int(fila["linkconciliadoerp"])
+                except:
+                    linkconciliadoerp = int(0)
+                codtcobco = fila["codtcobco"]
+                codtcoerp = fila["codtcoerp"]          
+                idrenc= Cbrenc.objects.filter(idrenc = idrenc).first()
+                if Cbwres.objects.filter(idsres=int(idsres)).exists():
+                    aCbsres = Cbwres.objects.filter(idsres=int(idsres)).first()
+                else:
+                    aCbsres = Cbsres.objects.filter(idsres=int(idsres)).first()
+                estadobco= fila["estadobco"]
+                estadoerp= fila["estadoerp"]
+                cliente= aCbsres.cliente
+                empresa= aCbsres.empresa
+                codbco= aCbsres.codbco
+                nrocta= aCbsres.nrocta
+                ano= aCbsres.ano
+                mes= aCbsres.mes
+                fechatrabco= aCbsres.fechatrabco
+                horatrabco= aCbsres.horatrabco
+                blockcolor= aCbsres.blockcolor
+                debebco= aCbsres.debebco
+                haberbco= aCbsres.haberbco
+                saldobco= aCbsres.saldobco
+                saldoacumesbco= aCbsres.saldoacumesbco
+                saldoacumdiabco= aCbsres.saldoacumdiabco
+                oficina= aCbsres.oficina
+                desctra= aCbsres.desctra
+                reftra= aCbsres.reftra
+                codtra= aCbsres.codtra
+                idrbcod= aCbsres.idrbcod
+                nrotraerp= aCbsres.nrotraerp
+                fechatraerp= aCbsres.fechatraerp
+                nrocomperp= aCbsres.nrocomperp
+                auxerp= aCbsres.auxerp
+                referp= aCbsres.referp
+                glosaerp= aCbsres.glosaerp
+                saldoerp= aCbsres.saldoerp
+                fechaconerp= aCbsres.fechaconerp
+                idrerpd= aCbsres.idrerpd   
+                Cbwres.objects.filter( idsres = idsres ).delete()
+                aCbwres = Cbwres(linkconciliadobco=linkconciliadobco,linkconciliadoerp=linkconciliadoerp,idsres=idsres, idrenc= idrenc, cliente=cliente, empresa=empresa, codbco=codbco, nrocta=nrocta, ano=ano, mes=mes, fechatrabco=fechatrabco, horatrabco=horatrabco, debebco=debebco, haberbco=haberbco, saldobco=saldobco, saldoacumesbco=saldoacumesbco, saldoacumdiabco=saldoacumdiabco, oficina=oficina, desctra=desctra, reftra=reftra, codtra=codtra, idrbcod=idrbcod,nrotraerp=nrotraerp,fechatraerp=fechatraerp,nrocomperp=nrocomperp, auxerp=auxerp, referp=referp,glosaerp=glosaerp,debeerp=debeerp,habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp,fechaconerp=fechaconerp,idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco,estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp)
+                aCbwres.save()
+            return HttpResponse("")
+        except Exception as e:
+            print(e)
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 
@@ -1330,7 +1339,7 @@ class DetalleTiempoListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
-        context['title']='Tiempo'
+        context['title']='Log de Tiempo'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         context['codigo']='CBF05'
@@ -1657,7 +1666,6 @@ class DetalleErroresBodListView(ListView):
                 item['saldo'] = detalle.saldo
                 item['position']=position
                 item['coderr']= i.idterr.descerr
-                item['fechact']= detalle.fechact
                 item['ID']=position
                 data.append( item )
                 position+=1
@@ -1666,7 +1674,7 @@ class DetalleErroresBodListView(ListView):
         return JsonResponse( data, safe=False )
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
-        context['title']='Detalle de Errores BOD'
+        context['title']='Detalle de Errores Banco'
         context['codigo']='CBF10'
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         return context
@@ -1693,6 +1701,7 @@ class DetalleErroresGalListView(ListView):
                 item=i.toJSON()
                 item['aux'] = detalle.aux
                 item['fechatra'] = detalle.fechatra
+                item['nrocomp'] = detalle.nrocomp
                 item['ref'] = detalle.ref
                 item['glosa'] = detalle.glosa
                 item['debe'] = detalle.debe
@@ -1710,7 +1719,7 @@ class DetalleErroresGalListView(ListView):
         return JsonResponse( data, safe=False )
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
-        context['title']='Detalle de Errores GAL'
+        context['title']='Detalle de Errores ERP'
         context['codigo']='CBF11'
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         return context

@@ -6,6 +6,7 @@ $(function () {
         destroy: true,
         hover: true,
         deferRender: true,
+        orderFixed: [ 0, 'asc' ],
         colReorder: true,
         stateSave: true,
         fixedHeader: true,
@@ -21,8 +22,7 @@ $(function () {
             dataSrc: ""
         },
         columns: [
-            {"data": "idrbode"},
-            {"data": "fechact"},
+
             {"data": "diatra"},
             {"data": "oficina"},
             {"data": "desctra"},
@@ -33,7 +33,7 @@ $(function () {
         ],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5, 6, 7,8],
+                targets: [0, 1, 2, 3, 4, 5, 6],
                 class: 'text-center pt-4',
             }
         ],
