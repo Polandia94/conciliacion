@@ -66,14 +66,19 @@ td {
 .callout-conc {
     font-size: small;
     border-left: 10px solid !important;
+    width: 20px !important;
 }
 
 .callout-success {
     border-left-color: #5cb85c !important;
-}
 
+}
+.callout a { 
+    padding: 1px !important;
+}
 .callout-warning  {
     border-left-color: #9c2b2b !important;
+
 }
 
 td.current {
@@ -145,3 +150,19 @@ table#data.dataTable tbody tr:hover > .sorting_1 {
   background-color: #ffa;
 }
 
+.miniselect {
+    width: 70px;
+    height: 20px;
+    top: 14px;
+    right: 10px;
+  }
+
+.linkconciliadook{
+    border-left: 10px solid !important;
+    border-left-color: #5cb85c !important;
+}
+
+.linkconciliadofallo{
+    border-left: 10px solid !important;
+    border-left-color: #9c2b2b !important;
+}

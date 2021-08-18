@@ -1,4 +1,5 @@
 from django.db.models.aggregates import Count
+from django.db.models.fields import NullBooleanField
 from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco,Cbterr,Cbrbode,Cbrgale
 import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
@@ -911,19 +912,19 @@ def conciliarSaldos(request):
                                 )
                                 insCbsres.save()
                                 cambio = True
-                        for vwRow in erpDataSet:
-                            #Para cada dia carga los registros del erp que coincilian
-                            if vwRow.fechatra.day == dia:
-                                    if Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).exists():
-                                        insCbsres=Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).first()
-                                        Unir(vwRow,insCbsres,idrenc,color)
-                                        erpDataSet = erpDataSet.exclude(idrerpd=vwRow.idrerpd)
+                        #for vwRow in erpDataSet:
+                        #    #Para cada dia carga los registros del erp que coincilian
+                        #    if vwRow.fechatra.day == dia:
+                        #            if Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).exists():
+                        #                insCbsres=Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco, debebco=vwRow.haber, haberbco=vwRow.debe).first()
+                        #                Unir(vwRow,insCbsres,idrenc,color)
+                        #                erpDataSet = erpDataSet.exclude(idrerpd=vwRow.idrerpd)
                         for vwRow in erpDataSet:
                             #Para cada dia carga los registros del erp que no concilian en  orden de cercania
                             if vwRow.fechatra.day == dia:
                                 if fechatrabco != 0 and Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco ).exists():
                                     insCbsres=Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco ).first()
-                                    insCbsres = Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco).annotate(abs_diff=Func(F('debebco') - vwRow.haber + F('haberbco') - vwRow.debe, function='ABS')).order_by('abs_diff').first()
+                        #            insCbsres = Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco).annotate(abs_diff=Func(F('debebco') - vwRow.haber + F('haberbco') - vwRow.debe, function='ABS')).order_by('abs_diff').first()
                                 else:
                                     try:
                                         insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ), blockcolor = color)
@@ -975,6 +976,15 @@ def conciliarSaldos(request):
                             diabcoant=diabco
                             diaerpant=diaerp
                             aCbsres.save()
+                        if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debebco=aCbsres.debebco,haberbco=aCbsres.haberbco).count() == 1:
+                            if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).count() == 1:
+                                bCbsres = Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).first()
+                                aCbsres.estadobco = 1
+                                bCbsres.estadoerp = 1
+                                aCbsres.linkconciliadoerp = bCbsres.idrerpd
+                                bCbsres.linkconciliadobco = aCbsres.idrbcod
+                                aCbsres.save()
+                                bCbsres.save()
 
                     CbrencUpd=Cbrenc.objects.get( idrenc=idrenc )
                     CbrencUpd.fechacons=dt.datetime.now(tz=timezone.utc)+huso
@@ -1038,16 +1048,8 @@ def Unir(vwRow,insCbsres,idrenc,color):
     insCbsres.fechaconerp = vwRow.fechacon
     insCbsres.blockcolor = color
 
-
-    if insCbsres.debeerp == insCbsres.haberbco and insCbsres.debebco == insCbsres.habererp:
-        insCbsres.estadobco = 1
-        insCbsres.estadoerp = 1
-        insCbsres.linkconciliadobco = insCbsres.idrerpd
-        insCbsres.linkconciliadoerp = insCbsres.idrbcod
-
-    else:
-        insCbsres.estadobco = 0
-        insCbsres.estadoerp = 0
+    insCbsres.estadobco = 0
+    insCbsres.estadoerp = 0
 
         # --------------------
     insCbsres.save()
@@ -1060,13 +1062,13 @@ def editCbwres(request):
         print(request)
         try:
             tabla = list(dict(request.POST).keys())[0][1:-1]
+            print(tabla)
             while True:
                 fila = tabla[:tabla.find("}")+1]
                 comienzo = tabla[10:].find("{")
-                if comienzo == -1:
-                    break
-                tabla = tabla[comienzo+10:]
+
                 fila = json.loads(fila)
+                
 
                 idsres = fila["idsres"]
                 idrenc = float(fila["idrenc"])
@@ -1136,6 +1138,9 @@ def editCbwres(request):
                 Cbwres.objects.filter( idsres = idsres ).delete()
                 aCbwres = Cbwres(linkconciliadobco=linkconciliadobco,linkconciliadoerp=linkconciliadoerp,idsres=idsres, idrenc= idrenc, cliente=cliente, empresa=empresa, codbco=codbco, nrocta=nrocta, ano=ano, mes=mes, fechatrabco=fechatrabco, horatrabco=horatrabco, debebco=debebco, haberbco=haberbco, saldobco=saldobco, saldoacumesbco=saldoacumesbco, saldoacumdiabco=saldoacumdiabco, oficina=oficina, desctra=desctra, reftra=reftra, codtra=codtra, idrbcod=idrbcod,nrotraerp=nrotraerp,fechatraerp=fechatraerp,nrocomperp=nrocomperp, auxerp=auxerp, referp=referp,glosaerp=glosaerp,debeerp=debeerp,habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp,fechaconerp=fechaconerp,idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco,estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp)
                 aCbwres.save()
+                if comienzo == -1:
+                    break
+                tabla = tabla[comienzo+10:]
             return HttpResponse("")
         except Exception as e:
             print(e)
@@ -1202,6 +1207,27 @@ def getanomes(request):
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
+
+@login_required
+def getguardado(request):
+    data={"guardado":"si"} 
+    idrenc=request.GET.get( 'idrenc' )
+    if Cbwres.objects.filter(idrenc=idrenc,debeerp=0,habererp=0).exists():
+        alertaGuardado = str(Cbwres.objects.filter(idrenc=idrenc,debeerp=0,habererp=0).first().idsres)
+        data={"guardado": "Debe y Haber no pueden ser 0 en IDSRES = " + alertaGuardado}
+    else:
+        for registro in Cbwres.objects.filter(idrenc=idrenc).all():
+            aCbsres = Cbsres.objects.filter(idsres = registro.idsres).first()
+            if (aCbsres.debeerp != registro.debeerp or aCbsres.habererp != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
+                data={"guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
+    return JsonResponse( data )
+
+
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
 class DetalleBcoListView( ListView ):
     model=Cbrbcod
     template_name='cbrbcod/list.html'
@@ -1600,21 +1626,14 @@ def conservarGuardado(request):
         aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)+huso
         print("b")
         aCbrencl.save(aCbrencl)
-        if Cbsres.objects.filter(idrenc=idrenca, isconciliado = 1).exists():
+        if Cbsres.objects.filter(idrenc=idrenca, linkconciliadobco = 0).exists() or Cbsres.objects.filter(idrenc=idrenca, linkconciliadoerp = 0).exists():
             aCbrenc.estado = 1
             aCbrenc.save()
             return redirect("../../cbsres/?idrenc="+idrenca)
-        
-
         else:
-            if Cbsres.objects.filter(idrenc=idrenca, historial = 4, tipoconciliado = " ").exists():
-                aCbrenc.estado = 1
-                aCbrenc.save()
-                return redirect("../../cbsres/?idrenc="+idrenca)
-            else:
-                aCbrenc.estado = 2
-                aCbrenc.save()
-                return redirect("../../")        
+            aCbrenc.estado = 2
+            aCbrenc.save()
+            return redirect("../../")        
     except Exception as e: 
         print(e)
         pass

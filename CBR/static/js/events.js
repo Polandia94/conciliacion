@@ -39,12 +39,29 @@
             /******************************************************************************************************************/
     /******************************************************************************************************************/
  
-    $("#btnGuardar").on('click', function () {        
+            /******************************************************************************************************************/
+    /******************************************************************************************************************/
+ 
+    $("#btnGuardar").click(function () {        
         const idrenc = urlParams.get('idrenc');
-            globalVariable.editado = 0;
-            location.href = "../verificar/conservar/?idrenc=" + idrenc;
+        $.ajax({
+            method: 'GET',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/getGuardado',
+            data: {'idrenc': idrenc},
+            success: function (respons) {
+                if (respons.guardado=="si") {
+                    globalVariable.editado = 0;
+                    location.href = "../verificar/conservar/?idrenc=" + idrenc;
+                } else {
+                    alert(respons.guardado)
+                }}
+            
         
     });
+});
 
             /******************************************************************************************************************/
     /******************************************************************************************************************/
