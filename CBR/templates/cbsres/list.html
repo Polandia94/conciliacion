@@ -12,6 +12,24 @@ window.onbeforeunload = function(){
         return False
     }
 };
+window.addEventListener("load", function(event) {
+        const csrftoken = getCookie('csrftoken');
+        const urlParams = new URLSearchParams(window.location.search);
+        const idrenc = urlParams.get('idrenc');
+        var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
+        $.ajax({
+            method: 'POST',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: "../conciliarSaldos/",
+            data: {'idrenc': idrenc, "sobreescribir": 'false'},
+            success: function (respons) {
+                    if(!window.location.hash && respons.hasOwnProperty('info')) {
+                        window.location = window.location + '#loaded';
+                        window.location.reload();
+                    }
+}})})
 </script>
     <a id="btnSalir" class="btn btn-primary btn-flat mb-3" data-toggle="tooltip" data-toggle="tooltip" data-placement="bottom" title="Regresar a la lista principal">
         <i class="fas fa-arrow-circle-left"></i>
