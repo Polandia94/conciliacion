@@ -419,7 +419,7 @@ class CbrencListView( ListView ):
             aCbterr = Cbterr(idterr = 99, descerr = "Error Desconocido")
             aCbterr.save()
         if Cbterr.objects.filter(idterr = 6).exists() == False:
-            aCbterr = Cbterr(idterr = 6, descerr = "Incumple Lógica de aplicación")
+            aCbterr = Cbterr(idterr = 6, descerr = "Incumple Logica de aplicación")
             aCbterr.save()
         data={}
         try:

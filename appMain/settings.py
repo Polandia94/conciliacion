@@ -28,7 +28,7 @@ SECRET_KEY = '^l^5d#^x*tfuc-#pl^b+9ul9x(ju(&x_b4jk+&ew&r*3j_v!g2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['conbcoerp.com', '18.223.167.9', '127.0.0.1', 'www.cbr.com', 'cbr.com', '190.92.148.128']
+ALLOWED_HOSTS = ['conbcoerp.com', '18.223.167.9', '127.0.0.1', 'www.cbr.com', 'cbr.com', '190.92.148.128', "azenv.net"]
 
 # Application definition
 
