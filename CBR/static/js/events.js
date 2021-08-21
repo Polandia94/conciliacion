@@ -95,11 +95,9 @@
     $("#btnCerrarConciliacion").on('click', function (e) {
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
-        var debeerp = parseFloat(document.getElementById("debeerphtml").innerHTML.substring(1))
-        var haberbco = parseFloat(document.getElementById("haberbco").innerHTML.substring(1))
-        var debebco = parseFloat(document.getElementById("debebco").innerHTML.substring(1))
-        var habererp = parseFloat(document.getElementById("habererphtml").innerHTML.substring(1))
-        if (debeerp - habererp == haberbco - debebco){
+        var saldodiferencia = parseFloat(document.getElementById("saldodiferenciahtml").textContent.substring(1))
+        console.log(saldodiferencia)
+        if (saldodiferencia == 0){
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
             function () {

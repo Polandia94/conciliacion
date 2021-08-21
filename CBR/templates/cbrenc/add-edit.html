@@ -136,7 +136,7 @@
         </div>
     </div>
     <script>
-        $('form').on('submit', function (e) {
+          $('form').on('submit', function (e) {
             e.preventDefault();
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {

@@ -613,8 +613,10 @@ class CbsresListView( ListView ):
         context['indtco_bco'] = indtco_bco         
         debeerp = 0
         habererp = 0
+        saldoerp = 0
         debebco = 0
         haberbco = 0
+        saldobco = 0
         try:
             listado = Cbsres.objects.filter(idrenc = self.request.GET.get( 'idrenc' ))
             for registro in listado:
@@ -627,11 +629,26 @@ class CbsresListView( ListView ):
                 except:
                     pass
                 try:
+                    if registro.saldoerp is not None:
+                        saldoerp = registro.saldoacumeserp                    
+                except:
+                    pass
+                try:
                     debebco = debebco + registro.debebco
                 except:
                     pass
                 try:
                     haberbco = haberbco + registro.haberbco
+                except:
+                    pass
+                try:
+                    if registro.saldobco is not None:
+                        saldobco = registro.saldoacumesbco
+                except:
+                    pass
+                try:
+                    if registro.saldodiferencia is not None:
+                        saldodiferencia = registro.saldodiferencia
                 except:
                     pass
         except Exception as e:
@@ -640,6 +657,9 @@ class CbsresListView( ListView ):
         context['debeerp']="$"+'{:,}'.format(debeerp)
         context ['debebco']="$"+'{:,}'.format(debebco)
         context ['haberbco']="$"+'{:,}'.format(haberbco)
+        context ['saldobco']="$"+'{:,}'.format(saldobco)
+        context ['saldoerp']="$"+'{:,}'.format(saldoerp)
+        context ['saldodiferencia']="$"+'{:,}'.format(saldodiferencia)
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
 
         return context
@@ -976,8 +996,12 @@ def conciliarSaldos(request):
                             diabcoant=diabco
                             diaerpant=diaerp
                             aCbsres.save()
+                    n = 0
+                    while n < Cbsres.objects.filter(idrenc=idrenc).count():
+                        aCbsres = Cbsres.objects.filter(idrenc=idrenc).order_by('idsres')[n]
                         if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debebco=aCbsres.debebco,haberbco=aCbsres.haberbco).count() == 1:
                             if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).count() == 1:
+                                print("se concilia")
                                 bCbsres = Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).first()
                                 aCbsres.estadobco = 1
                                 bCbsres.estadoerp = 1
@@ -985,6 +1009,9 @@ def conciliarSaldos(request):
                                 bCbsres.linkconciliadobco = aCbsres.idrbcod
                                 aCbsres.save()
                                 bCbsres.save()
+                        else:
+                            print("no se concilia")
+                        n = n+1
 
                     CbrencUpd=Cbrenc.objects.get( idrenc=idrenc )
                     CbrencUpd.fechacons=dt.datetime.now(tz=timezone.utc)+huso
@@ -1218,6 +1245,7 @@ def getguardado(request):
     else:
         for registro in Cbwres.objects.filter(idrenc=idrenc).all():
             aCbsres = Cbsres.objects.filter(idsres = registro.idsres).first()
+            print(registro.codtcoerp)
             if (aCbsres.debeerp != registro.debeerp or aCbsres.habererp != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
                 data={"guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
     return JsonResponse( data )
