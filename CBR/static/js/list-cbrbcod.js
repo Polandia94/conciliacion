@@ -9,6 +9,7 @@ $(function () {
         hover: true,
         deferRender: true,
         colReorder: true,
+        orderFixed: [ 0, 'asc' ],
         stateSave: true,
         fixedHeader: true,
         ajax: {
@@ -39,6 +40,7 @@ $(function () {
             {
                 targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
                 class: 'text-center pt-4',
+                orderable: false
             }
         ],
     });

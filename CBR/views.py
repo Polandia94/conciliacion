@@ -1299,7 +1299,7 @@ class DetalleErpListView( ListView ):
                     item['ID']=position
                     # item['idrenc']=i.idrenc
                     data.append( item )
-                    position+=1
+                    position+=1                
                 if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
                     bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
                     bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
@@ -1340,10 +1340,16 @@ class DetalleTiempoListView( ListView ):
             if action == 'searchdata':
                 data=[]
                 position=1
+                tiempoacum = dt.timedelta(0)
                 for i in Cbrenct.objects.filter( idrenc=idrenc ):
                     item=i.toJSON()
                     item['position']=position
                     item['ID']=position
+                    try:
+                        tiempoacum = tiempoacum + item['tiempodif']
+                    except:
+                        pass
+                    item['tiempodifacum'] = tiempoacum
                     # item['idrenc']=i.idrenc
                     data.append( item )
                     position+=1
@@ -1369,6 +1375,17 @@ class DetalleTiempoListView( ListView ):
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         context['codigo']='CBF05'
+        print(self.request)
+        print(self.request.GET)
+        idrenc=self.request.GET['idrenc']
+        tiempototal = dt.timedelta(0)
+        for i in Cbrenct.objects.filter( idrenc=idrenc ):
+            try:
+                tiempototal += i.tiempodif
+            except:
+                pass
+        tiempototal = str(tiempototal)[:-7]
+        context["tiempototal"]=tiempototal
         return context
 
 # ******************************************************************************************************************** #

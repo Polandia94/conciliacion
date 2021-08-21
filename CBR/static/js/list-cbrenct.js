@@ -7,6 +7,7 @@ $(function () {
         autoWidth: true,
         destroy: true,
         hover: true,
+        orderFixed: [ 0, 'asc' ],
         deferRender: true,
         colReorder: true,
         stateSave: true,
@@ -65,12 +66,15 @@ $(function () {
                     zone_html = 'No Conservar Guardado'
                 }
                 return zone_html;
-            }}
+            }},
+            {"data": "tiempodifacum", "render":function(data){
+                return String(data).replace("H",":").replace("M",":").replace("P0DT","").slice(0,8)}},
         ],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5],
+                targets: [0, 1, 2, 3, 4, 5,6],
                 class: 'text-center pt-4',
+                orderable: false
             }
         ],
     });

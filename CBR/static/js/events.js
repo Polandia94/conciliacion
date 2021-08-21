@@ -95,12 +95,21 @@
     $("#btnCerrarConciliacion").on('click', function (e) {
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
+        var debeerp = parseFloat(document.getElementById("debeerphtml").innerHTML.substring(1))
+        var haberbco = parseFloat(document.getElementById("haberbco").innerHTML.substring(1))
+        var debebco = parseFloat(document.getElementById("debebco").innerHTML.substring(1))
+        var habererp = parseFloat(document.getElementById("habererphtml").innerHTML.substring(1))
+        if (debeerp - habererp == haberbco - debebco){
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
-            function (response) {
-                location.href = `../cbsres/?idrenc=${response['idrenc']}`;
+            function () {
+                location.href = `../cbsres/?idrenc=`+idrenc;
                 return false;
             });
+        }else{
+            alert("Los saldos no concilian")
+        }
+
     });
         /******************************************************************************************************************/
     /******************************************************************************************************************/

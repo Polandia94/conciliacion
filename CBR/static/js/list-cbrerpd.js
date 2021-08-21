@@ -5,6 +5,7 @@ $(function () {
     $('#data').DataTable({
         responsive: true,
         autoWidth: true,
+        orderFixed: [ 0, 'asc' ],
         destroy: true,
         hover: true,
         deferRender: true,
@@ -37,6 +38,7 @@ $(function () {
             {
                 targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                 class: 'text-center pt-4',
+                orderable: false
             }
         ],
         initComplete: function (settings, json) {
