@@ -387,23 +387,23 @@ class CbrencListView( ListView ):
     def post(self, request, *args, **kwargs):
         # si no existe la base de datos de CBTTCO la crea, esto solo para pruebas, no mantener en produccion
         if Cbttco.objects.filter(codtco = "DPTR").exists() == False:
-            aCbttco= Cbttco(2,1,"DPTR","Depositos en Transito (+)",0,0)
+            aCbttco= Cbttco(1,1,"DPTR","Depositos en Transito (+)",0,1,"H",1)
             aCbttco.save()
-            aCbttco= Cbttco(9,2,"CERR","Cargos Erroneos",0,0)
+            aCbttco= Cbttco(2,2,"CERR","Cargos Erroneos",0,2,"D",0)
             aCbttco.save()
-            aCbttco= Cbttco(8,2,"CHNC","Cheques no Contabilizados (-)",0,0)
+            aCbttco= Cbttco(3,2, "CHNC","Cheques no Contabilizados (-)",0,2,"H",1)
             aCbttco.save()
-            aCbttco= Cbttco(7,2,"NDNC","Notas de Debito no Contabilizadas (-)",0,0)
+            aCbttco= Cbttco(4,2,"NDNC","Notas de Debito no C (-)",0,2,"H",1)
             aCbttco.save()
-            aCbttco= Cbttco(6,2,"NCNC","Notas de Credito no Contabilizadas (+)",0,0)
+            aCbttco= Cbttco(5,2,"NCNC","Notas de Credito no C(+)",0,2,"D",1)
             aCbttco.save()
-            aCbttco= Cbttco(5,2,"DNC","Deposito no Contabilizado (+)",0,0)
+            aCbttco= Cbttco(6,2,"DNC","Deposito no Contabilizado (+)",0,2,"D",1)
             aCbttco.save()
-            aCbttco= Cbttco(4,1,"NDTR","Notas de Debito en Transito (-)",0,0)
+            aCbttco= Cbttco(7,1,"NDTR","Notas de Debito en T (-)",0,1,"D",1)
             aCbttco.save()
-            aCbttco= Cbttco(3,1,"NCTR","Notas de Credito en Transito (+)",0,0)
+            aCbttco= Cbttco(8,1,"NCTR","Notas de Credito en T (+)",0,1,"H",1)
             aCbttco.save()
-            aCbttco= Cbttco(10,2,"AERR","Abonos Erroneos",0,0)
+            aCbttco= Cbttco(9,2,"AERR","Abonos Erroneos",0,2,"H",0)
             aCbttco.save()
         if Cbterr.objects.filter(idterr = 99).exists() == False:
             aCbterr = Cbterr(idterr = 1, descerr = "Día Fuera de Calendario")
@@ -517,13 +517,11 @@ class CbsresListView( ListView ):
                 return redirect('/verificar/?idrenc='+idrenca, idrenc= idrenca )
             else:
                 if Cbsres.objects.filter(idrenc=idrenca).exists() == False:
-                    print("automatico")
                     try:
                         conciliarSaldos(request)
                     except Exception as e:
                         print()
                         print(e)
-                    print("hola")
                     
                 return super().dispatch( request, *args, **kwargs )
         except:
@@ -617,6 +615,7 @@ class CbsresListView( ListView ):
         debebco = 0
         haberbco = 0
         saldobco = 0
+        saldodiferencia = 0
         try:
             listado = Cbsres.objects.filter(idrenc = self.request.GET.get( 'idrenc' ))
             for registro in listado:
@@ -784,7 +783,6 @@ class CbrbcodDetailView( UpdateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
-        print(self.kwargs)
         context['title']='Registro original del archivo del Banco'
         context['id']=self.kwargs.get( 'idrbcod' )
         context['nombre_id']='IDRBCOD'
@@ -866,8 +864,6 @@ def cbtctaDelete(request):
 # ******************************************************************************************************************** #
 @csrf_exempt
 def conciliarSaldos(request):
-    print(request)
-    print(request.POST)
     if request.method == 'POST':
         try:
             idrenc=request.POST.get( 'idrenc' )
@@ -1001,7 +997,6 @@ def conciliarSaldos(request):
                         aCbsres = Cbsres.objects.filter(idrenc=idrenc).order_by('idsres')[n]
                         if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debebco=aCbsres.debebco,haberbco=aCbsres.haberbco).count() == 1:
                             if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).count() == 1:
-                                print("se concilia")
                                 bCbsres = Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).first()
                                 aCbsres.estadobco = 1
                                 bCbsres.estadoerp = 1
@@ -1009,8 +1004,6 @@ def conciliarSaldos(request):
                                 bCbsres.linkconciliadobco = aCbsres.idrbcod
                                 aCbsres.save()
                                 bCbsres.save()
-                        else:
-                            print("no se concilia")
                         n = n+1
 
                     CbrencUpd=Cbrenc.objects.get( idrenc=idrenc )
@@ -1031,10 +1024,7 @@ def conciliarSaldos(request):
                 else:
                     hist=Cbrenc.objects.get( idrenc=idrenc )
                     data={"existe_info": "¿Desea sobreescribir la conciliación anterior?"}
-                    print("hola")
-                    print(idrenc)
                     data['fechacons']=hist.fechacons.strftime( '%d-%m-%Y %H:%M:%S' )
-                    print("chau")
                     data['idusucons']=hist.idusucons
 
             else:
@@ -1086,10 +1076,8 @@ def Unir(vwRow,insCbsres,idrenc,color):
 # ******************************************************************************************************************** #
 def editCbwres(request):
         
-        print(request)
         try:
             tabla = list(dict(request.POST).keys())[0][1:-1]
-            print(tabla)
             while True:
                 fila = tabla[:tabla.find("}")+1]
                 comienzo = tabla[10:].find("{")
@@ -1245,7 +1233,6 @@ def getguardado(request):
     else:
         for registro in Cbwres.objects.filter(idrenc=idrenc).all():
             aCbsres = Cbsres.objects.filter(idsres = registro.idsres).first()
-            print(registro.codtcoerp)
             if (aCbsres.debeerp != registro.debeerp or aCbsres.habererp != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
                 data={"guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
     return JsonResponse( data )
@@ -1369,7 +1356,8 @@ class DetalleTiempoListView( ListView ):
                 data=[]
                 position=1
                 tiempoacum = dt.timedelta(0)
-                for i in Cbrenct.objects.filter( idrenc=idrenc ):
+                largo = Cbrenct.objects.filter( idrenc=idrenc ).count()
+                for i in Cbrenct.objects.filter( idrenc=idrenc )[:largo-1]:
                     item=i.toJSON()
                     item['position']=position
                     item['ID']=position
@@ -1377,7 +1365,8 @@ class DetalleTiempoListView( ListView ):
                         tiempoacum = tiempoacum + item['tiempodif']
                     except:
                         pass
-                    item['tiempodifacum'] = tiempoacum
+                    item['tiempodif'] = str(i.tiempodif)[:-7]
+                    item['tiempodifacum'] = str(tiempoacum)[:-7]
                     # item['idrenc']=i.idrenc
                     data.append( item )
                     position+=1
@@ -1403,8 +1392,6 @@ class DetalleTiempoListView( ListView ):
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         context['codigo']='CBF05'
-        print(self.request)
-        print(self.request.GET)
         idrenc=self.request.GET['idrenc']
         tiempototal = dt.timedelta(0)
         for i in Cbrenct.objects.filter( idrenc=idrenc ):
@@ -1412,7 +1399,7 @@ class DetalleTiempoListView( ListView ):
                 tiempototal += i.tiempodif
             except:
                 pass
-        tiempototal = str(tiempototal)[:-7]
+        tiempototal = str(tiempototal)[:-7].replace("day","día")
         context["tiempototal"]=tiempototal
         return context
 
@@ -1566,9 +1553,14 @@ class ConciliacionDeleteForm( CreateView ):
         context['list_url']=reverse_lazy( 'CBR:cbrenc-list' )
         return context
 
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
 
 def verificarGuardado(request):
     return render(request, "cbrenc/confirmation-form.html")
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
 
 
 def verificarCarga(request):
@@ -1608,6 +1600,10 @@ def verificarCarga(request):
         return redirect("../../")
     return render(request, "cbrenc/confirmarcarga.html",{"saldobcoanterior":saldobcoanterior,  "saldoerpanterior": saldoerpanterior, "saldobco": saldobco, "saldoerp":saldoerp})
 
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
 def eliminarCarga(request):
     aCbrenc = Cbrenc.objects.order_by('-idrenc').first()
     idrenc = aCbrenc.idrenc
@@ -1621,7 +1617,10 @@ def eliminarCarga(request):
     Cbrenct.objects.filter(idrenc=idrenc).delete()
     Cbrenc.objects.filter(idrenc=idrenc).delete()
     return redirect("../../")
-    
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
 def conservarGuardado(request):
     idrenca = request.GET['idrenc']
     if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
@@ -1653,14 +1652,11 @@ def conservarGuardado(request):
         aCbsres.save()
         aCbwres.delete()
     try:
-        print("hola")
         aCbsres = Cbsres.objects.filter(idrenc=idrenca).order_by('-idsres').first()
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenca).first()
         aCbrenc.saldoerp=aCbsres.saldoacumeserp
         aCbrenc.difbcoerp = aCbrenc.saldobco - aCbrenc.saldoerp
-        print("chau")
         aCbrenc.save()
-        print("a")
         aCbrencl = Cbrencl(
             idrenc = Cbrenc.objects.filter(idrenc=idrenca).first(),
             status = 1,
@@ -1669,7 +1665,6 @@ def conservarGuardado(request):
             difbcoerp = Cbrenc.objects.filter(idrenc=idrenca).first().saldobco - aCbsres.saldoacumeserp+aCbsres.debeerp-aCbsres.habererp,
             idusu = request.user.username)
         aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)+huso
-        print("b")
         aCbrencl.save(aCbrencl)
         if Cbsres.objects.filter(idrenc=idrenca, linkconciliadobco = 0).exists() or Cbsres.objects.filter(idrenc=idrenca, linkconciliadoerp = 0).exists():
             aCbrenc.estado = 1
@@ -1683,6 +1678,9 @@ def conservarGuardado(request):
         print(e)
         pass
     return redirect("../../cbsres/?idrenc="+idrenca)
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
 
 
 def eliminarGuardado(request):
@@ -1703,6 +1701,9 @@ def eliminarGuardado(request):
 
     return redirect("../../cbsres/?idrenc="+idrenc)
 
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
 class DetalleErroresBodListView(ListView):
     model=Cbrbode
     template_name= 'cbrbode/list.html'
@@ -1714,7 +1715,6 @@ class DetalleErroresBodListView(ListView):
     def post(self, request, *args, **kwargs):
         data={}
         try:
-            print("a")
             action=request.POST['action']
             print(action)
             data=[]
@@ -1743,6 +1743,9 @@ class DetalleErroresBodListView(ListView):
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         return context
 
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
 
 class DetalleErroresGalListView(ListView):
     model=Cbrgale
@@ -1755,9 +1758,7 @@ class DetalleErroresGalListView(ListView):
     def post(self, request, *args, **kwargs):
         data={}
         try:
-            print("a")
             action=request.POST['action']
-            print(action)
             data=[]
             position=1
             for i in Cbrgale.objects.all():
@@ -1788,3 +1789,82 @@ class DetalleErroresGalListView(ListView):
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         return context
 
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
+@login_required
+def getTiposDeConciliacion(request):
+    idrenc = request.GET["idrenc"]
+    data = {"debebcototal":0, "haberbcototal":0,"saldobcototal":0,"debeerptotal":0,"habererptotal":0, "saldoerptotal":0,"saldodiferenciatotal":0 }
+    yaTomadas = []
+    n = 0
+    m = 0
+    #calcula que codigos suman a cada lado
+    listadoSumaDebeBco = []
+    listadoSumaHaberBco = []
+    listadoSumaDebeErp= []
+    listadoSumaHaberErp = []
+    for tipo in Cbttco.objects.all():
+        if tipo.indsuma == 1:
+            if tipo.erpbco == 1:
+                if tipo.inddebhab == "D":
+                    listadoSumaDebeBco.append(tipo.codtco)
+                elif tipo.inddebhab == "H":
+                    listadoSumaHaberBco.append(tipo.codtco)
+            elif tipo.erpbco == 2:
+                if tipo.inddebhab == "D":
+                    listadoSumaDebeErp.append(tipo.codtco)
+                elif tipo.inddebhab == "H":
+                    listadoSumaHaberErp.append(tipo.codtco)
+    #calcula primero las del cbwres y si no existen las del cbsres
+    for registro in Cbsres.objects.filter(idrenc=idrenc).all():
+        if Cbwres.objects.filter(idsres = registro.idsres).exists():
+            registroAnalizado = Cbwres.objects.filter(idsres = registro.idsres).first()
+        else:
+            registroAnalizado = registro
+        saldoextrabco = 0
+        saldoextraerp = 0
+        try:
+            data["debeerptotal"] = registroAnalizado.debeerp + data["debeerptotal"]
+        except:
+            pass
+        try:
+            data["habererptotal"] = registroAnalizado.habererp + data["habererptotal"]
+        except:
+            pass
+        try:
+            data["debebcototal"] = registroAnalizado.debebco + data["debebcototal"]
+        except:
+            pass
+        try:
+            data["haberbcototal"] = registroAnalizado.haberbco + data["haberbcototal"]
+        except:
+            pass
+        try:
+            data["saldobcototal"] = registroAnalizado.saldoacumesbco
+        except:
+            pass
+        try:
+            data["saldoerptotal"] = registroAnalizado.saldoacumeserp
+        except:
+            pass
+        if registroAnalizado.codtcobco in listadoSumaDebeErp:
+            print("listadosumadebeerp")
+            data["debeerptotal"] = registroAnalizado.haberbco + data["debeerptotal"]
+            saldoextraerp = saldoextraerp + registroAnalizado.haberbco
+        elif registroAnalizado.codtcobco in listadoSumaHaberErp:
+            print("listadosumahabererp")
+            data["habererptotal"] = registroAnalizado.debebco + data["habererptotal"]
+            saldoextraerp = saldoextraerp - registroAnalizado.debebco
+        if registroAnalizado.codtcoerp in listadoSumaDebeBco:
+            print("listadosumadebebco")
+            data["debebcototal"] = registroAnalizado.habererp + data["debebcototal"]
+            saldoextrabco = saldoextrabco + registroAnalizado.habererp
+        elif registroAnalizado.codtcoerp in listadoSumaHaberBco:
+            data["haberbcototal"] = registroAnalizado.debeerp + data["haberbcototal"]
+            saldoextrabco = saldoextrabco + registroAnalizado.habererp
+    data["saldobcototal"] = data["saldobcototal"] + saldoextrabco
+    data["saldoerptotal"] = data["saldoerptotal"] + saldoextraerp
+    data["saldodiferenciatotal"] = data["saldobcototal"] - data["saldoerptotal"]
+    return JsonResponse( data )

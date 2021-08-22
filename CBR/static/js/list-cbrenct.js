@@ -31,7 +31,7 @@ $(function () {
             {"data": "fechorafin", "render":function(data){
                 return moment(data).format('DD/MM/YYYY HH:mm:ss')}},
             {"data": "tiempodif", "render":function(data){
-                return String(data).replace("H",":").replace("M",":").replace("P0DT","").slice(0,8)}},
+                return String(data).replace("day","día")}},
             {"data": "formulario"},
             {"data": "accion", 'sClass': 'text-center pt-4', "render": function (data) {
                 var zone_html = "";
@@ -68,7 +68,7 @@ $(function () {
                 return zone_html;
             }},
             {"data": "tiempodifacum", "render":function(data){
-                return String(data).replace("H",":").replace("M",":").replace("P0DT","").slice(0,8)}},
+                return String(data).replace("day","día")}}
         ],
         columnDefs: [
             {

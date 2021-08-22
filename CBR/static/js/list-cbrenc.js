@@ -141,8 +141,22 @@ $(function () {
                                           class="far fa-file-alt mr-2"></i> ${row['recorderp']} </a>`);
                     return $elDiv.clone().html();
                 },
+
                 "createdCell": function (td, cellData, rowData, row, col) {
                     $(td).css('padding-bottom', '0px');
+                }
+            },
+            {targets: [9],
+                createdCell: function (cell) {
+                    var row = table.row(cell)
+                    $(cell).attr("title", "Saldo Original: " + row.data()['saldobcoori'])
+
+                }
+            },
+            {targets: [10],
+                createdCell: function (cell) {
+                    var row = table.row(cell)
+                    $(cell).attr("title", "Saldo Original: " + row.data()['saldoerpori'])
                 }
             },
             {

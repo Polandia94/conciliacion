@@ -318,6 +318,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 fechact = dt.datetime.now(tz=timezone.utc),
                 idusu = request.user.username
                 )
+            aCbrenc.saldobcoori = aCbrenc.saldobco
             try:
                 aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa).order_by('-corr')[0].corr + 1
             except:
@@ -354,6 +355,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             except:
                 aCbrenc.difbcoerp = 0
             aCbrenc.estado = "0"
+            aCbrenc.saldoerpori = aCbrenc.saldoerp
             aCbrenc.fechacons=dt.datetime.now(tz=timezone.utc)
             aCbrenc.idusu=request.user.username
             aCbrenc.save()

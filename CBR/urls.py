@@ -15,6 +15,7 @@ app_name='CBR'
 urlpatterns=[
     path( 'getAnoMes/', views.getanomes, name='getAnoMes' ),
     path( 'getGuardado/', views.getguardado, name='getGuardado' ),
+    path( 'getTiposDeConciliacion/', views.getTiposDeConciliacion, name='getTiposDeConciliacion' ),
     path( 'conciliarSaldos/', views.conciliarSaldos, name='conciliarSaldos' ),
     path( 'cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del' ),
     #path( 'cbtcta/del/', views.cbtctaDelete, name='cbtcta_delete_cuenta' ),
