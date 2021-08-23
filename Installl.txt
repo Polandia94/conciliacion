@@ -11,6 +11,7 @@ pip install django-widget-tweaks
 pip install django-db-file-storage
 pip install pandas
 pip install python-dotenv
+pip install requests
 python -m pip install --upgrade pip
 mod_wsgi-express module-config
 
@@ -26,6 +27,10 @@ agregar a Hosts:
 CREATE DATABASE contag;
 
 [CREAR EN POSTGRES LA BASE DE DATOS contag]
+
+crear archivo .env con:
+    USUARIO_POSTGRES = 
+    PASSWORD_POSTGRES = 
 
 python manage.py makemigrations
 python manage.py migrate

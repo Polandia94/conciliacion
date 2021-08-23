@@ -66,19 +66,15 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         debe = 0
                         if pd.isnull(dataBco.loc[i, dataBco.columns[3]]) == False:
                             errores.append(3)
-                            debe = dataBco.loc[i, dataBco.columns[3]]
                         # Si el debe no está vacio ni es un numero devuelve errores 3
                     if debe[-1]=="-":
                         debe = debe[0:-1]
                     if es_decimal(debe) == False:
                         debe = 0
                         errores.append(3)
-                        debe = dataBco.loc[i, dataBco.columns[3]]
                         # si el debe no es un numero devuelve errores 3
                     if 3 not in errores:
-                        aCbrbod.debe = float(debe)/100
-                    else:
-                        aCbrbod.debe = debe
+                        debe = float(debe)/100
                     try:
                         haber = dataBco.loc[i, dataBco.columns[4]].replace(".","").replace(",","")
                     except:
@@ -91,11 +87,10 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     if es_decimal(haber) == False:
                         if 4 not in errores:
                             errores.append(4)
-                            haber = dataBco.loc[i, dataBco.columns[4]]
 
                         # si el haber no es un numero devuelve errores 4
                     if 4 not in errores:
-                        aCbrbod.haber = float(haber)/100
+                        haber = float(haber)/100
                     try:
                         if float(debe) > 0 and float(haber) > 0:
                             errores.append(6)
@@ -112,17 +107,21 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                             saldo = float(saldo[0:-1])*-1
                     except:
                         errores.append(5)
-                        saldo = dataBco.loc[i, dataBco.columns[5]]
                     if es_decimal(saldo) == False and 5 not in errores:
                         errores.append(5)
                         saldo = dataBco.loc[i, dataBco.columns[5]]
                     # si el saldo no es un numero devuelve errores 5
                     if 5 not in errores:
-                        aCbrbod.saldo = float(saldo)/100
-                    else:
-                        aCbrbod.saldo = saldo
+                        saldo = float(saldo)/100
                     aCbrbod.fechact = dt.datetime.now(tz=timezone.utc)
                     aCbrbod.idusu=request.user.username
+                    if len(errores) > 0:
+                        debe = dataBco.loc[i, dataBco.columns[3]]
+                        haber = dataBco.loc[i, dataBco.columns[4]]
+                        saldo = dataBco.loc[i, dataBco.columns[5]]
+                    aCbrbod.debe = debe
+                    aCbrbod.haber = haber
+                    aCbrbod.saldo = saldo
                     aCbrbod.save(aCbrbod)                
                     for error in errores:
                         fallo = True
@@ -225,7 +224,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             errores.append(1)
                     except:
                         fechatra==dataErp.loc[i, dataErp.columns[0]]
-                    aCbrgal.fechatra = fechatra
+                    
                     aCbrgal.nrocomp = dataErp.loc[i, dataErp.columns[1]]
                     if pd.isnull(dataErp.loc[i, dataErp.columns[2]]):
                         aux = 0
@@ -243,16 +242,12 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         debe = dataErp.loc[i, dataErp.columns[5]].replace(",","")
                     except:
                         errores.append(3)
-                        debe = dataErp.loc[i, dataErp.columns[5]]
-                    aCbrgal.debe = debe
                     debeTotal = float(debe) + debeTotal
                     try:
                         float(dataErp.loc[i, dataErp.columns[6]].replace(",",""))
                         haber = dataErp.loc[i, dataErp.columns[6]].replace(",","")
                     except:
                         errores.append(4)
-                        haber = dataErp.loc[i, dataErp.columns[6]]
-                    aCbrgal.haber = haber
                     try:
                         if float(debe) > 0 and float(haber) > 0:
                             errores.append(6)
@@ -266,16 +261,25 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         saldo = dataErp.loc[i, dataErp.columns[7]].replace(",","")
                     except:
                         errores.append(5)
-                        saldo = dataErp.loc[i, dataErp.columns[7]]
-                    aCbrgal.saldo = saldo
                     s_date=dataErp.loc[i, dataErp.columns[8]]                
                     try:
                         fechacon = dt.datetime.strptime( s_date, '%d/%m/%Y' )
                     except:
                         pass
-                    aCbrgal.fechacon = fechacon
+                    
                     aCbrgal.idusu=request.user.username
                     aCbrgal.fechact=dt.datetime.now(tz=timezone.utc)
+                    if len(errores) > 0:
+                        debe = dataErp.loc[i, dataErp.columns[5]]
+                        haber = dataErp.loc[i, dataErp.columns[6]]
+                        saldo = dataErp.loc[i, dataErp.columns[7]]
+                        fechacon = dataErp.loc[i, dataErp.columns[8]]
+                        fechatra = dataErp.loc[i, dataErp.columns[0]]  
+                    aCbrgal.debe = debe
+                    aCbrgal.haber = haber
+                    aCbrgal.saldo = saldo
+                    aCbrgal.fechacon = fechacon
+                    aCbrgal.fechatra = fechatra
                     aCbrgal.save(aCbrgal)
                     for error in errores:
                         print(error)
@@ -314,6 +318,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 fechact = dt.datetime.now(tz=timezone.utc),
                 idusu = request.user.username
                 )
+            aCbrenc.saldobcoori = aCbrenc.saldobco
             try:
                 aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa).order_by('-corr')[0].corr + 1
             except:
@@ -350,6 +355,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             except:
                 aCbrenc.difbcoerp = 0
             aCbrenc.estado = "0"
+            aCbrenc.saldoerpori = aCbrenc.saldoerp
             aCbrenc.fechacons=dt.datetime.now(tz=timezone.utc)
             aCbrenc.idusu=request.user.username
             aCbrenc.save()

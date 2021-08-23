@@ -1,0 +1,64 @@
+{% extends 'Classes/list.html' %}
+{% load static %}
+{% block head_list %}
+    <script src="{% static 'js/list-cbttco.js' %}"></script>
+{% endblock %}
+{% block botones %}
+<div class="row">
+    <div class="row">
+        <a href="{{ list_url }}" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
+           title="Atras">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <a href="{{ create_account_url }}" class="btn btn-primary btn-flat mb-3  margin-left" data-toggle="tooltip" data-placement="bottom"
+           title="Crear Nueva Cuenta">
+            <i class="fas fa-plus"></i>
+        </a>
+
+
+
+
+</div>
+<div class="row">
+    <div class="column">
+        BANCO
+{% endblock %}
+{% block columns %}
+    <tr>
+        <th scope="col" style="width: 2% !important;">posición</th>
+        <th scope="col" style="width: 2% !important;">bcoerp</th>
+        <th scope="col" style="width: 2% !important;">Código de Conciliacion</th>
+        <th scope="col" style="width: 3%;">Debe</th>
+        <th class="text-center" scope="col" style="width: 3%;">Haber</th>
+        <th scope="col" style="width: 5% !important;">Saldo Acumulado</th>
+
+    </tr>
+</tbody>
+{% endblock %}
+{% block rows %}
+{% endblock %}
+{% block footer %}
+<div class="column">
+    ERP
+<table class="stripe order-column display nowrap table table-responsive-lg table-bordered table-hover" id="data2">
+<thead>
+    <tr>
+        <th scope="col" style="width: 2% !important;">posición</th>
+        <th scope="col" style="width: 2% !important;">bcoerp</th>
+        <th scope="col" style="width: 2% !important;">Código de Conciliacion</th>
+        <th scope="col" style="width: 3%;">Debe</th>
+        <th class="text-center" scope="col" style="width: 3%;">Haber</th>
+        <th scope="col" style="width: 5% !important;">Saldo Acumulado</th>
+
+    </tr>
+</thead>
+<tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+{% endblock %}

@@ -1,3 +1,15 @@
+.column {
+    float: left;
+    width: 50%;
+    }
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+
+
 .table th.dt-bancoColor {
     background-color: rgb(5, 75, 40) !important;
   }

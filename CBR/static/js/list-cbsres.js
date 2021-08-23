@@ -8,21 +8,192 @@ var globalVariable={
 
 $(function () { "use strict"
     $(document).ready(function() {
+        const csrftoken = getCookie('csrftoken');
+        function calcularSaldos(original, row, e, estadooriginal){
+            let totaldebe = parseFloat(0);
+            let totalhaber = parseFloat(0);
+                                let saldodia = parseFloat(0)
+                                let saldoi = parseFloat(0)
+                                saldoi = parseFloat(globalVariableSaldo.saldo)
+                                if(row.data()['linkconciliadobco']==-2 && original != e.target.textContent){
+                                    row.data()['estadoerp']=0,
+                                    row.data()['estadobco']=0,
+                                    row.data()['linkconciliadobco']=0,
+                                    row.data()['linkconciliadoerp']=0
+                                };
+                                try{
+                                    if (table.cell(row,".haberbco").data() != null){
+                                    if(parseFloat(table.cell(row,".debeerp").data().replace("$",""))==parseFloat(table.cell(row,".haberbco").data().replace("$","")) &&  parseFloat(table.cell(row,".debebco").data().replace("$",""))==parseFloat(table.cell(row,".habererp").data().replace("$",""))){
+                                        row.data()['estadoerp']=1,
+                                        row.data()['estadobco']=1,
+                                        row.data()['linkconciliadobco']=-2,
+                                        row.data()['linkconciliadoerp']=-2}};
+                                    }
+                                catch{}
+                                var datasend = []
+                                for (let fila = 0; fila < table.rows().count(); fila++) {
+                                let totalmasdebe = parseFloat(0)
+                                let totalmashaber = parseFloat(0)
+
+
+                                if(table.cell(fila,".debeerp").data() == null || table.cell(fila,".debeerp").data() == 0){
+                                    totalmasdebe = parseFloat(0)
+                                    totaldebe = totaldebe + totalmasdebe   
+                                } else{
+                                    totalmasdebe = parseFloat(table.cell(fila,".debeerp").data().replace("$",""))
+                                    totaldebe = totaldebe + totalmasdebe
+                                }
+                                if(table.cell(fila,".habererp").data() == null || table.cell(fila,".habererp").data() == 0){
+                                    totalmashaber = parseFloat(0)
+                                    totalhaber = totalhaber + totalmashaber   
+                                } else{
+                                    totalmashaber = parseFloat(table.cell(fila,".habererp").data().replace("$",""))
+                                    totalhaber = totalhaber + totalmashaber
+                                }
+                                let saldomas = parseFloat(0)
+                                if (table.cell(fila,".debeerp").data()==null){
+                                    saldomas = parseFloat(0)
+                                }else{saldomas = parseFloat(table.cell(fila,".debeerp").data())}
+
+                                let saldomenos = parseFloat(0)
+
+                                if (table.cell(fila,".habererp").data()==null){
+                                    saldomenos = parseFloat(0)
+                                }else{saldomenos = parseFloat(table.cell(fila,".habererp").data())}
+                                
+                                saldoi =  saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
+                                table.cell( fila,".saldoacumeserp" ).data(saldoi);
+
+                                var saldodiferencia = parseFloat(table.cell(row,".saldoacumesbco").data().replace("$","")) - parseFloat(table.cell(row,".saldoacumeserp").data())
+                                table.cell( row,".saldodiferencia" ).data(saldodiferencia);                                if (table.cell(fila-1,".fechatraerp").data()==table.cell(fila,".fechatraerp").data()){
+                                    saldodia = saldodia + saldomas - saldomenos
+                                }else{
+                                    saldodia = saldomas - saldomenos
+                                }
+                                table.cell( fila,".saldoacumdiaerp" ).data(saldodia);
+                                var rows = table.row(fila)
+                                saldodiferenciahtml.innerHTML = Number(saldodiferencia).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                saldoerphtml.innerHTML = Number(saldoi).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                debeerphtml.innerHTML = Number(totaldebe).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                habererphtml.innerHTML = Number(totalhaber).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+
+                                datasend.push(rows.data());
+                                }
+                                if(row.data()["linkconciliadobco"]==-1){row.data()["linkconciliadobco"]=0}
+                                table.rows( function ( idx, data, node ) { 
+                                    var rowg = table.row(idx)
+                                    if(rowg.data()["idrbcod"]==row.data()["linkconciliadobco"] && rowg.data()["linkconciliadoerp"]==-1){rowg.data()["linkconciliadoerp"]=0}})
+                                var debeerp = 0
+                                    var habererp = 0
+                                    var aConciliarVarios = 0
+                                    /*  
+                                      Si el debe y el haber del banco y del erp linkeados coinciden se coloca coinciliado ambos y ambos links
+                                    */
+    
+                                    /*  
+                                      Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
+                                    */
+                                    table.rows( function ( idx, data, node ) {
+                                        if(data.linkconciliadobco == row.data()["linkconciliadobco"]){
+                                            var rowc = table.row(idx)
+                                            aConciliarVarios = aConciliarVarios + 1
+                                            debeerp = debeerp + parseFloat(rowc.data()['debeerp'])
+                                            habererp = habererp + parseFloat(rowc.data()['habererp'])}});
+                                    table.rows( function ( idx, data, node ) { 
+                                        var rowb = table.row(idx)
+                                        if(rowb.data()['idrbcod'] == row.data()["linkconciliadobco"] && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)){                                           
+                                                table.rows( function ( idx, data, node ) {
+                                                    var rowc = table.row(idx)
+                                                    if(rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]){
+                                                            rowc.data()["estadoerp"]=1
+                                                        }
+                                                        if(aConciliarVarios>1){rowb.data()['linkconciliadoerp']=-1}else if(aConciliarVarios==1 && rowb.data()['linkconciliadobco'] == 0){
+                                                            rowb.data()['linkconciliadobco']=rowc.data()['idrbcod']
+                                                        }
+                                                    });
+                                                    rowb.data()['estadobco']=1
+                                                }else if(rowb.data()['idrbcod'] == row.data()["linkconciliadobco"]){
+                                                    table.rows( function ( idx, data, node ) {
+                                                        var rowc = table.row(idx)
+                                                        if(rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]){
+                                                                rowc.data()["estadoerp"]=0
+                                                            }});
+                                                        rowb.data()['estadobco']=0
+                                                }
+                                    });
+
+                                if(row.data()["estadoerp"]==1){
+                                    row.data()["historial"]="4"                                                
+                                                table.rows(function ( idx, data, node ) {
+                                                    var rowx = table.row(idx)
+                                                    if(rowx.data()["idrbcod"] == row.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != row.data()["fechatraerp"]){
+                                                        row.data()['historial']="2"
+                                                    }
+
+                                                })
+                                }else{
+                                    row.data()["historial"]="1"
+                                }
+                                if(estadooriginal == "2" || estadooriginal == "3" || estadooriginal == "4"){
+                                    if(row.data()["estadoerp"]==0){
+                                    row.data()["historial"]="5"}
+                                }
+                                var token =  $('input[name="csrfToken"]').attr('value')
+                                let cookie = document.cookie
+                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
+                                table.rows().invalidate().draw(false);                         
+
+
+
+                            $.ajax({
+                                type: "POST",
+                                url: '/updateScript/',
+                                data: JSON.stringify(datasend).replace(/[]/g, ""),
+                                headers: {
+                                    'X-CSRFToken': csrfToken
+                                  },
+                                success: function(response){
+                                    $.ajax({
+                                        method: 'GET',
+                                        beforeSend: function (request) {
+                                            request.setRequestHeader("X-CSRFToken", csrftoken);
+                                        },
+                                        url: '/getTiposDeConciliacion',
+                                        data: {'idrenc': idrenc},
+                                        success: function (respons) {
+                                            debebcototal.innerHTML = Number(respons.debebcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                            haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                            saldobcototal.innerHTML = Number(respons.saldobcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                            debeerptotalhtml.innerHTML = Number(respons.debeerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                            habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                            saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                            saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+        
+                                            }})
+                                }
+                            })
+                            
+                           
+                        
+                         
+        }
         function resaltarerp(e){
             var row = table.row(e.target.parentElement)
                                     if(row.data()["linkconciliadoerp"] ==-1){
                                         table.rows( function ( idx, data, node ) {
                                             var rowe = table.row(idx)
                                             if(row.data()["idrbcod"]==rowe.data()["linkconciliadobco"] && row.data()["idrbcod"] != 0 && row.data()["idrbcod"] != ""){
-                                                $(rowe.node()).css({ "background-color": "#84cf84" });
+                                                $(table.cells(rowe, [15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]).nodes()).css({ "background-color": "#84cf84"});
                                             }
+
                                         })
                                     }else{
                                     table.rows( function ( idx, data, node ) {
                                         var rowe = table.row(idx)
                                         if(row.data()["linkconciliadoerp"]==rowe.data()["idrerpd"] && row.data()["linkconciliadoerp"] != 0 && row.data()["linkconciliadoerp"] != ""){
-                                            $(rowe.node()).css({ "background-color": "#84cf84" });
+                                            $(table.cells(rowe, [15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]).nodes()).css({ "background-color": "#84cf84" });
                                         }
+
                                     })
                                     }
                                 }
@@ -33,14 +204,15 @@ $(function () { "use strict"
                                         table.rows( function ( idx, data, node ) {
                                             var rowe = table.row(idx)
                                             if(row.data()["idrbcod"]==rowe.data()["linkconciliadobco"] && row.data()["idrbcod"] != 0 && row.data()["idrbcod"] != ""){
-                                                $(rowe.node()).css({ "background-color": "" });
+                                                $(table.cells(rowe, [15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]).nodes()).css({ "background-color": "" });
                                             }
+
                                         })
                                     }else{
                                     table.rows( function ( idx, data, node ) {
                                         var rowe = table.row(idx)
                                         if(row.data()["linkconciliadoerp"]==rowe.data()["idrerpd"] && row.data()["linkconciliadoerp"] != 0 && row.data()["linkconciliadoerp"] != ""){
-                                            $(rowe.node()).css({ "background-color": "" });
+                                            $(table.cells(rowe, [15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]).nodes()).css({ "background-color": "" });
                                         }
                                     })
                                     }
@@ -51,14 +223,15 @@ $(function () { "use strict"
                 table.rows( function ( idx, data, node ) {
                     var rowe = table.row(idx)
                     if(row.data()["idrerpd"]==rowe.data()["linkconciliadoerp"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != ""){
-                        $(rowe.node()).css({ "background-color": "#84cf84" });
+                        $(table.cells(rowe,[1,2,3,4,5,6,7,8,9,10,11,12,13,14]).nodes()).css({ "background-color": "#84cf84" });
                     }
+
                 })
             }else{
             table.rows( function ( idx, data, node ) {
                 var rowe = table.row(idx)
                 if(row.data()["linkconciliadobco"]==rowe.data()["idrbcod"] && row.data()["linkconciliadobco"] != 0 && row.data()["linkconciliadobco"] != ""){
-                    $(rowe.node()).css({ "background-color": "#84cf84" });
+                    $(table.cells(rowe,[1,2,3,4,5,6,7,8,9,10,11,12,13,14]).nodes()).css({ "background-color": "#84cf84" });
                 }
             })
             }
@@ -69,14 +242,14 @@ $(function () { "use strict"
                                 table.rows( function ( idx, data, node ) {
                                     var rowe = table.row(idx)
                                     if(row.data()["idrerpd"]==rowe.data()["linkconciliadoerp"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != ""){
-                                        $(rowe.node()).css({ "background-color": "" });
-                                    }
+                                        $(table.cells(rowe,[1,2,3,4,5,6,7,8,9,10,11,12,13,14]).nodes()).css({ "background-color": "" });
+                                    } 
                                 })
                             }else{
                             table.rows( function ( idx, data, node ) {
                                 var rowe = table.row(idx)
                                 if(row.data()["linkconciliadobco"]==rowe.data()["idrbcod"] && row.data()["linkconciliadobco"] != 0 && row.data()["linkconciliadobco"] != ""){
-                                    $(rowe.node()).css({ "background-color": "" });
+                                    $(table.cells(rowe,[1,2,3,4,5,6,7,8,9,10,11,12,13,14]).nodes()).css({ "background-color": "" });
                                 }
                             })
                         }
@@ -224,12 +397,15 @@ $(function () { "use strict"
                     }},
                 
                 {"data": 'historial', className: "dt-comunColor", "render": function (data, type, full, meta) {
-                    var zone_html = "";
+                    var zone_html = ""; 
                     if (data === "0") {
                         zone_html = 'Original'
                     }
                     if (data === "1") {
                         zone_html = 'Modificado'
+                    }
+                    if (data === "2") {
+                        zone_html = 'Conciliado otra fecha'
                     }
                     if (data === "3") {
                         zone_html = 'Conciliado'
@@ -246,13 +422,13 @@ $(function () { "use strict"
 
             ],
             columnDefs: [
-                {targets: [2,8,10,11,12,13,14],
+                {targets: [2,8,10,11,12,13],
                     createdCell: function (cell){
                         cell.addEventListener('mouseenter', function(e) {resaltarerp(e)})
                         cell.addEventListener('mouseleave', function(e) {desresaltarerp(e)})
                     }
                 },
-                {  targets: [16,17,19,20,23,24,25,26,27,28,29,30,31,32],
+                {  targets: [16,19,20,23,24,25,26,27,28,29,30,31,32],
                     createdCell: function (cell){
                         cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
                         cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
@@ -311,9 +487,11 @@ $(function () { "use strict"
                     targets: ["desctra"],
                     createdCell: function (cell) {
                         var row = table.row(cell)
-                        if(row.data()['desctra']!=null && row.data()['desctra'].length > maximosCaracteres){
-                            $(cell).attr("title", row.data()['desctra'])
-                        };
+                        if(table.column(cell).visible() === true){
+                            if(row.data()['desctra']!=null && row.data()['desctra'].length > maximosCaracteres){
+                                $(cell).attr("title", row.data()['desctra'])
+                            };
+                        }
                         cell.addEventListener('mouseenter', function(e) {resaltarerp(e)})
                         cell.addEventListener('mouseleave', function(e) {desresaltarerp(e)})
                     }
@@ -321,23 +499,27 @@ $(function () { "use strict"
                 {targets: ["referp"],
                 createdCell: function (cell) {
                     var row = table.row(cell)
+                    if(table.column(cell).visible() === true){
                     if(row.data()['referp']!=null && row.data()['referp'].length > maximosCaracteres){
                         $(cell).attr("title", row.data()['referp'])
                         };
                         cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
                         cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
                     }
+                }
                     
                 },
                 {targets: ["glosaerp"],
                 createdCell: function (cell) {
                     var row = table.row(cell)
+                    if(table.column(cell).visible() === true){
                     if(row.data()['glosaerp']!=null && row.data()['glosaerp'].length > maximosCaracteres){
                         $(cell).attr("title", row.data()['glosaerp'])
                         };
                         cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
                         cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
                     }
+                }
                 },
                 {targets: ["codtcobco"],
                     createdCell: function (cell) {
@@ -349,27 +531,20 @@ $(function () { "use strict"
                             if(value != row.data()['codtcobco']){
                                 globalVariable.editado = 1
                                 row.data()['codtcobco']= value
-                                var datasend = []
-                                datasend.push(row.data());
-                                var token =  $('input[name="csrfToken"]').attr('value')
-                                let cookie = document.cookie
-                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
-                            $.ajax({
-                                type: "POST",
-                                url: '/updateScript/',
-                                data: JSON.stringify(datasend).replace(/[]/g, ""),
-                                headers: {
-                                    'X-CSRFToken': csrfToken
-                                  }
-                            })    
+                                let original = 0
+                                let estadooriginal =  row.data()["historial"]
+                                calcularSaldos(original, row, e, estadooriginal)  
                             }                       
-                            cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
-                            cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
                         }
                         
-                        )}
+                        )
+                        cell.addEventListener('mouseenter', function(e) {resaltarerp(e)})
+                        cell.addEventListener('mouseleave', function(e) {desresaltarerp(e)})
+
+                    }
                     },
-                    {targets: ["codtcoerp"],
+                    {
+                        targets: ["codtcoerp"],
                     createdCell: function (cell) {
                         cell.addEventListener('mouseleave', function(e) {
                             var row = table.row(e.target.parentElement)
@@ -379,44 +554,37 @@ $(function () { "use strict"
                             if(value != row.data()['codtcoerp']){
                                 globalVariable.editado = 1
                                 row.data()['codtcoerp']= value
-                                var datasend = []
-                                datasend.push(row.data());
-                                var token =  $('input[name="csrfToken"]').attr('value')
-                                let cookie = document.cookie
-                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
-                            $.ajax({
-                                type: "POST",
-                                url: '/updateScript/',
-                                data: JSON.stringify(datasend).replace(/[]/g, ""),
-                                headers: {
-                                    'X-CSRFToken': csrfToken
-                                  }
-                            })    
+                                let original = 0
+                                let estadooriginal =  row.data()["historial"]
+                                calcularSaldos(original, row, e, estadooriginal)    
                             }
                             
-                            cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
-                            cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
-                        }
-                        
-                        )}
+                        }                    
+                        )
+                        cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
+                        cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
+
+                    }
                     },
                 {
                     targets: ["linkconciliadoerp"],
                     createdCell: function (cell) {
                         let original
                         var row = table.row(cell)
-                        if(row.data()["estadobco"]==1){
-                            var $elDiv = $('<div></div>');
-                            $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ')
-                        }
-                        cell.setAttribute('contenteditable', true)
-                        cell.setAttribute('spellcheck', false)
+                        if(table.column(cell).visible() === true){
+                            if(row.data()["estadobco"]==1){
+                                var $elDiv = $('<div></div>');
+                                $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ')
+                            }
+                            cell.setAttribute('contenteditable', true)
+                            cell.setAttribute('spellcheck', false)
 
-                        cell.addEventListener('focus', function(e) {
-                            var row = table.row(e.target.parentElement)
-                            original = row.data()["linkconciliadoerp"]
-                            desresaltarerp(e)
-                        })
+                            cell.addEventListener('focus', function(e) {
+                                var row = table.row(e.target.parentElement)
+                                original = row.data()["linkconciliadoerp"]
+                                desresaltarerp(e)
+                            })
+                        }
 
                         cell.addEventListener('blur', function(e) {
                             e.target.textContent = e.target.textContent.substring(0,10)
@@ -473,6 +641,15 @@ $(function () { "use strict"
                                                         rowc.data()["estadobco"]=1
                                                     }});
                                                 rowb.data()['estadoerp']=1
+                                                rowb.data()['historial']="4"
+                                                table.rows(function ( idx, data, node ) {
+                                                    var rowx = table.row(idx)
+                                                    if(rowx.data()["idrbcod"] == rowb.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowb.data()["fechatraerp"]){
+                                                        rowb.data()['historial']="2"
+                                                    }
+
+                                                })
+                                                
                                                 if(aConciliarVarios>1){rowb.data()['linkconciliadobco']=-1}else if(aConciliarVarios==1){rowb.data()['linkconciliadobco']=row.data()['idrbcod']}
                                             }else if(rowb.data()['idrerpd'] == e.target.textContent){
                                                 table.rows( function ( idx, data, node ) {
@@ -481,6 +658,8 @@ $(function () { "use strict"
                                                             rowc.data()["estadobco"]=0
                                                         }});
                                                     rowb.data()['estadoerp']=0
+                                                    if(rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
+                                                        rowb.data()['historial']="5"}
                                                     rowb.data()['linkconciliadobco']=0
                                             }
                                 });
@@ -510,6 +689,14 @@ $(function () { "use strict"
                                                         rowc.data()["estadobco"]=1
                                                     }});
                                                 rowb.data()['estadoerp']=1
+                                                rowb.data()['historial']="4"
+                                                table.rows(function ( idx, data, node ) {
+                                                    var rowx = table.row(idx)
+                                                    if(rowx.data()["idrbcod"] == rowb.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowb.data()["fechatraerp"]){
+                                                        rowb.data()['historial']="2"
+                                                    }
+
+                                                })
                                                 if(aConciliarVarios>1){rowb.data()['linkconciliadobco']=-1}else if(aConciliarVarios==1){rowb.data()['linkconciliadobco']=row.data()['idrbcod']}
                                             }else if(rowb.data()['idrerpd'] == original && original != 0){
                                                 table.rows( function ( idx, data, node ) {
@@ -518,9 +705,12 @@ $(function () { "use strict"
                                                             rowc.data()["estadobco"]=0
                                                         }});
                                                     rowb.data()['estadoerp']=0
+                                                    if(rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
+                                                        rowb.data()['historial']="5"}
                                                     rowb.data()['linkconciliadobco']=0
                                             }
                                 });
+
                                 table.rows().invalidate().draw(false);
                                 var datasend = []
                                 for (let fila = 0; fila < table.rows().count(); fila++) {
@@ -586,129 +776,7 @@ $(function () { "use strict"
                                 globalVariable.editado = 1
 
                                 row.data()['debeerp']=e.target.textContent.replace("$","")
-                                let total = parseFloat(0);
-                                let saldodia = parseFloat(0)
-                                let saldoi = parseFloat(0)
-                                saldoi = parseFloat(globalVariableSaldo.saldo)
-                                if(row.data()['linkconciliadobco']==-2 && original != e.target.textContent){
-                                    row.data()['estadoerp']=0,
-                                    row.data()['estadobco']=0,
-                                    row.data()['linkconciliadobco']=0,
-                                    row.data()['linkconciliadoerp']=0
-                                };
-                                if (table.cell(row,".haberbco").data() != null){
-                                    if(parseFloat(table.cell(row,".debeerp").data().replace("$",""))==parseFloat(table.cell(row,".haberbco").data().replace("$","")) &&  parseFloat(table.cell(row,".debebco").data().replace("$",""))==parseFloat(table.cell(row,".habererp").data().replace("$",""))){
-                                        row.data()['estadoerp']=1,
-                                        row.data()['estadobco']=1,
-                                        row.data()['linkconciliadobco']=-2,
-                                        row.data()['linkconciliadoerp']=-2}};
-
-                                var datasend = []
-                                for (let fila = 0; fila < table.rows().count(); fila++) {
-                                let totalmas = parseFloat(0)
-
-
-                                if(table.cell(fila,".debeerp").data() == null || table.cell(fila,".debeerp").data() == 0){
-                                    totalmas = parseFloat(0)
-                                    total = total + totalmas   
-                                } else{
-                                    totalmas = parseFloat(table.cell(fila,".debeerp").data().replace("$",""))
-                                    total = total + totalmas
-                                }
-                                let saldomas = parseFloat(0)
-                                if (table.cell(fila,".debeerp").data()==null){
-                                    saldomas = parseFloat(0)
-                                }else{saldomas = parseFloat(table.cell(fila,".debeerp").data())}
-
-                                let saldomenos = parseFloat(0)
-
-                                if (table.cell(fila,".habererp").data()==null){
-                                    saldomenos = parseFloat(0)
-                                }else{saldomenos = parseFloat(table.cell(fila,".habererp").data())}
-                                
-                                saldoi =  saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
-                                table.cell( fila,".saldoacumeserp" ).data(saldoi);
-
-                                table.cell( row,".saldodiferencia" ).data(parseFloat(table.cell(row,".saldoacumesbco").data().replace("$","")) - parseFloat(table.cell(row,".saldoacumeserp").data()));
-                                if (table.cell(fila-1,".fechatraerp").data()==table.cell(fila,".fechatraerp").data()){
-                                    saldodia = saldodia + saldomas - saldomenos
-                                }else{
-                                    saldodia = saldomas - saldomenos
-                                }
-                                table.cell( fila,".saldoacumdiaerp" ).data(saldodia);
-                                var rows = table.row(fila)
-                                debeerphtml.innerHTML = Number(total).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                datasend.push(rows.data());
-                                }
-                                if(row.data()["linkconciliadobco"]==-1){row.data()["linkconciliadobco"]=0}
-                                table.rows( function ( idx, data, node ) { 
-                                    var rowg = table.row(idx)
-                                    if(rowg.data()["idrbcod"]==row.data()["linkconciliadobco"] && rowg.data()["linkconciliadoerp"]==-1){rowg.data()["linkconciliadoerp"]=0}})
-                                var debeerp = 0
-                                    var habererp = 0
-                                    var aConciliarVarios = 0
-                                    /*  
-                                      Si el debe y el haber del banco y del erp linkeados coinciden se coloca coinciliado ambos y ambos links
-                                    */
-    
-                                    /*  
-                                      Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
-                                    */
-                                    table.rows( function ( idx, data, node ) {
-                                        if(data.linkconciliadobco == row.data()["linkconciliadobco"]){
-                                            var rowc = table.row(idx)
-                                            aConciliarVarios = aConciliarVarios + 1
-                                            debeerp = debeerp + parseFloat(rowc.data()['debeerp'])
-                                            habererp = habererp + parseFloat(rowc.data()['habererp'])}});
-                                    table.rows( function ( idx, data, node ) { 
-                                        var rowb = table.row(idx)
-                                        if(rowb.data()['idrbcod'] == row.data()["linkconciliadobco"] && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)){                                           
-                                                table.rows( function ( idx, data, node ) {
-                                                    var rowc = table.row(idx)
-                                                    if(rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]){
-                                                            rowc.data()["estadoerp"]=1
-                                                        }
-                                                        if(aConciliarVarios>1){rowb.data()['linkconciliadoerp']=-1}else if(aConciliarVarios==1 && rowb.data()['linkconciliadobco'] == 0){
-                                                            rowb.data()['linkconciliadobco']=rowc.data()['idrbcod']
-                                                        }
-                                                    });
-                                                    rowb.data()['estadobco']=1
-                                                }else if(rowb.data()['idrbcod'] == row.data()["linkconciliadobco"]){
-                                                    table.rows( function ( idx, data, node ) {
-                                                        var rowc = table.row(idx)
-                                                        if(rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]){
-                                                                rowc.data()["estadoerp"]=0
-                                                            }});
-                                                        rowb.data()['estadobco']=0
-                                                }
-                                    });
-
-                                if(row.data()["estadoerp"]==1){
-                                    row.data()["historial"]="4"
-                                }else{
-                                    row.data()["historial"]="1"
-                                }
-                                if(estadooriginal == "3" || estadooriginal == "4"){
-                                    if(row.data()["estadoerp"]==0){
-                                    row.data()["historial"]="5"}
-                                }
-                                var token =  $('input[name="csrfToken"]').attr('value')
-                                let cookie = document.cookie
-                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
-                                table.rows().invalidate().draw(false);                         
-
-
-
-                            $.ajax({
-                                type: "POST",
-                                url: '/updateScript/',
-                                data: JSON.stringify(datasend).replace(/[]/g, ""),
-                                headers: {
-                                    'X-CSRFToken': csrfToken
-                                  }
-                            })   
-                        
-                            
+                                calcularSaldos(original, row, e, estadooriginal)   
                         }
                         
                           })
@@ -749,188 +817,14 @@ $(function () { "use strict"
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
                                 row.data()['habererp']=e.target.textContent.replace("$","")
-                                let total = parseFloat(0);
-                                let saldodia = parseFloat(0)
-                                let saldoi = parseFloat(0)
-                                saldoi = parseFloat(globalVariableSaldo.saldo)
-
-
-                                var datasend = []
-                                for (let fila = 0; fila < table.rows().count(); fila++) {
-
-                                let totalmas = parseFloat(0)
-
-
-                                if(table.cell(fila,".habererp").data() == null || table.cell(fila,".habererp").data() == 0){
-                                    totalmas = parseFloat(0)
-                                    total = total + totalmas   
-                                } else{
-                                    totalmas = parseFloat(table.cell(fila,".habererp").data().replace("$",""))
-                                    total = total + totalmas
-                                }
-
-                                let saldomas = parseFloat(0)
-                                if (table.cell(fila,".debeerp").data()==null){
-                                    saldomas = parseFloat(0)
-                                }else{saldomas = parseFloat(table.cell(fila,".debeerp").data())}
-
-                                let saldomenos = parseFloat(0)
-
-                                if (table.cell(fila,".habererp").data()==null){
-                                    saldomenos = parseFloat(0)
-                                }else{saldomenos = parseFloat(table.cell(fila,".habererp").data())}
-                
-                                saldoi =  saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
-                                
-                                table.cell( fila,".saldoacumeserp" ).data(saldoi);
-
-                                table.cell( row,".saldodiferencia" ).data(parseFloat(table.cell(row,".saldoacumesbco").data().replace("$","")) - parseFloat(table.cell(row,".saldoacumeserp").data()));
-
-                                if (table.cell(fila-1,".fechatraerp").data()==table.cell(fila,".fechatraerp").data()){
-                                    saldodia = saldodia + saldomas - saldomenos
-                                }else{
-                                    saldodia = saldomas - saldomenos
-                                }
-                                table.cell( fila,".saldoacumdiaerp" ).data(saldodia);
-                                var rows = table.row(fila)
-                                habererphtml.innerHTML = Number(total).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                datasend.push(rows.data());
-                                }
-                                if(row.data()["linkconciliadobco"]==-1){row.data()["linkconciliadobco"]=0}
-                                table.rows( function ( idx, data, node ) { 
-                                    var rowg = table.row(idx)
-                                    if(row.data()["idrerpd"]==rowg.data()["linkconciliadoerp"]){
-                                        rowg.data()["estadobco"]=0
-                                        if(rowg.data()["linkconciliadoerp"]==-1){rowg.data()["linkconciliadoerp"]=0}
-
-                                        }})
-                                var debeerp = 0
-                                var habererp = 0
-                                var aConciliarVarios = 0
-                                /*  
-                                  Si el debe y el haber del banco y del erp linkeados coinciden se coloca coinciliado ambos y ambos links
-                                */
-
-                                /*  
-                                  Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
-                                */
-                                table.rows( function ( idx, data, node ) {
-                                    if(data.linkconciliadobco == row.data()["linkconciliadobco"]){
-                                        var rowc = table.row(idx)
-                                        aConciliarVarios = aConciliarVarios + 1
-                                        debeerp = debeerp + parseFloat(rowc.data()['debeerp'])
-                                        habererp = habererp + parseFloat(rowc.data()['habererp'])}});
-                                table.rows( function ( idx, data, node ) { 
-                                    var rowb = table.row(idx)
-                                    if(rowb.data()['idrbcod'] == row.data()["linkconciliadobco"] && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)){                                           
-                                            table.rows( function ( idx, data, node ) {
-                                                var rowc = table.row(idx)
-                                                if(rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]){
-                                                        rowc.data()["estadoerp"]=1
-                                                    }});
-                                                rowb.data()['estadobco']=1
-                                                if(aConciliarVarios>1){rowb.data()['linkconciliadoerp']=-1}else if(aConciliarVarios==1){rowb.data()['linkconciliadoerp']=row.data()['idrerpd']}
-                                            }else if(rowb.data()['idrbcod'] == row.data()["linkconciliadobco"]){
-                                                table.rows( function ( idx, data, node ) {
-                                                    var rowc = table.row(idx)
-                                                    if(rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]){
-                                                            rowc.data()["estadoerp"]=0
-                                                        }});
-                                                    rowb.data()['estadobco']=0
-                                                    if(rowb.data()["linkconciliadoerp"]==-1){rowb.data()["linkconciliadoerp"]=0}
-                                            }
-                                });
-                                var debebco = 0
-                                var haberbco = 0
-                                var aConciliarVarios = 0
-                                /*  
-                                  Si el debe y el haber del banco y del erp linkeados coinciden se coloca coinciliado ambos y ambos links
-                                */
-
-                                /*  
-                                  Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
-                                */
-                                table.rows( function ( idx, data, node ) {
-                                    if(data.linkconciliadoerp == row.data()["idrerpd"]){
-                                        var rowc = table.row(idx)
-                                        aConciliarVarios = aConciliarVarios + 1
-                                        debebco = debebco + parseFloat(rowc.data()['debebco'])
-                                        haberbco = haberbco + parseFloat(rowc.data()['haberbco'])}});
-                                table.rows( function ( idx, data, node ) { 
-                                    var rowb = table.row(idx)
-                                    if(rowb.data()['idrerpd'] == row.data()["idrerpd"] && rowb.data()['debeerp'] == haberbco && rowb.data()['habererp'] == debebco && (debebco != 0 || haberbco != 0)){                                           
-                                            table.rows( function ( idx, data, node ) {
-                                                var rowc = table.row(idx)
-                                                if(rowc.data()["linkconciliadoerp"] == row.data()["idrerpd"]){
-                                                        rowc.data()["estadobco"]=1
-                                                    }
-                                                    if(aConciliarVarios>1){rowb.data()['linkconciliadobco']=-1}else if(aConciliarVarios==1 && rowb.data()['linkconciliadobco'] == 0){
-                                                        rowb.data()['linkconciliadobco']=rowc.data()['idrbcod']
-                                                    }
-                                                });
-                                                rowb.data()['estadoerp']=1
- 
-                                            }
-                                });
-                                var token =  $('input[name="csrfToken"]').attr('value')
-                                let cookie = document.cookie
-                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
-                                if(row.data()["estadoerp"]==1){
-                                    row.data()["historial"]="4"
-                                }else{
-                                    row.data()["historial"]="1"
-                                }
-                                if(estadooriginal == "3" || estadooriginal == "4"){
-                                    if(row.data()["estadoerp"]==0){
-                                    row.data()["historial"]="5"}
-                                }
-                                table.rows().invalidate().draw(false);
-                            $.ajax({
-                                type: "POST",
-                                url: '/updateScript/',
-                                data: JSON.stringify(datasend).replace(/[]/g, ""),
-                                headers: {
-                                    'X-CSRFToken': csrfToken
-                                  }
-                            })   
+                                calcularSaldos(original, row, e, estadooriginal) 
                         }
                           }})
                           cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
                           cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
                     }
                 },
-                {targets: ["codtcoerp"],
-                    createdCell: function (cell) {
-                        cell.addEventListener('mouseleave', function(e) {
-                            cell.addEventListener('mouseleave', function(e) {
-                                var row = table.row(e.target.parentElement)
-                                var valor = document.getElementById('optionerp-'+row.data()['idsres']);
-                                try{var value = valor.value}
-                                finally{}
-                                if(value != row.data()['codtcoerp']){
-                                    globalVariable.editado = 1
-                                    row.data()['codtcoerp']= value
-                                    var datasend = []
-                                    datasend.push(row.data());
-                                    var token =  $('input[name="csrfToken"]').attr('value')
-                                    let cookie = document.cookie
-                                    let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
-                                $.ajax({
-                                    type: "POST",
-                                    url: '/updateScript/',
-                                    data: JSON.stringify(datasend).replace(/[]/g, ""),
-                                    headers: {
-                                        'X-CSRFToken': csrfToken
-                                      }
-                                })    
-                                }
-                                
-                                
-                            })})
-                            cell.addEventListener('mouseenter', function(e) {resaltarbco(e)})
-                            cell.addEventListener('mouseleave', function(e) {desresaltarbco(e)})
-                        }
-                    },
+            
                     {
                         targets: ["linkconciliadobco"],
                         createdCell: function (cell) {
@@ -1001,6 +895,14 @@ $(function () { "use strict"
                                                     var rowc = table.row(idx)
                                                     if(rowc.data()["linkconciliadobco"] == e.target.textContent){
                                                             rowc.data()["estadoerp"]=1
+                                                            rowc.data()["historial"]="4"
+                                                            table.rows(function ( idx, data, node ) {
+                                                    var rowx = table.row(idx)
+                                                    if(rowx.data()["idrbcod"] == rowc.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]){
+                                                        rowc.data()['historial']="2"
+                                                    }
+
+                                                })
                                                         }});
                                                     rowb.data()['estadobco']=1
                                                     if(aConciliarVarios>1){rowb.data()['linkconciliadoerp']=-1}else if(aConciliarVarios==1){rowb.data()['linkconciliadoerp']=row.data()['idrerpd']}
@@ -1009,6 +911,9 @@ $(function () { "use strict"
                                                         var rowc = table.row(idx)
                                                         if(rowc.data()["linkconciliadobco"] == e.target.textContent){
                                                                 rowc.data()["estadoerp"]=0
+                                                                if(rowc.data()["historial"]== "2" || rowc.data()["historial"]=="4" || rowc.data()["historial"]=="3"){
+                                                                    rowc.data()["historial"]="5"
+                                                                        }
                                                             }});
                                                         rowb.data()['estadobco']=0
                                                         rowb.data()['linkconciliadoerp']=0
@@ -1038,6 +943,14 @@ $(function () { "use strict"
                                                     var rowc = table.row(idx)
                                                     if(rowc.data()["linkconciliadobco"] == original && original != 0){
                                                             rowc.data()["estadoerp"]=1
+                                                            rowc.data()["historial"]="4"        
+                                                table.rows(function ( idx, data, node ) {
+                                                    var rowx = table.row(idx)
+                                                    if(rowx.data()["idrbcod"] == rowc.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]){
+                                                        rowc.data()['historial']="2"
+                                                    }
+
+                                                })
                                                         }});
                                                     rowb.data()['estadobco']=1
                                                     if(aConciliarVarios>1){rowb.data()['linkconciliadoerp']=-1}else if(aConciliarVarios==1){rowb.data()['linkconciliadoerp']=row.data()['idrerpd']}
@@ -1046,23 +959,25 @@ $(function () { "use strict"
                                                         var rowc = table.row(idx)
                                                         if(rowc.data()["linkconciliadobco"] == original && original != 0){
                                                                 rowc.data()["estadoerp"]=0
+                                                                if(rowc.data()["historial"]== "2" || rowc.data()["historial"]=="4" || rowc.data()["historial"]=="3"){
+                                                                rowc.data()["historial"]="5"
+                                                                    }
                                                             }});
                                                         rowb.data()['estadobco']=0
                                                         rowb.data()['linkconciliadoerp']=0
                                                 }
                                     });
+                                    if (row.data()['historial']=="0"){
+                                        row.data()['historial']="1"
+                                    }
                                     table.rows().invalidate().draw(false);
                                     var datasend = []
                                     for (let fila = 0; fila < table.rows().count(); fila++) {
                                     var rows = table.row(fila)
                                     datasend.push(rows.data());
                                     }
-                                    if(row.data()["estadoerp"]==1){
-                                        row.data()["historial"]="4"
-                                    }else{
-                                        row.data()["historial"]="1"
-                                    }
-                                    if(estadooriginal == "3" || estadooriginal == "4"){
+
+                                    if(estadooriginal == "2" ||estadooriginal == "3" || estadooriginal == "4"){
                                         if(row.data()["estadoerp"]==0){
                                         row.data()["historial"]="5"}
                                     }
@@ -1148,7 +1063,7 @@ $(function () { "use strict"
                                 zone_html = ""
                             }
                             else if (data == -1){
-                                zone_html =  '<i class="fas fa-check"></i>'
+                                zone_html =  '<i style="color: green;" class="fas fa-check"></i>'
                             }
                             else if(row['estadobco']==1){zone_html =
                                 
@@ -1185,7 +1100,7 @@ $(function () { "use strict"
                                 zone_html = ""
                             }
                             else if (data == -1){
-                                zone_html =  '<i class="fas fa-check"></i>'
+                                zone_html =  '<i style="color: green;" class="fas fa-check"></i>'
                             }
                             else if(row['estadoerp']==1){zone_html =
                                 

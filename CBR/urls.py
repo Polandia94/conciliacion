@@ -15,6 +15,7 @@ app_name='CBR'
 urlpatterns=[
     path( 'getAnoMes/', views.getanomes, name='getAnoMes' ),
     path( 'getGuardado/', views.getguardado, name='getGuardado' ),
+    path( 'getTiposDeConciliacion/', views.getTiposDeConciliacion, name='getTiposDeConciliacion' ),
     path( 'conciliarSaldos/', views.conciliarSaldos, name='conciliarSaldos' ),
     path( 'cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del' ),
     #path( 'cbtcta/del/', views.cbtctaDelete, name='cbtcta_delete_cuenta' ),
@@ -43,6 +44,7 @@ urlpatterns=[
     path( 'cbrerpd/', views.DetalleErpListView.as_view(), name='cbrerpd-list' ),
     path( 'log/', views.DetalleLogListView.as_view(), name='log-list' ),
     path( 'tiempo/', views.DetalleTiempoListView.as_view(), name='tiempo-list' ),
+    path( 'cbttco/', views.DetalleTiposDeConciliacion.as_view(), name='DetalleTiposDeConciliacion' ),
 
 
     path( 'cbrbcod/<int:idrbcod>/<int:idrbcoe>/', views.CbrbcodDetailView.as_view(), name='cbrbcod-detail' ),
