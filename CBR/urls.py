@@ -44,6 +44,7 @@ urlpatterns=[
     path( 'cbrerpd/', views.DetalleErpListView.as_view(), name='cbrerpd-list' ),
     path( 'log/', views.DetalleLogListView.as_view(), name='log-list' ),
     path( 'tiempo/', views.DetalleTiempoListView.as_view(), name='tiempo-list' ),
+    path( 'cbttco/', views.DetalleTiposDeConciliacion.as_view(), name='DetalleTiposDeConciliacion' ),
 
 
     path( 'cbrbcod/<int:idrbcod>/<int:idrbcoe>/', views.CbrbcodDetailView.as_view(), name='cbrbcod-detail' ),

@@ -1818,7 +1818,7 @@ def getTiposDeConciliacion(request):
                 elif tipo.inddebhab == "H":
                     listadoSumaHaberErp.append(tipo.codtco)
     #calcula primero las del cbwres y si no existen las del cbsres
-    for registro in Cbsres.objects.filter(idrenc=idrenc).all():
+    for registro in Cbsres.objects.filter(idrenc=idrenc).order_by("idsres").all():
         if Cbwres.objects.filter(idsres = registro.idsres).exists():
             registroAnalizado = Cbwres.objects.filter(idsres = registro.idsres).first()
         else:
@@ -1842,29 +1842,92 @@ def getTiposDeConciliacion(request):
         except:
             pass
         try:
-            data["saldobcototal"] = registroAnalizado.saldoacumesbco
+            if data["saldobcototal"] is not None:
+                data["saldobcototal"] = registroAnalizado.saldoacumesbco
         except:
             pass
         try:
-            data["saldoerptotal"] = registroAnalizado.saldoacumeserp
+            if data["saldoerptotal"] is not None:
+                data["saldoerptotal"] = registroAnalizado.saldoacumeserp
         except:
             pass
         if registroAnalizado.codtcobco in listadoSumaDebeErp:
-            print("listadosumadebeerp")
-            data["debeerptotal"] = registroAnalizado.haberbco + data["debeerptotal"]
-            saldoextraerp = saldoextraerp + registroAnalizado.haberbco
+            try:
+                data["debeerptotal"] = registroAnalizado.haberbco + data["debeerptotal"]
+                saldoextraerp = saldoextraerp + registroAnalizado.haberbco
+            except:
+                pass
         elif registroAnalizado.codtcobco in listadoSumaHaberErp:
-            print("listadosumahabererp")
-            data["habererptotal"] = registroAnalizado.debebco + data["habererptotal"]
-            saldoextraerp = saldoextraerp - registroAnalizado.debebco
+            try:
+                data["habererptotal"] = registroAnalizado.debebco + data["habererptotal"]
+                saldoextraerp = saldoextraerp - registroAnalizado.debebco
+            except:
+                pass
         if registroAnalizado.codtcoerp in listadoSumaDebeBco:
-            print("listadosumadebebco")
-            data["debebcototal"] = registroAnalizado.habererp + data["debebcototal"]
-            saldoextrabco = saldoextrabco + registroAnalizado.habererp
+            try:
+                data["debebcototal"] = registroAnalizado.habererp + data["debebcototal"]
+                saldoextrabco = saldoextrabco + registroAnalizado.habererp
+            except:
+                pass
         elif registroAnalizado.codtcoerp in listadoSumaHaberBco:
-            data["haberbcototal"] = registroAnalizado.debeerp + data["haberbcototal"]
-            saldoextrabco = saldoextrabco + registroAnalizado.habererp
+            try:
+                data["haberbcototal"] = registroAnalizado.debeerp + data["haberbcototal"]
+                saldoextrabco = saldoextrabco + registroAnalizado.debeerp
+            except Exception as e:
+                print(e)
     data["saldobcototal"] = data["saldobcototal"] + saldoextrabco
     data["saldoerptotal"] = data["saldoerptotal"] + saldoextraerp
     data["saldodiferenciatotal"] = data["saldobcototal"] - data["saldoerptotal"]
     return JsonResponse( data )
+
+
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+class DetalleTiposDeConciliacion( ListView ):
+    model=Cbttco
+    template_name='cbttco/list.html'
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+    def post(self, request, *args, **kwargs):
+        data={}
+        try:
+            idrenc=request.POST['idrenc']
+            data=[]
+            data2=[]
+            position=1
+            for i in Cbttco.objects.order_by("ordtco").all():
+                item=i.toJSON()
+                print(i.codtco)
+                item['position']=position
+                item['ID']=position
+                item["debe"] = 0
+                item["haber"] = 0
+                item["saldoacumulado"] = 0
+                # item['idrenc']=i.idrenc
+                data.append( item )
+                position+=1
+            try:
+                if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
+                    bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
+                    bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
+                    bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
+                    bCbrenct.save()
+                aCbrenct = Cbrenct(formulario = "CBF11", idrenc = Cbrenc.objects.filter(idrenc = idrenc).first())
+                aCbrenct.idusu = request.user.username
+                aCbrenct.accion = 7
+                aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
+                aCbrenct.save()
+            except:
+                pass
+        except Exception as e:
+            data['error']=str( e )
+        return JsonResponse( data, safe=False )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        context['title']='Tipos de Conciliacion'
+        context['idrenc']=self.request.GET.get( 'idrenc' )
+        context['codigo']='CBF11'
+        return context
