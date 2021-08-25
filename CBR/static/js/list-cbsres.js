@@ -1,15 +1,17 @@
 var globalVariable={
-    editado: 0
+    editado: 0,
+    SaldoDiferenciaTotal:0
  };
  var globalVariableSaldo={
     saldo: 0
  };
 
-
 $(function () { "use strict"
     $(document).ready(function() {
+        const searchRegExp = /,/g;
         const csrftoken = getCookie('csrftoken');
         function calcularSaldos(original, row, e, estadooriginal){
+
             let totaldebe = parseFloat(0);
             let totalhaber = parseFloat(0);
                                 let saldodia = parseFloat(0)
@@ -72,10 +74,14 @@ $(function () { "use strict"
                                 }
                                 table.cell( fila,".saldoacumdiaerp" ).data(saldodia);
                                 var rows = table.row(fila)
-                                saldodiferenciahtml.innerHTML = Number(saldodiferencia).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                saldoerphtml.innerHTML = Number(saldoi).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                debeerphtml.innerHTML = Number(totaldebe).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                habererphtml.innerHTML = Number(totalhaber).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
+                                try{saldodiferenciahtml.innerHTML = Number(saldodiferencia).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                catch{}
+                                try{saldoerphtml.innerHTML = Number(saldoi).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                catch{}
+                                try{debeerphtml.innerHTML = Number(totaldebe).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                catch{}
+                                try{habererphtml.innerHTML = Number(totalhaber).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                catch{}
 
                                 datasend.push(rows.data());
                                 }
@@ -148,7 +154,7 @@ $(function () { "use strict"
                             $.ajax({
                                 type: "POST",
                                 url: '/updateScript/',
-                                data: JSON.stringify(datasend).replace(/[]/g, ""),
+                                data: JSON.stringify(datasend).replace("$", ""),
                                 headers: {
                                     'X-CSRFToken': csrfToken
                                   },
@@ -161,17 +167,28 @@ $(function () { "use strict"
                                         url: '/getTiposDeConciliacion',
                                         data: {'idrenc': idrenc},
                                         success: function (respons) {
-                                            debebcototal.innerHTML = Number(respons.debebcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                            haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                            saldobcototal.innerHTML = Number(respons.saldobcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                            debeerptotalhtml.innerHTML = Number(respons.debeerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                            habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                            saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-                                            saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})
-        
+                                            try{debebcototal.innerHTML = Number(respons.debebcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{}
+                                            try{haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{}
+                                            try{saldobcototal.innerHTML = Number(respons.saldobcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{}
+                                            try{debeerptotalhtml.innerHTML = Number(respons.debeerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{console.log("error al cargar " + respons.debeerptotal + "como debeerptotal")}
+                                            try{habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{}
+                                            try{saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{}
+                                            try{saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
+                                            catch{}
+                                            globalVariable.SaldoDiferenciaTotal = Number(respons.saldodiferenciatotal)
+                                            cargando.innerHTML = "Listo"
                                             }})
                                 }
                             })
+                            cargando.innerHTML = "Cargando"
+
+                        
                             
                            
                         
@@ -257,6 +274,8 @@ $(function () { "use strict"
 
         globalVariable.editado = 0;
         globalVariableSaldo.saldo = 0;
+        try{globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotalhtml").textContent.substring(1))}
+        catch{}
         const urlParams = new URLSearchParams(window.location.search);
         const idrenc = urlParams.get('idrenc');
         let maximosCaracteres = 25;
@@ -527,7 +546,7 @@ $(function () { "use strict"
                             var row = table.row(e.target.parentElement)
                             var valor = document.getElementById('optionbco-'+row.data()['idsres']);
                             try{var value = valor.value}
-                            finally{}
+                            catch{}
                             if(value != row.data()['codtcobco']){
                                 globalVariable.editado = 1
                                 row.data()['codtcobco']= value
@@ -587,6 +606,7 @@ $(function () { "use strict"
                         }
 
                         cell.addEventListener('blur', function(e) {
+                            console.log("s")
                             e.target.textContent = e.target.textContent.substring(0,10)
                             var row = table.row(e.target.parentElement)
                             if (original !== e.target.textContent) {
@@ -604,7 +624,8 @@ $(function () { "use strict"
                                     /*  
                                   Si el valor es numero pasa a ser rojo, la variable editado se activa
                                 */
-                            if(existe){         
+                            if(existe){ 
+                                console.log("existe")        
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
@@ -612,6 +633,8 @@ $(function () { "use strict"
                                 var debebco = 0
                                 var haberbco = 0
                                 var aConciliarVarios = 0
+                                console.log("original")
+                                console.log(original)
                                 if(original>0){
                                     table.rows( function ( idx, data, node ) {
                                     var rowe = table.row(idx)
@@ -658,7 +681,7 @@ $(function () { "use strict"
                                                             rowc.data()["estadobco"]=0
                                                         }});
                                                     rowb.data()['estadoerp']=0
-                                                    if(rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
+                                                    if(rowb.data()['historial']=="2" || rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
                                                         rowb.data()['historial']="5"}
                                                     rowb.data()['linkconciliadobco']=0
                                             }
@@ -674,6 +697,7 @@ $(function () { "use strict"
                                 /*  
                                   Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
                                 */
+                                
                                 table.rows( function ( idx, data, node ) {
                                     if(data.linkconciliadoerp == original && original != 0){
                                         var rowc = table.row(idx)
@@ -682,7 +706,9 @@ $(function () { "use strict"
                                         haberbco = haberbco + parseFloat(rowc.data()['haberbco'])}});
                                 table.rows( function ( idx, data, node ) { 
                                     var rowb = table.row(idx)
-                                    if(rowb.data()['idrerpd'] == original && original != 0 && rowb.data()['debeerp'] == haberbco && rowb.data()['habererp'] == debebco && (debebco != 0 || haberbco != 0)){                                           
+                                    console.log("a")
+                                    if(rowb.data()['idrerpd'] == original && original != 0 && (debebco != 0 || haberbco != 0)){
+                                        console.log("b")                                           
                                             table.rows( function ( idx, data, node ) {
                                                 var rowc = table.row(idx)
                                                 if(rowc.data()["linkconciliadoerp"] == original && original != 0){
@@ -698,14 +724,17 @@ $(function () { "use strict"
 
                                                 })
                                                 if(aConciliarVarios>1){rowb.data()['linkconciliadobco']=-1}else if(aConciliarVarios==1){rowb.data()['linkconciliadobco']=row.data()['idrbcod']}
-                                            }else if(rowb.data()['idrerpd'] == original && original != 0){
+                                            }if(rowb.data()['idrerpd'] == original && original != 0){
+                                                console.log("e")
                                                 table.rows( function ( idx, data, node ) {
+                                                    console.log("m")
                                                     var rowc = table.row(idx)
                                                     if(rowc.data()["linkconciliadoerp"] == original && original != 0){
                                                             rowc.data()["estadobco"]=0
                                                         }});
                                                     rowb.data()['estadoerp']=0
-                                                    if(rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
+                                                    if(rowb.data()['historial']=="2" || rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
+                                                        console.log("p")
                                                         rowb.data()['historial']="5"}
                                                     rowb.data()['linkconciliadobco']=0
                                             }
@@ -775,7 +804,7 @@ $(function () { "use strict"
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
 
-                                row.data()['debeerp']=e.target.textContent.replace("$","")
+                                row.data()['debeerp']=e.target.textContent.replace("$","").replace(searchRegExp,"")
                                 calcularSaldos(original, row, e, estadooriginal)   
                         }
                         
@@ -816,7 +845,7 @@ $(function () { "use strict"
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
-                                row.data()['habererp']=e.target.textContent.replace("$","")
+                                row.data()['habererp']=e.target.textContent.replace("$","").replace(searchRegExp,"")
                                 calcularSaldos(original, row, e, estadooriginal) 
                         }
                           }})
@@ -835,6 +864,7 @@ $(function () { "use strict"
                             cell.setAttribute('spellcheck', false)
     
                             cell.addEventListener('focus', function(e) {
+                                console.log("h")
                                 var row = table.row(e.target.parentElement)
                                 original = row.data()["linkconciliadobco"]
                                 estadooriginal =  row.data()["historial"]
@@ -843,6 +873,8 @@ $(function () { "use strict"
                             })
     
                             cell.addEventListener('blur', function(e) {
+                                console.log("f")
+
                                 e.target.textContent = e.target.textContent.substring(0,10)
                                 var row = table.row(e.target.parentElement)
                                 if (original !== e.target.textContent) {
@@ -943,11 +975,11 @@ $(function () { "use strict"
                                                     var rowc = table.row(idx)
                                                     if(rowc.data()["linkconciliadobco"] == original && original != 0){
                                                             rowc.data()["estadoerp"]=1
-                                                            rowc.data()["historial"]="4"        
+                                                            rowc.data()["historial"]="5"        
                                                 table.rows(function ( idx, data, node ) {
                                                     var rowx = table.row(idx)
                                                     if(rowx.data()["idrbcod"] == rowc.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]){
-                                                        rowc.data()['historial']="2"
+                                                        rowc.data()['historial']="5"
                                                     }
 
                                                 })
@@ -1235,7 +1267,9 @@ $(function () { "use strict"
                 }
 
             },
-
+            drawCallback: function(){
+                cargando.innerHTML = " "
+            },
             createdRow: function (row, data, dataIndex) {
 
                 var classBackground = '';/*

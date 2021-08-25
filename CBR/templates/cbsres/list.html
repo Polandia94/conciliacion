@@ -12,24 +12,7 @@ window.onbeforeunload = function(){
         return False
     }
 };
-window.addEventListener("load", function(event) {
-        const csrftoken = getCookie('csrftoken');
-        const urlParams = new URLSearchParams(window.location.search);
-        const idrenc = urlParams.get('idrenc');
-        var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
-        $.ajax({
-            method: 'POST',
-            beforeSend: function (request) {
-                request.setRequestHeader("X-CSRFToken", csrftoken);
-            },
-            url: "../conciliarSaldos/",
-            data: {'idrenc': idrenc, "sobreescribir": 'false'},
-            success: function (respons) {
-                    if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
-                        window.location = window.location + '#loaded';
-                        window.location.reload();
-                    }
-}})})
+
 </script>
     <a id="btnSalir" class="btn btn-primary btn-flat mb-3" data-toggle="tooltip" data-toggle="tooltip" data-placement="bottom" title="Regresar a la lista principal">
         <i class="fas fa-arrow-circle-left"></i>
@@ -58,6 +41,7 @@ window.addEventListener("load", function(event) {
         Ejecutar el proceso de conciliación
     </a>
     {% endif %}
+    <label class="ml-2" id="cargando"></label>
 
 
 
@@ -121,7 +105,14 @@ window.addEventListener("load", function(event) {
                 </tbody>
                 	<tfoot>
                     <tr><th>Subtotal</th><th></th><th> </th><th><div id="debebco">{{debebco}}</div></th><th><div id="haberbco">{{haberbco}}</div></th><th></th><th><div id="saldobco">{{saldobco}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th><div id="debeerphtml" class="number">{{debeerp}}</div></th><th><div id="habererphtml">{{habererp}}</div></th><th></th><th><div id="saldoerphtml">{{saldoerp}}</div></th><th></th><th><div id="saldodiferenciahtml">{{saldodiferencia}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
-                    <tr ><th class="dt-comunColor"><a onclick="javascript:ventanaSecundaria('../cbttco/')">Total</a></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="debebcototal">{{debebco}}</div></th><th class="dt-bancoColor"><div id="haberbcototal">{{haberbco}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="saldobcototal">{{saldobco}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor">      
+                    <script>
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const idrenc = urlParams.get('idrenc');
+                                function ventanaSecundariaGrande (URL){ 
+                                window.open(URL,"Lupa","centerscreen=yes,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                             } 
+                    </script>
+                    <tr ><th class="dt-comunColor"><a onclick="javascript:ventanaSecundariaGrande('../cbttco/'+'?idrenc=' + idrenc)">Total</a></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="debebcototal">{{debebco}}</div></th><th class="dt-bancoColor"><div id="haberbcototal">{{haberbco}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="saldobcototal">{{saldobco}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor">      
                     </th><th class="dt-comunColor"></th><th></th><th></th><th><div id="debeerptotalhtml" class="number">{{debeerp}}</div></th><th><div id="habererptotalhtml">{{habererp}}</div></th><th></th><th><div id="saldoerptotalhtml">{{saldoerp}}</div></th><th></th><th><div id="saldodiferenciatotalhtml">{{saldodiferencia}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th class="dt-comunColor"></th></tr>
 
 	            </tfoot>
@@ -136,6 +127,55 @@ window.addEventListener("load", function(event) {
             indtco_erp: "{{indtco_erp}}".split(","),
             indtco_bco: "{{indtco_bco}}".split(",")
         };
+    </script>
+    <script>
+    window.addEventListener("load", function(event) {
+        let cargadoIncompleto = true
+        const csrftoken = getCookie('csrftoken');
+        const urlParams = new URLSearchParams(window.location.search);
+        const idrenc = urlParams.get('idrenc');
+        var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
+        $.ajax({
+            method: 'POST',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: "../conciliarSaldos/",
+            data: {'idrenc': idrenc, "sobreescribir": 'false'},
+            success: function (respons) {
+                    console.log(respons)
+                    if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
+                        window.location = window.location + '#loaded';
+                        window.location.reload();
+                    }
+                    cargadoIncompleto = false
+        
+            }})
+        cargando.innerHTML = "Conciliando"
+        
+        if(cargadoIncompleto){
+                            setTimeout(start(0),5000)
+                            }
+        function start(counter){
+        if(counter < 300){
+            setTimeout(function(){
+            counter++;
+            console.log(counter);
+            console.log(cargando.innerHTML)
+            if(cargadoIncompleto){
+            cargando.innerHTML = "Conciliando " + counter + " segundos"
+            start(counter)};
+            }, 1000);
+        }else{
+        
+            if(cargadoIncompleto){
+            cargando.innerHTML = "Hubo un problema. Recargue la página"}
+        }
+    }
+
+
+
+})
     </script>
     <script src="{% static 'js/list-cbsres.js' %}"></script>
     {% else %}

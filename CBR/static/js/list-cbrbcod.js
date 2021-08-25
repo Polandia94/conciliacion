@@ -3,6 +3,9 @@ $(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const idrbcoe = urlParams.get('idrbcoe');
     $('#data').DataTable({
+        targets: 'no-sort',
+        bSort: false,
+        order: [],
         responsive: true,
         autoWidth: true,
         destroy: true,

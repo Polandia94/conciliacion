@@ -1,6 +1,9 @@
 $(function () {
     "use strict"
     $('#data').DataTable({
+        targets: 'no-sort',
+        bSort: false,
+        order: [],
         responsive: true,
         autoWidth: true,
         destroy: true,

@@ -140,9 +140,8 @@
             e.preventDefault();
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                cargando.innerHTML = "Cargando, Espere un Segundo";
                 location.href = "{% url 'CBR:cbrenc-car' %}";
-            });
+            },true);
         });
         $('.form-control').on("change", function(e){
              $('#btnCargar').attr('disabled', false);

@@ -60,8 +60,24 @@ function _ajax(url, parameters, callback){
 }
 // # ***************************************************************************************************************** #
 // # ***************************************************************************************************************** #
-function submit_(url, title, content, parameters, callback) {
-
+function submit_(url, title, content, parameters, callback,contador) {
+    function start(counter){
+        console.log(cargadoIncompleto)
+        if(counter < 300){
+            setTimeout(function(){
+            counter++;
+            console.log(counter);
+            console.log(cargando.innerHTML)
+            if(cargadoIncompleto){
+            cargando.innerHTML = "Cargando " + counter + " segundos"
+            start(counter)};
+            }, 1000);
+        }else{
+        
+            if(cargadoIncompleto){
+            cargando.innerHTML = "Hubo un problema. Recargue la página"}
+        }
+    };
     $.confirm({
         theme: 'material',
         title: title,
@@ -77,6 +93,12 @@ function submit_(url, title, content, parameters, callback) {
                 text: "Si",
                 btnClass: 'btn-primary',
                 action: function () {
+                    try{
+                        if(contador){
+                            start()
+                        }
+                    }
+                    catch{}
                     $.ajax({
                         url: url, //window.location.pathname
                         type: 'POST',
@@ -127,8 +149,25 @@ function submit_(url, title, content, parameters, callback) {
 }
 // # ***************************************************************************************************************** #
 // # ***************************************************************************************************************** #
-function ajax_confirm(url, title, content, parameters, callback) {
-
+function ajax_confirm(url, title, content, parameters, callback,contador) {
+    let cargadoIncompleto = true;
+    function start(counter){
+        console.log(cargadoIncompleto)
+        if(counter < 300){
+            setTimeout(function(){
+            counter++;
+            console.log(counter);
+            console.log(cargando.innerHTML)
+            if(cargadoIncompleto){
+            cargando.innerHTML = "Conciliando " + counter + " segundos"
+            start(counter)};
+            }, 1000);
+        }else{
+        
+            if(cargadoIncompleto){
+            cargando.innerHTML = "Hubo un problema. Recargue la página"}
+        }
+    };
     $.confirm({
         theme: 'material',
         title: title,
@@ -144,6 +183,10 @@ function ajax_confirm(url, title, content, parameters, callback) {
                 text: "Si",
                 btnClass: 'btn-primary',
                 action: function () {
+                    try{
+                    if(contador){
+                    start(0)}}
+                    catch{}
                     $.ajax({
                         url: url, //window.location.pathname
                         type: 'POST',

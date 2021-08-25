@@ -30,9 +30,9 @@ $(function () {
             {"data": "position"},
             {"data": "erpbco"},
             {"data": "codtco"},
-            {'data': 'debe'},
-            {'data': 'haber'},
-            {'data': 'saldoacumulado'}
+            {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')}
         ],
         columnDefs: [
             {
@@ -52,6 +52,9 @@ $(function () {
 }
     });
     let table2 = $('#data2').DataTable({
+        targets: 'no-sort',
+        bSort: false,
+        order: [],
         searching: false, 
         paging: false, 
         info: false,
@@ -79,9 +82,9 @@ $(function () {
             {"data": "position"},
             {"data": "erpbco"},
             {"data": "codtco"},
-            {'data': 'debe'},
-            {'data': 'haber'},
-            {'data': 'saldoacumulado'}
+            {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')}
         ],
         columnDefs: [
             {

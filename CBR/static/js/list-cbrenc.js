@@ -89,9 +89,9 @@ $(function () {
             },
             {"data": "recordbco"},
             {"data": "recorderp"},
-            {"data": "saldobco"},
-            {"data": "saldoerp"},
-            {"data": "difbcoerp"},
+            {"data": "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "difbcoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
             {"data": null}
         ],
         columnDefs: [

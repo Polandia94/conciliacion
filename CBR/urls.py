@@ -54,8 +54,8 @@ urlpatterns=[
 
     path( 'list/add/', views.CbrencCreateView.as_view(), name='cbrenc_nueva' ),
     path( 'list/addaccount/', views.CbtctaCreateView.as_view(), name='cbtcta_nueva_cuenta' ),
-    path('updateScript/', views.editCbwres, name='edit_cbwres')
-
+    path('updateScript/', views.editCbwres, name='edit_cbwres'),
+    path('descargarArchivos/', views.DescargarArchivoView.as_view(), name='descargar_archivo')
     #path( 'log/<int:idrenc>/', views.CbrecnlListView.as_view(), name='cbrecnl-list' ),
 
 
