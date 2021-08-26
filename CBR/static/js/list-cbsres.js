@@ -177,6 +177,8 @@ $(function () { "use strict"
                                             catch{console.log("error al cargar " + respons.debeerptotal + "como debeerptotal")}
                                             try{habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
                                             catch{}
+                                            console.log("saldoerptotal")
+                                            console.log(Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2}))
                                             try{saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
                                             catch{}
                                             try{saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}

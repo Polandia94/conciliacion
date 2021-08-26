@@ -6,3 +6,4 @@ django-db-file-storage
 pandas
 python-dotenv
 requests
+wsgiref

@@ -96,7 +96,7 @@ class CbrencaForm( ModelForm ):
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             ),
-            'imgbcoroute': DBClearableFileInput(
+            'imgbcoroute': FileInput(
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             )

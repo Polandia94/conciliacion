@@ -428,7 +428,7 @@ class Cbrenc(models.Model):
     #fechacterp = models.DateTimeField(verbose_name='Fecha de carga ERP', db_column='FECHACTERP', blank=True, null=True)
     #idusuerp = models.CharField(verbose_name='Usuario carga ERP', db_column='IDUSUERP', max_length=16, blank=True, null=True)
     recorderp = models.IntegerField(verbose_name='Registros de ERP', db_column='recorderp', default=0, blank=True, null=True)
-    imgbcoroute = models.FileField(verbose_name='Imagen del Banco', storage= DatabaseFileStorage,upload_to='CBR.Cbrenci/imgbco/imgbconame/imgbcomime',blank=True, null=True)
+    imgbcoroute = models.FileField(verbose_name='Imagen del Banco', upload_to='temp',blank=True, null=True)
     saldobco = models.DecimalField( db_column='saldobco', max_digits=16, decimal_places=2, blank=True, null=True )
     saldobcoori = models.DecimalField( db_column='saldobcoori', max_digits=16, decimal_places=2, blank=True, null=True )
     saldoerp =models.DecimalField( db_column='saldoerp', max_digits=16, decimal_places=2, blank=True, null=True )
@@ -436,8 +436,9 @@ class Cbrenc(models.Model):
     difbcoerp =models.DecimalField( db_column='difbcoerp', max_digits=16, decimal_places=2, blank=True, null=True )    
     fechacons=models.DateTimeField( verbose_name='Fecha de conciliación', db_column='fechact', null=True)
     idusucons=models.CharField( verbose_name='Usuario que realizó la última operación', db_column='idusu', max_length=16, null=True )
+    imgbco = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
     def toJSON(self):
-        item = model_to_dict(self)
+        item = model_to_dict(self,exclude=["imgbco", "imgbcoroute"])
         return item
     def delete(self):
         Cbrbod.objects.filter(idrenc=self.idrenc).delete()
@@ -461,17 +462,6 @@ class Cbrenc(models.Model):
 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
-
-class Cbrenci(models.Model):
-    idrenc = models.IntegerField( db_column='idrenc', primary_key=True, default = 1005)
-    imgbconame = models.CharField(max_length=255,null=True)
-    imgbcomime = models.CharField(max_length=50,null=True)
-    imgbco = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
-    def save(self, *args, **kwargs):
-        super( Cbrenci, self ).save( *args, **kwargs )
-    class Meta:
-        managed = True
-        db_table = 'cbrenci'  # Para que en la migracion no ponga el prefijo de la app
 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#

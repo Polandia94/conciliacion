@@ -1,6 +1,6 @@
 from django.db.models.aggregates import Count
 from django.db.models.fields import NullBooleanField
-from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbrenci,Cbttco,Cbterr,Cbrbode,Cbrgale
+from CBR.models import Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale
 import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
@@ -13,11 +13,13 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max, Func, F
 from django.utils.decorators import method_decorator
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render, HttpResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 import requests
+import os
+from wsgiref.util import FileWrapper
 huso = dt.timedelta(hours=0)
 
 
@@ -143,21 +145,18 @@ class CbrencCreateView( CreateView ):
                 form.idusualt=request.user.username
                 self.CbrencNew=form.save()
                 archivobco=request.POST.get( 'archivobco', None )
-                #Elimina el CBRENCI base por si hubo un error previo
-                try:
-                    Cbrenci.objects.filter(idrenc = 1005).delete()
-                except:
-                    pass
-                print( "media/" +str( self.CbrencNew.imgbcoroute ))
-                imgbco = open("media/" +str( self.CbrencNew.imgbcoroute ), "rb").read()
-                file = open('new.pdf', 'wb')
-                file.write(imgbco)
-                file.close()
                 #Homologa el Banco BOD, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'codbco') para saber que homologacion usar
                 HomologacionBcoBOD(request, self.CbrencNew, data,saldobcoanterior )
                 archivoerp=request.POST.get( 'archivoerp', None )
                 #Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
                 HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
+                try:
+                    imgbco = base64.b64encode(open("media/"+ str( self.CbrencNew.imgbcoroute ), 'rb').read())
+                    self.CbrencNew.imgbco = imgbco
+                    self.CbrencNew.save()
+                    os.remove("media/"+ str( self.CbrencNew.imgbcoroute ))
+                except:
+                    print("No hay imagen de banco")
                 try:
                     print( data['error'])
                     error=True
@@ -196,17 +195,7 @@ class CbrencCreateView( CreateView ):
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
                 # Crea la imagen de banco correspondiente
-                try:
-                    aCbrenci = Cbrenci.objects.filter(imgbconame=self.CbrencNew.imgbcoroute).first() 
-                    self.CbrencNew.imgbcoroute = str(self.CbrencNew.imgbcoroute)[:-4] + str(self.CbrencNew.idrenc) + ".pdf"
-                    aCbrenci.imgbconame = str(self.CbrencNew.imgbcoroute)
-                    aCbrenci.idrenc = self.CbrencNew.idrenc
-                    aCbrenci.save()
-                    Cbrenci.objects.filter(idrenc = 1005).delete()
-                    self.CbrencNew.save()
-                except:
-                    pass
-                
+             
 
             else:
                 if Cbrenc.objects.filter( codbco=codbco,
@@ -357,7 +346,7 @@ class CbtctaEditView( CreateView ):
 
             self.CbrencNew=form.save()
         except Exception as e:
-
+            data={}
             data['error']=str( e )
             print(e)
             return JsonResponse( data )
@@ -435,7 +424,6 @@ class CbrencListView( ListView ):
                 for i in Cbrenc.objects.all():
                     item=i.toJSON()
                     item['position']=position
-                    item['imgbcoroute']=i.imgbcoroute.name
                     item['archivobco']=i.archivobco.name
                     item['archivoerp']=i.archivoerp.name
                     data.append( item )
@@ -448,6 +436,7 @@ class CbrencListView( ListView ):
             else:
                 data['error']='Ha ocurrido un error'
         except Exception as e:
+            data={}
             print(e)
             data['error']=str( e )
         return JsonResponse( data, safe=False )
@@ -790,7 +779,7 @@ class CbrbcodDetailView( UpdateView ):
         context['title']='Registro original del archivo del Banco'
         context['id']=self.kwargs.get( 'idrbcod' )
         context['nombre_id']='IDRBCOD'
-        context['idrenc']=self.kwargs.get( 'idrbcoe' )        
+        context['idrenc']=self.kwargs.get( 'idrbcoe' )
         context['list_url']=reverse_lazy( 'CBR:cbsres-list' )
         context['return_url']=self.request.GET['return_url']
         return context
@@ -855,6 +844,7 @@ def cbtctaDelete(request):
         
         except Exception as e:
             print(e)
+            data={}
             data['error']=str( e )
         return JsonResponse( data )
     else:
@@ -1037,8 +1027,7 @@ def conciliarSaldos(request):
             else:
                 data={"info": "La conciliación ya fue cerrada"}
         except Exception as e:
-            import traceback
-            traceback.print_exc()
+            data={}
             print(e)
             data['error']=str( e )
         return JsonResponse( data )
@@ -1298,7 +1287,10 @@ class DetalleBcoListView( ListView ):
         context['codigo']='CBF06'
         context['idrbcoe']=self.request.GET.get( 'idrbcoe' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
-        context['aCbrenc']= Cbrenc.objects.filter(idrenc=idrenc).first()
+        aCbrenc= Cbrenc.objects.filter(idrenc=idrenc).first()
+        context['imagen']=False
+        if aCbrenc.imgbcoroute != "":
+            context['imagen']=True
         return context
 
 
@@ -1726,7 +1718,6 @@ class DetalleErroresBodListView(ListView):
         data={}
         try:
             action=request.POST['action']
-            print(action)
             data=[]
             position=1
             for i in Cbrbode.objects.all():
@@ -1827,14 +1818,15 @@ def getTiposDeConciliacion(request):
                     listadoSumaDebeErp.append(tipo.codtco)
                 elif tipo.inddebhab == "H":
                     listadoSumaHaberErp.append(tipo.codtco)
+    saldoextrabco = 0
+    saldoextraerp = 0
     #calcula primero las del cbwres y si no existen las del cbsres
     for registro in Cbsres.objects.filter(idrenc=idrenc).order_by("idsres").all():
         if Cbwres.objects.filter(idsres = registro.idsres).exists():
             registroAnalizado = Cbwres.objects.filter(idsres = registro.idsres).first()
         else:
             registroAnalizado = registro
-        saldoextrabco = 0
-        saldoextraerp = 0
+
         try:
             data["debeerptotal"] = registroAnalizado.debeerp + data["debeerptotal"]
         except:
@@ -1865,13 +1857,13 @@ def getTiposDeConciliacion(request):
             try:
                 data["debeerptotal"] = registroAnalizado.haberbco + data["debeerptotal"]
                 saldoextraerp = saldoextraerp + registroAnalizado.haberbco
-            except:
+            except Exception as e:
                 pass
         elif registroAnalizado.codtcobco in listadoSumaHaberErp:
             try:
                 data["habererptotal"] = registroAnalizado.debebco + data["habererptotal"]
                 saldoextraerp = saldoextraerp - registroAnalizado.debebco
-            except:
+            except Exception as e:
                 pass
         if registroAnalizado.codtcoerp in listadoSumaDebeBco:
             try:
@@ -1884,7 +1876,7 @@ def getTiposDeConciliacion(request):
                 data["haberbcototal"] = registroAnalizado.debeerp + data["haberbcototal"]
                 saldoextrabco = saldoextrabco + registroAnalizado.debeerp
             except Exception as e:
-                print(e)
+                pass
     data["saldobcototal"] = data["saldobcototal"] + saldoextrabco
     data["saldoerptotal"] = data["saldoerptotal"] + saldoextraerp
     data["saldodiferenciatotal"] = data["saldobcototal"] - data["saldoerptotal"]
@@ -1911,6 +1903,10 @@ class DetalleTiposDeConciliacion( ListView ):
             listadoSumaHaberBco = []
             listadoSumaDebeErp= []
             listadoSumaHaberErp = []
+            listadoSumaDebeBcoNoSaldo = []
+            listadoSumaHaberBcoNoSaldo = []
+            listadoSumaDebeErpNoSaldo = []
+            listadoSumaHaberErpNoSaldo = []
             datos = {}
             for tipo in Cbttco.objects.all():
                 if tipo.indsuma == 1:
@@ -1924,6 +1920,18 @@ class DetalleTiposDeConciliacion( ListView ):
                             listadoSumaDebeErp.append(tipo.codtco)
                         elif tipo.inddebhab == "H":
                             listadoSumaHaberErp.append(tipo.codtco)
+                else:
+                    if tipo.erpbco == 1:
+                        if tipo.inddebhab == "D":
+                            listadoSumaDebeBcoNoSaldo.append(tipo.codtco)
+                        elif tipo.inddebhab == "H":
+                            listadoSumaHaberBcoNoSaldo.append(tipo.codtco)
+                    elif tipo.erpbco == 2:
+                        if tipo.inddebhab == "D":
+                            listadoSumaDebeErpNoSaldo.append(tipo.codtco)
+                        elif tipo.inddebhab == "H":
+                            listadoSumaHaberErpNoSaldo.append(tipo.codtco)
+                    
             #calcula primero las del cbwres y si no existen las del cbsres
             for registro in Cbsres.objects.filter(idrenc=idrenc).order_by("idsres").all():
                 
@@ -1953,33 +1961,61 @@ class DetalleTiposDeConciliacion( ListView ):
                         datos[registroAnalizado.codtcobco]=["haber", registroAnalizado.debeerp + datos[registroAnalizado.codtcobco][1]]
                     except Exception as e:
                         datos[registroAnalizado.codtcobco]=["haber", registroAnalizado.debeerp]
+                if registroAnalizado.codtcobco in listadoSumaDebeErpNoSaldo:
+                    try:
+                        datos[registroAnalizado.codtcobco]=["debeNoSaldo", registroAnalizado.haberbco + datos[registroAnalizado.codtcobco][1]]
+                    except:
+                        datos[registroAnalizado.codtcobco]=["debeNoSaldo", registroAnalizado.haberbco]
+                elif registroAnalizado.codtcobco in listadoSumaHaberErpNoSaldo:
+                    try:
+                        datos[registroAnalizado.codtcobco]=["haberNoSaldo", registroAnalizado.debebco + datos[registroAnalizado.codtcoerp][1]]
+                    except:
+                        datos[registroAnalizado.codtcobco]=["haberNoSaldo", registroAnalizado.debebco]
+                if registroAnalizado.codtcoerp in listadoSumaDebeBcoNoSaldo:
+                    try:
+                        datos[registroAnalizado.codtcoerp]=["debeNoSaldo", registroAnalizado.habererp + datos[registroAnalizado.codtcoerp][1]]
+                    except:
+                        datos[registroAnalizado.codtcoerp]=["debeNoSaldo", registroAnalizado.habererp]
+                elif registroAnalizado.codtcoerp in listadoSumaHaberBcoNoSaldo:
+                    try:
+                        datos[registroAnalizado.codtcobco]=["haberNoSaldo", registroAnalizado.debeerp + datos[registroAnalizado.codtcobco][1]]
+                    except Exception as e:
+                        datos[registroAnalizado.codtcobco]=["haberNoSaldo", registroAnalizado.debeerp]
             print(datos)
-            for i in Cbttco.objects.order_by("ordtco").all():
+            for i in Cbttco.objects.order_by("ordtco").order_by("-indsuma").all():
                 item=i.toJSON()
                 item['position']=position
                 item['ID']=position
                 item["debe"] = 0
                 item["haber"] = 0
+                item['indsum'] = True
                 try:
                     if datos[i.codtco][0]=="debe":
                         if i.erpbco==1:
-                            saldoBco -= datos[i.codtco][1]
+                            saldoBco += datos[i.codtco][1]
                             item["saldoacumulado"] = saldoBco
                         else:
                             saldoErp += datos[i.codtco][1]
                             item["saldoacumulado"] = saldoErp
                         item["debe"] = item["debe"] + datos[i.codtco][1]
-                    else:
-                        if i.erpbco==2:
-                            saldoBco += datos[i.codtco][1]
+                    elif datos[i.codtco][0]=="debe":
+                        if i.erpbco==1:
+                            saldoBco -= datos[i.codtco][1]
                             item["saldoacumulado"] = saldoBco
                         else:
                             saldoErp -= datos[i.codtco][1]
                             item["saldoacumulado"] = saldoErp
                         item["haber"] = item["haber"] + datos[i.codtco][1]
-
-                except Exception as e:
-                    print(e)
+                    elif datos[i.codtco][0]=="debeNoSaldo":
+                        item["debe"] = item["debe"] + datos[i.codtco][1]
+                        item["indsum"] = False
+                    elif datos[i.codtco][0]=="haberNoSaldo":
+                        item["haber"] = item["haber"] + datos[i.codtco][1]
+                        item["indsum"] = False
+                except:
+                    print("error")
+                    import traceback
+                    traceback.print_exc()
                 if i.erpbco==1:
                     item["saldoacumulado"] = saldoBco
                 else:
@@ -2013,9 +2049,17 @@ class DetalleTiposDeConciliacion( ListView ):
         return context
 
 class DescargarArchivoView(View):
-    def post(self, request, *args, **kwargs):
-        idrenc = request.POST['idrenc']
-        Cbrenc(idrenc).imgbcoroute
-        response = HttpResponse(post.archivo, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % post.archivo
+    def get(self, request, *args, **kwargs):
+        idrenc = request.GET['idrenc']
+        imgbco = Cbrenc.objects.filter(idrenc=idrenc).first().imgbco
+        try:
+            os.remove('media/temp/imagen.pdf')
+        except:
+            pass
+        file = open('media/temp/imagen.pdf', 'wb')
+        file.write(base64.b64decode(imgbco))
+        file.close()
+        wrapper = FileWrapper(open('media/temp/imagen.pdf', 'rb'))
+        response = HttpResponse(wrapper, content_type='application/force-download')
+        response['Content-Disposition'] = 'inline; filename=' + 'imagenbanco.pdf'
         return response

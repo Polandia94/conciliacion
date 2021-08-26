@@ -29,21 +29,38 @@ $(function () {
         columns: [
             {"data": "position"},
             {"data": "erpbco"},
+            {'data': 'indsum'},
             {"data": "codtco"},
             {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
             {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')}
+            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            
         ],
         columnDefs: [
             {
-                targets: [2, 3, 4, 5],
+                targets: [3, 4, 5,6],
                 class: 'text-center pt-4',
-                orderable: false
+                orderable: false,
+                createdCell: function (cell){
+                    var row = table.row(cell)
+                    try{
+                        var tr = $(cell);
+                        if(row.data()["indsum"]){
+                            tr.css('color', 'black');
+                        }else{
+                            tr.css('color', 'gray');
+                        }
+                    }
+                    catch{}
+
+                }
             },
             {   
-                targets: [0,1],
+                targets: [0,1,2],
                 visible: false,
-                searchable: false}
+                searchable: false
+            },
+                
         ],
         rowCallback: function( row, data, index ) {
             if (data["erpbco"] == 2) {
@@ -81,19 +98,34 @@ $(function () {
         columns: [
             {"data": "position"},
             {"data": "erpbco"},
+            {'data': 'indsum'},
             {"data": "codtco"},
             {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
             {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')}
+            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            
         ],
         columnDefs: [
             {
-                targets: [2, 3, 4, 5],
+                targets: [3, 4, 5,6],
                 class: 'text-center pt-4',
-                orderable: false
+                orderable: false,
+                createdCell: function (cell){
+                    var row = table2.row(cell)
+                    try{
+                        var tr = $(cell);
+                        if(row.data()["indsum"]){
+                            tr.css('color', 'black');
+                        }else{
+                            tr.css('color', 'gray');
+                        }
+                    }
+                    catch{}
+
+                }
             },
             {   
-                targets: [0,1],
+                targets: [0,1,2],
                 visible: false,
                 searchable: false}
         ],
