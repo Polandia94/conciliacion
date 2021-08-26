@@ -52,9 +52,7 @@ class CbrencaForm( ModelForm ):
             if form.is_valid():
                 data = form.save(commit=True)
             else:
-                print("forma invalida")
                 data['error']=form.errors
-                print(form.errors)
         except Exception as e:
             print(e)
             data['error']=str( e )
@@ -118,9 +116,7 @@ class CbtctaForm( ModelForm ):
             if form.is_valid():
                 data = form.save(commit=True)
             else:
-                print("forma invalida")
                 data['error']=form.errors
-                print(data['error'])
         except Exception as e:
             print(e)
             data['error']=str( e )

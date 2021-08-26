@@ -62,12 +62,9 @@ function _ajax(url, parameters, callback){
 // # ***************************************************************************************************************** #
 function submit_(url, title, content, parameters, callback,contador) {
     function start(counter){
-        console.log(cargadoIncompleto)
         if(counter < 300){
             setTimeout(function(){
             counter++;
-            console.log(counter);
-            console.log(cargando.innerHTML)
             if(cargadoIncompleto){
             cargando.innerHTML = "Cargando " + counter + " segundos"
             start(counter)};
@@ -152,12 +149,9 @@ function submit_(url, title, content, parameters, callback,contador) {
 function ajax_confirm(url, title, content, parameters, callback,contador) {
     let cargadoIncompleto = true;
     function start(counter){
-        console.log(cargadoIncompleto)
         if(counter < 300){
             setTimeout(function(){
             counter++;
-            console.log(counter);
-            console.log(cargando.innerHTML)
             if(cargadoIncompleto){
             cargando.innerHTML = "Conciliando " + counter + " segundos"
             start(counter)};

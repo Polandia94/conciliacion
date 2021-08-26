@@ -35,8 +35,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
         except:
             dataBco=pd.read_csv( "/home/pestevez/aplicacion/conciliacion/media/" + str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,11)) )
         fallo = False
-        print(len( dataBco ))
-        sobreescribir=request.POST['sobreescribir']
         for i in range(1, len( dataBco ) ):
             if pd.isnull(dataBco.loc[i, dataBco.columns[0]]) == False:
                 mes = int(aCbrenc.mes)
@@ -44,6 +42,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 try:
                     aCbrbod = Cbrbod()
                     errores = []
+                    # Crea un Cbrod vacio y una lista vacia de errores. Cada error se agrega a la lista, para al final determinar si debe guardarse o no
                     aCbrbod.idrenc = aCbrenc
                     dia = dataBco.loc[i, dataBco.columns[0]]
                     try:
@@ -159,7 +158,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 )
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
             tableBcoEnc.save()
-            print("va")
             for registro in Cbrbod.objects.filter(idrenc=aCbrbod.idrenc).all():
                 tableBco=Cbrbcod(
                 fechatra=dt.datetime(aCbrenc.ano, aCbrenc.mes, int(registro.diatra)),
@@ -175,11 +173,9 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     )
                 saldo = registro.saldo
                 tableBco.save( aCbrenc )
-            print("fue")
             aCbrenc.recordbco = len( dataBco )
             aCbrenc.saldobco = saldo
             aCbrenc.idusubco=request.user.username
-            print("va")
             return True
     except Exception as e:
         print(e)

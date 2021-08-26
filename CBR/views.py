@@ -1981,7 +1981,6 @@ class DetalleTiposDeConciliacion( ListView ):
                         datos[registroAnalizado.codtcobco]=["haberNoSaldo", registroAnalizado.debeerp + datos[registroAnalizado.codtcobco][1]]
                     except Exception as e:
                         datos[registroAnalizado.codtcobco]=["haberNoSaldo", registroAnalizado.debeerp]
-            print(datos)
             for i in Cbttco.objects.order_by("ordtco").order_by("-indsuma").all():
                 item=i.toJSON()
                 item['position']=position
@@ -2013,9 +2012,7 @@ class DetalleTiposDeConciliacion( ListView ):
                         item["haber"] = item["haber"] + datos[i.codtco][1]
                         item["indsum"] = False
                 except:
-                    print("error")
-                    import traceback
-                    traceback.print_exc()
+                    pass
                 if i.erpbco==1:
                     item["saldoacumulado"] = saldoBco
                 else:

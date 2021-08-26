@@ -94,7 +94,6 @@
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
         var saldodiferencia = parseFloat(document.getElementById("saldodiferenciahtml").textContent.substring(1))
-        console.log(saldodiferencia)
         if (saldodiferencia == 0){
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
@@ -118,7 +117,6 @@
         
 
         
-        console.log("eme")
         ajax_confirm("../conciliarSaldos/", 'Notificación',
             '¿Ejecutar el proceso de conciliación?', parameters,
             function (response) {
@@ -126,29 +124,23 @@
                     location.href = `../cbsres/?idrenc=${response['idrenc']}`;
                     return false;
                 }
-                console.log("alfa")
                 if (response.hasOwnProperty('existe_info')) {
                     const mensaje = `<label> ${response['existe_info']}</label><p class="m-0">Generado por:</p>  <label class="m-0">Usuairo: <strong> ${response['idusucons']}</strong></label><label>Fecha: <strong> ${response['fechacons']}</strong></label> `
-                    console.log("beta")
                     ajax_confirm("../conciliarSaldos/", 'Confirmación',
                         mensaje, {'idrenc': idrenc, "sobreescribir": 'true'},
                         
                         function (response) {  
-                            console.log("doblealfa"),                      
                             location.href = `../cbsres/?idrenc=${response['idrenc']}`;
                         },
                         true
                         )
                     
-                    console.log("doble gamma")
                     return false;
                 }
-                console.log("ya ni se")
                 if (response.hasOwnProperty('info')) {
                     message_info(response['info'], null, null)
                     return false;
                 }
-                console.log("ni se 2")
             });            
     });
     /******************************************************************************************************************/

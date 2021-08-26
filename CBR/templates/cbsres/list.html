@@ -143,7 +143,6 @@ window.onbeforeunload = function(){
             url: "../conciliarSaldos/",
             data: {'idrenc': idrenc, "sobreescribir": 'false'},
             success: function (respons) {
-                    console.log(respons)
                     if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
                         window.location = window.location + '#loaded';
                         window.location.reload();
@@ -160,8 +159,6 @@ window.onbeforeunload = function(){
         if(counter < 300){
             setTimeout(function(){
             counter++;
-            console.log(counter);
-            console.log(cargando.innerHTML)
             if(cargadoIncompleto){
             cargando.innerHTML = "Conciliando " + counter + " segundos"
             start(counter)};
