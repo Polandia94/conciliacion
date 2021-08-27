@@ -2,7 +2,6 @@
 psycopg2-binary
 django
 django-widget-tweaks
-django-db-file-storage
 pandas
 python-dotenv
 requests

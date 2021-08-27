@@ -80,7 +80,7 @@ try:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'contag',
+            'NAME': 'contag2',
             'USER': config['USUARIO_POSTGRES'],
             'PASSWORD': config['PASSWORD_POSTGRES'],
             'HOST': 'localhost',
