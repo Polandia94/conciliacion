@@ -436,7 +436,6 @@ class Cbrenc(models.Model):
     difbcoerp =models.DecimalField( db_column='difbcoerp', max_digits=16, decimal_places=2, blank=True, null=True )    
     fechacons=models.DateTimeField( verbose_name='Fecha de conciliación', db_column='fechact', null=True)
     idusucons=models.CharField( verbose_name='Usuario que realizó la última operación', db_column='idusu', max_length=16, null=True )
-    imgbco = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
     def toJSON(self):
         item = model_to_dict(self,exclude=["imgbco", "imgbcoroute"])
         return item
@@ -462,7 +461,13 @@ class Cbrenc(models.Model):
 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
-
+class Cbrenci(models.Model):
+    idrenc = models.AutoField(verbose_name='ID', db_column='idrenc', primary_key=True)
+    imgbco = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
+    
+    class Meta:
+        managed = True
+        db_table = 'cbrenci'
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
 

@@ -42,23 +42,25 @@
  
     $("#btnGuardar").click(function () {        
         const idrenc = urlParams.get('idrenc');
-        $.ajax({
-            method: 'GET',
-            beforeSend: function (request) {
-                request.setRequestHeader("X-CSRFToken", csrftoken);
-            },
-            url: '/getGuardado',
-            data: {'idrenc': idrenc},
-            success: function (respons) {
-                if (respons.guardado=="si") {
-                    globalVariable.editado = 0;
-                    location.href = "../verificar/conservar/?idrenc=" + idrenc;
-                } else {
-                    alert(respons.guardado)
-                }}
-            
-        
-    });
+        if(cargando.innerHTML == ""){
+            $.ajax({
+                method: 'GET',
+                beforeSend: function (request) {
+                    request.setRequestHeader("X-CSRFToken", csrftoken);
+                },
+                url: '/getGuardado',
+                data: {'idrenc': idrenc},
+                success: function (respons) {
+                    if (respons.guardado=="si") {
+                        globalVariable.editado = 0;
+                        location.href = "../verificar/conservar/?idrenc=" + idrenc;
+                    } else {
+                        alert(respons.guardado)
+                    }}
+            });
+        }else{
+            alert("Espere a que termine de cargar")
+        }
 });
 
             /******************************************************************************************************************/
@@ -93,16 +95,13 @@
     $("#btnCerrarConciliacion").on('click', function (e) {
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
-        var saldodiferencia = parseFloat(document.getElementById("saldodiferenciahtml").textContent.substring(1))
-        if (saldodiferencia == 0){
+        if (globalVariable.SaldoDiferenciaTotal == 0){
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
             function () {
                 location.href = `../cbsres/?idrenc=`+idrenc;
                 return false;
             });
-        }else{
-            alert("Los saldos no concilian")
         }
 
     });

@@ -80,7 +80,7 @@ try:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'contag2',
+            'NAME': 'contag',
             'USER': config['USUARIO_POSTGRES'],
             'PASSWORD': config['PASSWORD_POSTGRES'],
             'HOST': 'localhost',
@@ -92,7 +92,7 @@ except:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'contag2',
+            'NAME': 'contag',
             'USER': "pestevez",
             'PASSWORD': "pestevez123",
             'HOST': 'localhost',

@@ -24,7 +24,7 @@ window.onbeforeunload = function(){
         <i class="fas fa-columns"></i>
     </a>
     {% if editable == 'Editable' %} 
-    <a id="btnCerrarConciliacion" class="btn btn-success btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
+    <a id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
         <i class="fas fa-check-double"></i>
     </a>
     {% endif %}
@@ -112,8 +112,8 @@ window.onbeforeunload = function(){
                                 window.open(URL,"Lupa","centerscreen=yes,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
                              } 
                     </script>
-                    <tr ><th class="dt-comunColor"><a onclick="javascript:ventanaSecundariaGrande('../cbttco/'+'?idrenc=' + idrenc)">Total</a></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="debebcototal">{{debebco}}</div></th><th class="dt-bancoColor"><div id="haberbcototal">{{haberbco}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="saldobcototal">{{saldobco}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor">      
-                    </th><th class="dt-comunColor"></th><th></th><th></th><th><div id="debeerptotalhtml" class="number">{{debeerp}}</div></th><th><div id="habererptotalhtml">{{habererp}}</div></th><th></th><th><div id="saldoerptotalhtml">{{saldoerp}}</div></th><th></th><th><div id="saldodiferenciatotalhtml">{{saldodiferencia}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th class="dt-comunColor"></th></tr>
+                    <tr ><th class="dt-comunColor"><a onclick="javascript:ventanaSecundariaGrande('../cbttco/'+'?idrenc=' + idrenc)">Total</a></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="debebcototal">{{debebcototal}}</div></th><th class="dt-bancoColor"><div id="haberbcototal">{{haberbcototal}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="saldobcototal">{{saldobcototal}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor">      
+                    </th><th class="dt-comunColor"></th><th></th><th></th><th><div id="debeerptotalhtml" class="number">{{debeerptotal}}</div></th><th><div id="habererptotalhtml">{{habererptotal}}</div></th><th></th><th><div id="saldoerptotalhtml">{{saldoerptotal}}</div></th><th></th><th><div id="saldodiferenciatotalhtml">{{saldodiferenciatotal}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th class="dt-comunColor"></th></tr>
 
 	            </tfoot>
 {% endblock %}
@@ -150,7 +150,7 @@ window.onbeforeunload = function(){
                     cargadoIncompleto = false
         
             }})
-        cargando.innerHTML = "Conciliando"
+        cargando.innerHTML = " "
         
         if(cargadoIncompleto){
                             setTimeout(start(0),5000)

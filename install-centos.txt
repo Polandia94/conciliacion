@@ -19,12 +19,12 @@ python3 -m pip install requests
 python3 -m pip install --upgrade pip
 
 deactivate
-psql postgres
+su - postgres
 CREATE DATABASE contag;
 exit
 . \entornovirtual\bin\activate
 
-export PYTHONIOENCODING="UTF-8"; python3.6 manage.py createsuperuser
+export PYTHONIOENCODING="UTF-8"; python manage.py createsuperuser
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser

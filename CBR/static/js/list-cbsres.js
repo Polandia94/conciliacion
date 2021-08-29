@@ -59,9 +59,9 @@ $(function () {
                 saldoi = saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
                 table.cell(fila, ".saldoacumeserp").data(saldoi);
                 /*Calcula el saldo de diferencia */
-                var saldodiferencia = parseFloat(table.cell(row, ".saldoacumesbco").data().replace("$", "")) - parseFloat(table.cell(row, ".saldoacumeserp").data())
+                var saldodiferencia = parseFloat(table.cell(fila, ".saldoacumesbco").data().replace("$", "")) - parseFloat(table.cell(fila, ".saldoacumeserp").data())
                 /* si el dia coincide suma a saldo dia, si no parte de cero*/
-                table.cell(row, ".saldodiferencia").data(saldodiferencia); if (table.cell(fila - 1, ".fechatraerp").data() == table.cell(fila, ".fechatraerp").data()) {
+                table.cell(fila, ".saldodiferencia").data(saldodiferencia); if (table.cell(fila - 1, ".fechatraerp").data() == table.cell(fila, ".fechatraerp").data()) {
                     saldodia = saldodia + saldomas - saldomenos
                 } else {
                     saldodia = saldomas - saldomenos
@@ -180,9 +180,17 @@ $(function () {
                             try { saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
                             catch { }
                             try { saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
-                            catch { }
+                            catch {}
                             globalVariable.SaldoDiferenciaTotal = Number(respons.saldodiferenciatotal)
-                            cargando.innerHTML = "Listo"
+                            if(globalVariable.SaldoDiferenciaTotal == 0){
+                                document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
+                                document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
+                            }else{
+                                document.getElementById("btnCerrarConciliacion").className = "btn btn-light btn-flat mb-3"
+                                document.getElementById("btnCerrarConciliacion").title = "Los saldos no concilian"
+
+                            }
+                            cargando.innerHTML = ""
                         }
                     })
                 }
@@ -325,9 +333,12 @@ $(function () {
                 { "data": "idsres", className: "dt-comunColor" },
                 {
                     "data": "fechatrabco", name: "fechatrabco", className: "dt-bancoColor", "render": function (data, type, full, meta) {
+                        /*
                         if (data != null) {
                             return "<td><nobr>" + data + "</nobr></td>"
                         } else { return "" }
+                        */
+                       return meta.row
                     }
                 },
                 { "data": "horatrabco", className: "dt-bancoColor" },
@@ -464,6 +475,7 @@ $(function () {
 
             ],
             columnDefs: [
+                {orderData: [0]},
                 {
                     targets: [2, 8, 10, 11, 12, 13],
                     createdCell: function (cell) {
@@ -1414,6 +1426,7 @@ $(function () {
 
         );
     */
-
+     
 });
+
 

@@ -346,11 +346,11 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 tableErp.save( aCbrenc )
             aCbrenc.recorderp = len( dataErp )
             aCbrenc.saldoerp = saldo
+            aCbrenc.estado = "0"
             try:
                 aCbrenc.difbcoerp = aCbrenc.saldobco - saldo
             except:
                 aCbrenc.difbcoerp = 0
-            aCbrenc.estado = "0"
             aCbrenc.saldoerpori = aCbrenc.saldoerp
             aCbrenc.fechacons=dt.datetime.now(tz=timezone.utc)
             aCbrenc.idusu=request.user.username
