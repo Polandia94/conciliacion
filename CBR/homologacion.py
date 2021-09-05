@@ -194,11 +194,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
         except:
             pass
         Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
-        try:
-            dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,11)))
-        except Exception as e:
-            print(e)
-            dataErp=pd.read_csv( "/home/pestevez/aplicacion/conciliacion/media/" + str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,11)))
+        dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,11)))
         iniciado = False
         pausa = False
         fallo = False
