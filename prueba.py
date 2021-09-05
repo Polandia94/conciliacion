@@ -1,2 +1,2 @@
-a = '\xed'
+a = '0xf3'
 print(a)
