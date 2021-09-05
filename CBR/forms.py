@@ -1,6 +1,5 @@
 from django.forms import *
 from .models import Cbrenc, Cbrbcod, Cbrencl, Cbrerpd, Cbtcta
-from db_file_storage.form_widgets import DBClearableFileInput
 
 
 class CbrbcodForm(ModelForm):

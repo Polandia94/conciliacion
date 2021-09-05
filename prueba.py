@@ -1,0 +1,2 @@
+a = '\xed'
+print(a)

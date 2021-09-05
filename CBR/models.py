@@ -3,7 +3,6 @@ from django.db import models, connection
 from django.db.models.fields import NullBooleanField
 from django.forms import model_to_dict
 import datetime as dt
-from db_file_storage.storage import DatabaseFileStorage
 
 class Cbrerpe(models.Model):
     idrerpe = models.AutoField(db_column='idrerpe', primary_key=True)
