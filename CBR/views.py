@@ -152,10 +152,10 @@ class CbrencCreateView( CreateView ):
                 #Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
                 HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
                 try:
-                    imgbco = base64.b64encode(open("media/"+ str( self.CbrencNew.imgbcoroute ), 'rb').read())
+                    imgbco = base64.b64encode(open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.imgbcoroute ), 'rb').read())
                     aCbrenci = Cbrenci(idrenc = self.CbrencNew.idrenc, imgbco= imgbco)
                     aCbrenci.save()
-                    os.remove("media/"+ str( self.CbrencNew.imgbcoroute ))
+                    os.remove(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.imgbcoroute ))
                 except:
                     print("No hay imagen de banco")
                 try:
@@ -2073,13 +2073,13 @@ class DescargarArchivoView(View):
         idrenc = request.GET['idrenc']
         imgbco = Cbrenci.objects.filter(idrenc=idrenc).first().imgbco
         try:
-            os.remove('media/temp/imagen.pdf')
+            os.remove(str(Path(__file__).resolve().parent.parent)+ "/media/"+ 'temp/imagen.pdf')
         except:
             pass
-        file = open('media/temp/imagen.pdf', 'wb')
+        file = open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ 'temp/imagen.pdf', 'wb')
         file.write(base64.b64decode(imgbco))
         file.close()
-        wrapper = FileWrapper(open('media/temp/imagen.pdf', 'rb'))
+        wrapper = FileWrapper(open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ 'temp/imagen.pdf', 'rb'))
         response = HttpResponse(wrapper, content_type='application/pdf')
         response['Content-Disposition'] = 'inline; filename=' + 'imagenbanco.pdf'
         return response
