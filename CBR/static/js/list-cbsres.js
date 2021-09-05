@@ -333,12 +333,11 @@ $(function () {
                 { "data": "idsres", className: "dt-comunColor" },
                 {
                     "data": "fechatrabco", name: "fechatrabco", className: "dt-bancoColor", "render": function (data, type, full, meta) {
-                        /*
+                        
                         if (data != null) {
                             return "<td><nobr>" + data + "</nobr></td>"
                         } else { return "" }
-                        */
-                       return meta.row
+                        
                     }
                 },
                 { "data": "horatrabco", className: "dt-bancoColor" },
@@ -1235,6 +1234,7 @@ $(function () {
                         <td><nobr>
                         <select class="miniselect" name="tipo" id="optionbco-${row['idsres']}">
                         <option value="${table.row(meta.row).data()['codtcobco']}">${table.row(meta.row).data()['codtcobco']}</option>
+                        <option value=" "> </option>
                         `
                                 + agregar +
                                 `</select>
@@ -1305,6 +1305,7 @@ $(function () {
                         <td><nobr>
                         <select class="miniselect" name="tipo" id="optionerp-${row['idsres']}">
                         <option value="${table.row(meta.row).data()['codtcoerp']}">${table.row(meta.row).data()['codtcoerp']}</option>
+                        <option value=" "> </option>
                         `
                                 + agregar +
                                 `</select>
