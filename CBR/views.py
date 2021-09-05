@@ -2,7 +2,6 @@ from json.decoder import JSONDecoder
 from django.db.models.aggregates import Count
 from django.db.models.fields import NullBooleanField
 from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale
-import ntpath
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
@@ -21,6 +20,8 @@ from django.utils import timezone
 import requests
 import os
 from wsgiref.util import FileWrapper
+from pathlib import Path
+
 huso = dt.timedelta(hours=0)
 
 
