@@ -356,7 +356,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             aCbrenc.saldoerp = saldo
             aCbrenc.estado = "0"
             try:
-                aCbrenc.difbcoerp = aCbrenc.saldobco - saldo
+                aCbrenc.difbcoerp = float(aCbrenc.saldobco) - float(saldo)
             except:
                 aCbrenc.difbcoerp = 0
             aCbrenc.saldoerpori = aCbrenc.saldoerp

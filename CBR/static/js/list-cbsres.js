@@ -1159,7 +1159,7 @@ $(function () {
                         else if (row['estadobco'] == 1) {
                             zone_html =
 
-                            ` <div class="linkconciliadook"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                            ` <div class="linkconciliadook"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
                                 <script>
                                 function ventanaSecundaria (URL){ 
                                         window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1198,7 +1198,7 @@ $(function () {
                         else if (row['estadoerp'] == 1) {
                             zone_html =
 
-                            ` <div class="linkconciliadook"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                            ` <div class="linkconciliadook"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
                                 <script>
                                 function ventanaSecundaria (URL){ 
                                         window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 

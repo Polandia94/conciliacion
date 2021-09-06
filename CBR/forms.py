@@ -77,11 +77,11 @@ class CbrencaForm( ModelForm ):
                 attrs = { 'placeholder': 'Cuenta',
                           'class': 'form-control getanomes'}
             ),
-            'ano': TextInput(
+            'ano': NumberInput(
                 attrs={'placeholder': 'Año',
                           'class': 'form-control'}
             ),
-            'mes': TextInput(
+            'mes': NumberInput(
                 attrs = { 'placeholder': 'Mes',
                           'class': 'form-control'}
             ),
@@ -111,8 +111,12 @@ class CbtctaForm( ModelForm ):
     def save(self, commit=True):
         data={}
         form=super()
+
         try:
             if form.is_valid():
+                print("casa")
+                form.cleaned_data['empresa']
+                form.data['empresa']
                 data = form.save(commit=True)
             else:
                 data['error']=form.errors
@@ -154,19 +158,19 @@ class CbtctaForm( ModelForm ):
                 attrs = { 'placeholder': 'Mes Base ERP',
                           'class': 'form-control'}
             ),
-            'ano': TextInput(
+            'ano': NumberInput(
                 attrs={'placeholder': 'Año',
                           'class': 'form-control'}
             ),
-            'mes': TextInput(
+            'mes': NumberInput(
                 attrs = { 'placeholder': 'Mes',
                           'class': 'form-control'}
             ),
-            'saldoinibco': TextInput(
+            'saldoinibco': NumberInput(
                 attrs = { 'placeholder': 'Saldo Inicial Banco',
                           'class': 'form-control'}
             ),
-            'saldoinierp': TextInput(
+            'saldoinierp': NumberInput(
                 attrs = { 'placeholder': 'Saldo Inicial ERP',
                           'class': 'form-control'}
             )
