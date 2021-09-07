@@ -114,9 +114,6 @@ class CbtctaForm( ModelForm ):
 
         try:
             if form.is_valid():
-                print("casa")
-                form.cleaned_data['empresa']
-                form.data['empresa']
                 data = form.save(commit=True)
             else:
                 data['error']=form.errors

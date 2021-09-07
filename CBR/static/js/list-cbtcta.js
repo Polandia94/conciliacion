@@ -79,7 +79,7 @@ $(function () {
                     var idtcta = $(this).data('idtcta');
                     var parameters = {'idtcta': idtcta, 'index': $(this).data('index')};
                     ajax_confirm("del/", 'Confirmación',
-                        `¿Eliminar la cuenta ${$(this).data('modificable')}?`, parameters,
+                        `¿Eliminar la cuenta ${$(this).data('idtcta')}?`, parameters,
                         function (response) {
                             if (response.hasOwnProperty('info')) {
                                 message_info(response['info'], null, null)
