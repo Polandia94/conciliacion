@@ -227,8 +227,12 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         if fechatra.year != aCbrenc.ano or fechatra.month != aCbrenc.mes:
                             errores.append(1)
                     except:
-                        fechatra==dataErp.loc[i, dataErp.columns[0]]
-                    
+                        try:
+                            s_date2 = s_date[0:-2]+"20"+s_date[-2:]
+                            fechatra=dt.datetime.strptime( s_date2, '%d/%m/%Y' )
+                        except:
+                            fechatra=dataErp.loc[i, dataErp.columns[0]]
+                            errores.append(1)
                     aCbrgal.nrocomp = dataErp.loc[i, dataErp.columns[1]]
                     if pd.isnull(dataErp.loc[i, dataErp.columns[2]]):
                         aux = 0
@@ -246,7 +250,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         debe = dataErp.loc[i, dataErp.columns[5]].replace(",","")
                     except:
                         errores.append(3)
-                    debeTotal = float(debe) + debeTotal
+                    
                     try:
                         float(dataErp.loc[i, dataErp.columns[6]].replace(",",""))
                         haber = dataErp.loc[i, dataErp.columns[6]].replace(",","")
@@ -259,18 +263,28 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             errores.append(6)
                     except:
                         pass
-                    haberTotal = float(haber) + haberTotal
                     try:
                         float(dataErp.loc[i, dataErp.columns[7]].replace(",",""))
                         saldo = dataErp.loc[i, dataErp.columns[7]].replace(",","")
+
                     except:
-                        errores.append(5)
-                    s_date=dataErp.loc[i, dataErp.columns[8]]                
+                        try:
+                            print("saldo original")
+                            print(float(dataErp.loc[i, dataErp.columns[7]][1:-1].replace(",","")))
+                            saldo = "-" + dataErp.loc[i, dataErp.columns[7]][1:-1].replace(",","")
+                            print("saldomal")
+                            print(saldo) 
+                        except:
+                            errores.append(5)
+                    s_date=dataErp.loc[i, dataErp.columns[8]]
                     try:
                         fechacon = dt.datetime.strptime( s_date, '%d/%m/%Y' )
                     except:
-                        pass
-                    
+                        try:
+                            s_date2 = s_date[0:-2]+"20"+s_date[-2:]
+                            fechacon=dt.datetime.strptime( s_date2, '%d/%m/%Y' )
+                        except:
+                            errores.append(1)
                     aCbrgal.idusu=request.user.username
                     aCbrgal.fechact=dt.datetime.now(tz=timezone.utc)
                     if len(errores) > 0:
@@ -278,7 +292,10 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         haber = dataErp.loc[i, dataErp.columns[6]]
                         saldo = dataErp.loc[i, dataErp.columns[7]]
                         fechacon = dataErp.loc[i, dataErp.columns[8]]
-                        fechatra = dataErp.loc[i, dataErp.columns[0]]  
+                        fechatra = dataErp.loc[i, dataErp.columns[0]]
+                    else:
+                        haberTotal = float(haber) + haberTotal
+                        debeTotal = float(debe) + debeTotal
                     aCbrgal.debe = debe
                     aCbrgal.haber = haber
                     aCbrgal.saldo = saldo

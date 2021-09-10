@@ -1,3 +1,4 @@
+
 from json.decoder import JSONDecoder
 from django.db.models.aggregates import Count
 from django.db.models.fields import NullBooleanField
@@ -207,21 +208,9 @@ class CbrencCreateView( CreateView ):
                                        #cliente=cliente,
                                        empresa=empresa,
                                        ).exists():
-                    data['error']='El mes Anterior no está conciliado: (' \
-                              + ' Cliente: ' + cliente \
-                              + ' Empresa: ' + empresa \
-                              + ' Banco: ' + codbco \
-                              + ' Cuenta: ' + nrocta \
-                              + ' Año: ' + str(anoanterior) \
-                              + ' Mes: ' + str(mesanterior) + ')'
+                    data['error']='Error desconocido'
                 else:
-                    data['error']='El mes Anterior no existe: (' \
-                              + ' Cliente: ' + cliente \
-                              + ' Empresa: ' + empresa \
-                              + ' Banco: ' + codbco \
-                              + ' Cuenta: ' + nrocta \
-                              + ' Año: ' + str(anoanterior) \
-                              + ' Mes: ' + str(mesanterior) + ')'
+                    data['error']='Error desconocido'
         except Exception as e:
             data['error']=str( e )
             print(e)
@@ -1015,6 +1004,10 @@ def conciliarSaldos(request):
                                 bCbsres.linkconciliadobco = aCbsres.idrbcod
                                 aCbsres.save()
                                 bCbsres.save()
+                                if bCbsres.debeerp == bCbsres.haberbco and bCbsres.habererp == bCbsres.debebco:
+                                     bCbsres.estadobco = 1
+                                     bCbsres.linkconciliadoerp = bCbsres.idrerpd
+                                     bCbsres.save()
                         n = n+1
 
                     CbrencUpd=Cbrenc.objects.get( idrenc=idrenc )
@@ -1616,7 +1609,19 @@ def verificarCarga(request):
     saldoerp = aCbrerpd.saldo - aCbrerpd.debe + aCbrerpd.haber
     if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:
         return redirect("../../")
-    return render(request, "cbrenc/confirmarcarga.html",{"saldobcoanterior":saldobcoanterior,  "saldoerpanterior": saldoerpanterior, "saldobco": saldobco, "saldoerp":saldoerp})
+    errorBco = False
+    errorERP = False
+    if saldoerp != saldoerpanterior:
+        errorERP = True
+    if saldobco != saldobcoanterior:
+        errorBco = True
+    saldoerp = "$"+'{:,}'.format(float(saldoerp))
+    saldobco = "$"+'{:,}'.format(float(saldobco))
+    saldoerpanterior = "$"+'{:,}'.format(float(saldoerpanterior))
+    saldobcoanterior = "$"+'{:,}'.format(float(saldobcoanterior))
+    print(errorERP)
+    print(errorBco)
+    return render(request, "cbrenc/confirmarcarga.html",{"saldobcoanterior":saldobcoanterior,  "saldoerpanterior": saldoerpanterior, "saldobco": saldobco, "saldoerp":saldoerp, "errorBco":errorBco, "errorERP":errorERP})
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #

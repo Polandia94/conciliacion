@@ -130,11 +130,17 @@ window.onbeforeunload = function(){
     </script>
     <script>
     window.addEventListener("load", function(event) {
+        console.log("1")
         let cargadoIncompleto = true
+        console.log("2")
         const csrftoken = getCookie('csrftoken');
+        console.log("3")
         const urlParams = new URLSearchParams(window.location.search);
+        console.log("4")
         const idrenc = urlParams.get('idrenc');
+        console.log("5")
         var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
+        console.log("6")
         $.ajax({
             method: 'POST',
             beforeSend: function (request) {
@@ -150,22 +156,33 @@ window.onbeforeunload = function(){
                     cargadoIncompleto = false
         
             }})
+        console.log("7")
         cargando.innerHTML = " "
-        
+        console.log("8")
         if(cargadoIncompleto){
+                            console.log("9")
                             setTimeout(start(0),5000)
                             }
+        console.log("10")
         function start(counter){
-        if(counter < 300){
+        console.log("11")
+        if(counter < 100){
+            console.log("12")
             setTimeout(function(){
+            console.log("13")
             counter++;
+            console.log("14")
             if(cargadoIncompleto){
+            console.log("15")
             cargando.innerHTML = "Conciliando " + counter + " segundos"
+            console.log("16")
             start(counter)};
+            console.log("17")
             }, 1000);
         }else{
-        
+            console.log("18")
             if(cargadoIncompleto){
+            console.log("19")
             cargando.innerHTML = "Hubo un problema. Recargue la página"}
         }
     }

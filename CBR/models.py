@@ -1,8 +1,26 @@
+# -*- coding: utf-8 -*-
+
+
+
 from django.contrib.auth.models import User
 from django.db import models, connection
 from django.db.models.fields import NullBooleanField
 from django.forms import model_to_dict
 import datetime as dt
+import os
+
+def get_path(instance, filename):
+    ahora = dt.datetime.now()
+    filename = filename.encode("ascii", "ignore")
+    filename = filename.decode("ascii", "ignore")
+    path = "upload_files/"+str(ahora.year)+"/"+ str(ahora.month)+ "/" + str(ahora.day) + "/" + filename
+    return path
+
+def get_path_temp(instance, filename):
+    filename = filename.encode("ascii", "ignore")
+    filename = filename.decode("ascii", "ignore")
+    path = "temp/"+ filename
+    return path
 
 class Cbrerpe(models.Model):
     idrerpe = models.AutoField(db_column='idrerpe', primary_key=True)
@@ -105,7 +123,7 @@ class Cbttco(models.Model):
     idttco = models.AutoField(db_column='idttco', primary_key=True)
     indtco = models.CharField(verbose_name='Tipo de conciliación', db_column='indtco', max_length=1)
     codtco = models.CharField(verbose_name='Codtco', db_column='codtco', max_length=4)
-    destco = models.CharField(verbose_name='Descripcion tipo de conciliacion', db_column='destco', max_length=30)
+    destco = models.CharField(verbose_name='Descripcion tipo de conciliacion', db_column='destco', max_length=50)
     ordtco = models.SmallIntegerField(db_column='ordtco', blank=True, null=True)
     erpbco = models.SmallIntegerField(db_column='erpbco', blank=True, null=True)
     inddebhab = models.CharField(db_column='inddebhab', blank=True, null=True, max_length=1)
@@ -419,15 +437,15 @@ class Cbrenc(models.Model):
     #idusualt =models.CharField(verbose_name='Usuario alta', db_column='IDUSUALT', max_length=16, null=True )
     #fechmod=models.DateTimeField( verbose_name='Fecha de Modificado', db_column='FECHMOD', null=True )
     #idusumod =models.CharField(verbose_name='Usuario modificó', db_column='IDUSUMOD', max_length=16, null=True )
-    archivobco = models.FileField(verbose_name='Archivo del Banco', db_column='archivobco', upload_to='upload_files/%Y/%m/%d', null=True, blank=True)
+    archivobco = models.FileField(verbose_name='Archivo del Banco', db_column='archivobco', upload_to=get_path, null=True, blank=True)
     #fechactbco = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='FECHACTBCO', blank=True, null=True)
     #idusubco = models.CharField(verbose_name='Usuario carga Banco', db_column='IDUSUBCO', max_length=16, blank=True, null=True)
     recordbco = models.IntegerField(verbose_name='Registros de Banco', db_column='recordbco', default=0, blank=True, null=True)
-    archivoerp = models.FileField(verbose_name='Archivo del ERP', db_column='archivoerp', upload_to='upload_files/%Y/%m/%d', null=True, blank=True)
+    archivoerp = models.FileField(verbose_name='Archivo del ERP', db_column='archivoerp', upload_to=get_path, null=True, blank=True)
     #fechacterp = models.DateTimeField(verbose_name='Fecha de carga ERP', db_column='FECHACTERP', blank=True, null=True)
     #idusuerp = models.CharField(verbose_name='Usuario carga ERP', db_column='IDUSUERP', max_length=16, blank=True, null=True)
     recorderp = models.IntegerField(verbose_name='Registros de ERP', db_column='recorderp', default=0, blank=True, null=True)
-    imgbcoroute = models.FileField(verbose_name='Imagen del Banco', upload_to='temp',blank=True, null=True)
+    imgbcoroute = models.FileField(verbose_name='Imagen del Banco', upload_to=get_path_temp,blank=True, null=True)
     saldobco = models.DecimalField( db_column='saldobco', max_digits=16, decimal_places=2, blank=True, null=True )
     saldobcoori = models.DecimalField( db_column='saldobcoori', max_digits=16, decimal_places=2, blank=True, null=True )
     saldoerp =models.DecimalField( db_column='saldoerp', max_digits=16, decimal_places=2, blank=True, null=True )
