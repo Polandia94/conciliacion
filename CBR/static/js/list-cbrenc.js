@@ -149,14 +149,19 @@ $(function () {
             {targets: [9],
                 createdCell: function (cell) {
                     var row = table.row(cell)
-                    $(cell).attr("title", "Saldo Original: " + row.data()['saldobcoori'])
-
+                    if(row.data()['saldobcoori'] != null){
+                        var monto = parseFloat(row.data()['saldobcoori']);
+                        $(cell).attr("title", "Saldo Original: $" + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
+                    }
                 }
             },
             {targets: [10],
                 createdCell: function (cell) {
                     var row = table.row(cell)
-                    $(cell).attr("title", "Saldo Original: " + row.data()['saldoerpori'])
+                    if(row.data()['saldobcoori'] != null){
+                        var monto = parseFloat(row.data()['saldoerpori']);
+                        $(cell).attr("title", "Saldo Original: $" + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
+                    }
                 }
             },
             {

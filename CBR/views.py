@@ -208,7 +208,7 @@ class CbrencCreateView( CreateView ):
                                        #cliente=cliente,
                                        empresa=empresa,
                                        ).exists():
-                    data['error']='Error desconocido'
+                    data['error']='El Mes anterior no se encuentra conciliado'
                 else:
                     data['error']='Error desconocido'
         except Exception as e:
@@ -1835,14 +1835,14 @@ def getTiposDeConciliacion(request):
     for tipo in Cbttco.objects.all():
         if tipo.indsuma == 1:
             if tipo.erpbco == 1:
-                if tipo.inddebhab == "D":
+                if tipo.inddebhab == "H":
                     listadoSumaDebeBco.append(tipo.codtco)
-                elif tipo.inddebhab == "H":
+                elif tipo.inddebhab == "D":
                     listadoSumaHaberBco.append(tipo.codtco)
             elif tipo.erpbco == 2:
-                if tipo.inddebhab == "D":
+                if tipo.inddebhab == "H":
                     listadoSumaDebeErp.append(tipo.codtco)
-                elif tipo.inddebhab == "H":
+                elif tipo.inddebhab == "D":
                     listadoSumaHaberErp.append(tipo.codtco)
     saldoextrabco = 0
     saldoextraerp = 0
@@ -1938,25 +1938,25 @@ class DetalleTiposDeConciliacion( ListView ):
             for tipo in Cbttco.objects.all():
                 if tipo.indsuma == 1:
                     if tipo.erpbco == 1:
-                        if tipo.inddebhab == "D":
+                        if tipo.inddebhab == "H":
                             listadoSumaDebeBco.append(tipo.codtco)
-                        elif tipo.inddebhab == "H":
+                        elif tipo.inddebhab == "D":
                             listadoSumaHaberBco.append(tipo.codtco)
                     elif tipo.erpbco == 2:
-                        if tipo.inddebhab == "D":
+                        if tipo.inddebhab == "H":
                             listadoSumaDebeErp.append(tipo.codtco)
-                        elif tipo.inddebhab == "H":
+                        elif tipo.inddebhab == "D":
                             listadoSumaHaberErp.append(tipo.codtco)
                 else:
                     if tipo.erpbco == 1:
-                        if tipo.inddebhab == "D":
+                        if tipo.inddebhab == "H":
                             listadoSumaDebeBcoNoSaldo.append(tipo.codtco)
-                        elif tipo.inddebhab == "H":
+                        elif tipo.inddebhab == "D":
                             listadoSumaHaberBcoNoSaldo.append(tipo.codtco)
                     elif tipo.erpbco == 2:
-                        if tipo.inddebhab == "D":
+                        if tipo.inddebhab == "H":
                             listadoSumaDebeErpNoSaldo.append(tipo.codtco)
-                        elif tipo.inddebhab == "H":
+                        elif tipo.inddebhab == "D":
                             listadoSumaHaberErpNoSaldo.append(tipo.codtco)
                     
             #calcula primero las del cbwres y si no existen las del cbsres

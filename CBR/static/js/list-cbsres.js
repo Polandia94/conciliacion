@@ -313,7 +313,7 @@ $(function () {
             ],
 
             stripeClasses: [],
-            autoWidth: false,
+            autoWidth: true,
             destroy: true,
             hover: true,
             select: true,

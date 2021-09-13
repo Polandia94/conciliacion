@@ -131,7 +131,6 @@ window.onbeforeunload = function(){
     <script>
     window.addEventListener("load", function(event) {
         console.log("1")
-        let cargadoIncompleto = true
         console.log("2")
         const csrftoken = getCookie('csrftoken');
         console.log("3")
@@ -153,35 +152,8 @@ window.onbeforeunload = function(){
                         window.location = window.location + '#loaded';
                         window.location.reload();
                     }
-                    cargadoIncompleto = false
         
             }})
-        console.log("7")
-        
-        console.log("8")
-        if(cargadoIncompleto){
-                            console.log("9")
-                            var contador = 0;
-                            setTimeout(refreshIntervalId = setInterval(start,1000),7000)
-                            }
-        console.log("10")
-        function start(){
-            console.log("13")
-            contador += 1;
-            console.log("contador")
-            console.log(contador)
-            console.log(cargadoIncompleto)
-            console.log("14")
-            if(cargadoIncompleto && contador < 100){
-                console.log("15")
-                cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
-                console.log("16")
-            }else{
-                clearInterval(refreshIntervalId);
-                cargando.innerHTML = ""
-                console.log("stop")
-            };
-        console.log("17")
     }
         
 
