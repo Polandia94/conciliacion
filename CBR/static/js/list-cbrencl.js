@@ -14,6 +14,7 @@ $(function () {
         deferRender: true,
         colReorder: true,
         stateSave: true,
+        stateDuration: 60 * 60 * 24 * 30,
         fixedHeader: true,
         ajax: {
             url: window.location.pathname,
@@ -29,7 +30,7 @@ $(function () {
         },
         columns: [
             {"data": "fechact", "render":function(data){
-                return moment(data).format('L')}},
+                return moment(data).format('DD/MM/YYYY')}},
             {"data": "fechact", "render":function(data){
                 return moment(data).format('HH : mm')}},
             {"data": "idusu"},

@@ -61,19 +61,17 @@ function _ajax(url, parameters, callback){
 // # ***************************************************************************************************************** #
 // # ***************************************************************************************************************** #
 function submit_(url, title, content, parameters, callback,contador) {
+    let error=false;
     function start(counter){
         if(counter < 300){
             setTimeout(function(){
             counter++;
-            if(cargadoIncompleto){
+            
+            if(error){
+                cargando.innerHTML = "Carga errónea"
+            }else{
             cargando.innerHTML = "Cargando " + counter + " segundos"
-            start(counter)};
-            }, 1000);
-        }else{
-        
-            if(cargadoIncompleto){
-            cargando.innerHTML = "Hubo un problema. Recargue la página"}
-        }
+            start(counter)}},1000)};
     };
     $.confirm({
         theme: 'material',
@@ -92,10 +90,11 @@ function submit_(url, title, content, parameters, callback,contador) {
                 action: function () {
                     try{
                         if(contador){
-                            start()
+                            console.log("empieza")
+                            start(0)
                         }
                     }
-                    catch{}
+                    catch{console.log("falla")}
                     $.ajax({
                         url: url, //window.location.pathname
                         type: 'POST',
@@ -127,6 +126,7 @@ function submit_(url, title, content, parameters, callback,contador) {
                               return false;
                         }
                         message_error(data.error);
+                        error = true
                     }).fail(function (jqXHR, textStatus, errorThrown) {
                         alert(textStatus + ': ' + errorThrown);
                     }).always(function (data) {

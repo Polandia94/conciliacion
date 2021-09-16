@@ -38,10 +38,10 @@ function eliminar(){
                     <!-- /.card-body -->
                     Los saldos no coinciden
                     {% if errorBco %}
-                    <p>El saldo esperado del banco es: {{saldobcoanterior}} pero fue de: {{saldobco}}</p>
+                    <p>El saldo inicial esperado del banco es: {{saldobcoanterior}} pero fue de: {{saldobco}}</p>
                     {% endif %}
                     {% if errorERP %}
-                    <p>El saldo esperado del ERP es: {{saldoerpanterior}} pero fue de: {{saldoerp}}</p>
+                    <p>El saldo inicial esperado del ERP es: {{saldoerpanterior}} pero fue de: {{saldoerp}}</p>
                     {% endif %}
                     <p>¿Desea cargar igualmente?</p>
                     <div class="card-footer text-right">

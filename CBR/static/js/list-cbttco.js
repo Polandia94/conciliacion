@@ -13,6 +13,7 @@ $(function () {
         destroy: true,
         deferRender: true,
         stateSave: true,
+        stateDuration: 60 * 60 * 24 * 30,
         fixedHeader: true,
         ajax: {
             url: window.location.pathname,
@@ -82,6 +83,7 @@ $(function () {
         deferRender: true,
         colReorder: true,
         stateSave: true,
+        stateDuration: 60 * 60 * 24 * 30,
         fixedHeader: true,
         ajax: {
             url: window.location.pathname,

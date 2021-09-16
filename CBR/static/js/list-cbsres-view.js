@@ -287,6 +287,7 @@ $(function () { "use strict"
             deferRender: true,
             colReorder: true,
             stateSave: true,
+            stateDuration: 60 * 60 * 24 * 30,
             fixedHeader:{            
                 header: true,
                 footer: true},

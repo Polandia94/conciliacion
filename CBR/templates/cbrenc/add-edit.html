@@ -126,7 +126,7 @@
                                 onclick="location.href='{{ list_url }}'">Cancelar</button>
                     <div id="cargando"></div>
                     </div>
-
+                    
             </form>
             <div class="progress">
                 <div class="progress-bar bg-primary progress-bar-striped" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
@@ -139,6 +139,7 @@
           $('form').on('submit', function (e) {
             e.preventDefault();
             var parameters = new FormData(this);
+            console.log("primera")
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
                 location.href = "{% url 'CBR:cbrenc-car' %}";
             },true);

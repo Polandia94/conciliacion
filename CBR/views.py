@@ -1603,10 +1603,8 @@ def verificarCarga(request):
     else:
         saldobcoanterior = aCberencAnterior.saldobco
         saldoerpanterior = aCberencAnterior.saldoerp
-    aCbrbcod = Cbrbcod.objects.filter(idrbcoe = aCbrenc.idrenc).first()
-    saldobco = aCbrbcod.saldo - aCbrbcod.debe + aCbrbcod.haber
-    aCbrerpd = Cbrerpd.objects.filter(idrerpe = aCbrenc.idrenc).first()
-    saldoerp = aCbrerpd.saldo - aCbrerpd.debe + aCbrerpd.haber
+    saldobco = aCbrenc.saldobco
+    saldoerp = aCbrenc.saldoerp
     if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:
         return redirect("../../")
     errorBco = False

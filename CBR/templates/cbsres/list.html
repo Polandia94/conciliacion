@@ -130,24 +130,19 @@ window.onbeforeunload = function(){
     </script>
     <script>
     window.addEventListener("load", function(event) {
-        console.log("1")
         let cargadoIncompleto = true
-        console.log("2")
         const csrftoken = getCookie('csrftoken');
-        console.log("3")
         const urlParams = new URLSearchParams(window.location.search);
-        console.log("4")
         const idrenc = urlParams.get('idrenc');
-        console.log("5")
         var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
-        console.log("6")
+        const idrencparam =  String(parseInt(idrenc));
         $.ajax({
             method: 'POST',
             beforeSend: function (request) {
                 request.setRequestHeader("X-CSRFToken", csrftoken);
             },
             url: "../conciliarSaldos/",
-            data: {'idrenc': idrenc, "sobreescribir": 'false'},
+            data: {'idrenc': idrencparam, "sobreescribir": 'false'},
             success: function (respons) {
                     if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
                         window.location = window.location + '#loaded';
@@ -156,32 +151,20 @@ window.onbeforeunload = function(){
                     cargadoIncompleto = false
         
             }})
-        console.log("7")
         
-        console.log("8")
         if(cargadoIncompleto){
                             console.log("9")
                             var contador = 0;
                             setTimeout(refreshIntervalId = setInterval(start,1000),7000)
                             }
-        console.log("10")
         function start(){
-            console.log("13")
             contador += 1;
-            console.log("contador")
-            console.log(contador)
-            console.log(cargadoIncompleto)
-            console.log("14")
             if(cargadoIncompleto && contador < 100){
-                console.log("15")
                 cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
-                console.log("16")
             }else{
                 clearInterval(refreshIntervalId);
                 cargando.innerHTML = ""
-                console.log("stop")
             };
-        console.log("17")
     }
         
 

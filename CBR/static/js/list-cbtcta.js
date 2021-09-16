@@ -31,8 +31,8 @@ $(function () {
             {"data": "monbaseerp"},
             {"data": "ano"},
             {"data": "mes"},
-            {"data": "saldoinibco"},
-            {"data": "saldoinierp"},
+            {"data": "saldoinibco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "saldoinierp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
             {"data": null}
         ],
         columnDefs: [
