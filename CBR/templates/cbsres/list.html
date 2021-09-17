@@ -74,10 +74,10 @@ window.onbeforeunload = function(){
         <th scope="col" style="width: 3%; font-size:x-small" class="idrbcod">IDRBCOD</th>
         <th scope="col" style="width: 3%; font-size:x-small;" class="estadobco">ESTADO BANCO</th>
         <th scope="col" style="width: 3%; font-size:x-small" class="codtcobco">COD CONCILIACION BCO</th>
-        <th scope="col" style="width: 3%; font-size:x-small" class="linkconciliadoerp">LINK CONCILIADO ERP</th>
+        <th scope="col" style="width: 3%; font-size:x-small" class="idrerpdl">LINK CONCILIADO ERP</th>
         <th scope="col" style="width: 3%; font-size:x-small;" class="estadoerp">ESTADO ERP</th>
         <th scope="col" style="width: 3%; font-size:x-small" class="codtcoerp">CODIGO CONCILIACION ERP</th>
-        <th scope="col" style="width: 3%; font-size:x-small" class="linkconciliadobco">LINK CONCILIADO BCO</th>
+        <th scope="col" style="width: 3%; font-size:x-small" class="idrbcodl">LINK CONCILIADO BCO</th>
         <th scope="col" style="width: 3%; font-size:x-small" class="idrerpd">IDRERPD</th>
         <th data-look="fechatraerp" scope="col" style="width: 6%; font-size:x-small" class="fechatraerp">FECHA TRANSACCION ERP</th>
         <th data-look="debeerp" scope="col" style="width: 3%; font-size:x-small" class="debeerp">DEBE ERP</th>
@@ -130,45 +130,10 @@ window.onbeforeunload = function(){
     </script>
     <script>
     window.addEventListener("load", function(event) {
-        let cargadoIncompleto = true
-        const csrftoken = getCookie('csrftoken');
-        const urlParams = new URLSearchParams(window.location.search);
-        const idrenc = urlParams.get('idrenc');
-        var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
-        const idrencparam =  String(parseInt(idrenc));
-        $.ajax({
-            method: 'POST',
-            beforeSend: function (request) {
-                request.setRequestHeader("X-CSRFToken", csrftoken);
-            },
-            url: "../conciliarSaldos/",
-            data: {'idrenc': idrencparam, "sobreescribir": 'false'},
-            success: function (respons) {
-                    if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
-                        window.location = window.location + '#loaded';
-                        window.location.reload();
-                    }
-                    cargadoIncompleto = false
+        console.log("comienza funcion")
+        primeraCargaCbsres()
+        console.log("termina funcion")
         
-            }})
-        
-        if(cargadoIncompleto){
-                            console.log("9")
-                            var contador = 0;
-                            setTimeout(refreshIntervalId = setInterval(start,1000),7000)
-                            }
-        function start(){
-            contador += 1;
-            if(cargadoIncompleto && contador < 100){
-                cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
-            }else{
-                clearInterval(refreshIntervalId);
-                cargando.innerHTML = ""
-            };
-    }
-        
-
-
 
 })
     </script>

@@ -80,10 +80,10 @@ $(function () {
                 /*va llenando la informacion a enviar al back */
                 datasend.push(rows.data());
             }
-            if (row.data()["linkconciliadobco"] == -1) { row.data()["linkconciliadobco"] = 0 }
+            if (row.data()["idrbcodl"] == -1) { row.data()["idrbcodl"] = 0 }
             table.rows(function (idx, data, node) {
                 var rowg = table.row(idx)
-                if (rowg.data()["idrbcod"] == row.data()["linkconciliadobco"] && rowg.data()["linkconciliadoerp"] == -1) { rowg.data()["linkconciliadoerp"] = 0 }
+                if (rowg.data()["idrbcod"] == row.data()["idrbcodl"] && rowg.data()["idrerpdl"] == -1) { rowg.data()["idrerpdl"] = 0 }
             })
             var debeerp = 0
             var habererp = 0
@@ -96,7 +96,7 @@ $(function () {
               Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
             */
             table.rows(function (idx, data, node) {
-                if (data.linkconciliadobco == row.data()["linkconciliadobco"]) {
+                if (data.idrbcodl == row.data()["idrbcodl"]) {
                     var rowc = table.row(idx)
                     aConciliarVarios = aConciliarVarios + 1
                     debeerp = debeerp + parseFloat(rowc.data()['debeerp'])
@@ -105,21 +105,21 @@ $(function () {
             });
             table.rows(function (idx, data, node) {
                 var rowb = table.row(idx)
-                if (rowb.data()['idrbcod'] == row.data()["linkconciliadobco"] && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)) {
+                if (rowb.data()['idrbcod'] == row.data()["idrbcodl"] && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)) {
                     table.rows(function (idx, data, node) {
                         var rowc = table.row(idx)
-                        if (rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]) {
+                        if (rowc.data()["idrbcodl"] == row.data()["idrbcodl"]) {
                             rowc.data()["estadoerp"] = 1
                         }
-                        if (aConciliarVarios > 1) { rowb.data()['linkconciliadoerp'] = -1 } else if (aConciliarVarios == 1 && rowb.data()['linkconciliadobco'] == 0) {
-                            rowb.data()['linkconciliadobco'] = rowc.data()['idrbcod']
+                        if (aConciliarVarios > 1) { rowb.data()['idrerpdl'] = -1 } else if (aConciliarVarios == 1 && rowb.data()['idrbcodl'] == 0) {
+                            rowb.data()['idrbcodl'] = rowc.data()['idrbcod']
                         }
                     });
                     rowb.data()['estadobco'] = 1
-                } else if (rowb.data()['idrbcod'] == row.data()["linkconciliadobco"]) {
+                } else if (rowb.data()['idrbcod'] == row.data()["idrbcodl"]) {
                     table.rows(function (idx, data, node) {
                         var rowc = table.row(idx)
-                        if (rowc.data()["linkconciliadobco"] == row.data()["linkconciliadobco"]) {
+                        if (rowc.data()["idrbcodl"] == row.data()["idrbcodl"]) {
                             rowc.data()["estadoerp"] = 0
                         }
                     });
@@ -131,7 +131,7 @@ $(function () {
                 row.data()["historial"] = "4"
                 table.rows(function (idx, data, node) {
                     var rowx = table.row(idx)
-                    if (rowx.data()["idrbcod"] == row.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != row.data()["fechatraerp"]) {
+                    if (rowx.data()["idrbcod"] == row.data()["idrbcodl"] && rowx.data()["fechatrabco"] != row.data()["fechatraerp"]) {
                         row.data()['historial'] = "2"
                     }
 
@@ -205,10 +205,10 @@ $(function () {
         }
         function resaltarerp(e) {
             var row = table.row(e.target.parentElement)
-            if (row.data()["linkconciliadoerp"] == -1) {
+            if (row.data()["idrerpdl"] == -1) {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["idrbcod"] == rowe.data()["linkconciliadobco"] && row.data()["idrbcod"] != 0 && row.data()["idrbcod"] != "") {
+                    if (row.data()["idrbcod"] == rowe.data()["idrbcodl"] && row.data()["idrbcod"] != 0 && row.data()["idrbcod"] != "") {
                         $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#84cf84" });
                     }
 
@@ -216,7 +216,7 @@ $(function () {
             } else {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["linkconciliadoerp"] == rowe.data()["idrerpd"] && row.data()["linkconciliadoerp"] != 0 && row.data()["linkconciliadoerp"] != "") {
+                    if (row.data()["idrerpdl"] == rowe.data()["idrerpd"] && row.data()["idrerpdl"] != 0 && row.data()["idrerpdl"] != "") {
                         $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#84cf84" });
                     }
 
@@ -226,10 +226,10 @@ $(function () {
 
         function desresaltarerp(e) {
             var row = table.row(e.target.parentElement)
-            if (row.data()["linkconciliadoerp"] == -1) {
+            if (row.data()["idrerpdl"] == -1) {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["idrbcod"] == rowe.data()["linkconciliadobco"] && row.data()["idrbcod"] != 0 && row.data()["idrbcod"] != "") {
+                    if (row.data()["idrbcod"] == rowe.data()["idrbcodl"] && row.data()["idrbcod"] != 0 && row.data()["idrbcod"] != "") {
                         $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "" });
                     }
 
@@ -237,7 +237,7 @@ $(function () {
             } else {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["linkconciliadoerp"] == rowe.data()["idrerpd"] && row.data()["linkconciliadoerp"] != 0 && row.data()["linkconciliadoerp"] != "") {
+                    if (row.data()["idrerpdl"] == rowe.data()["idrerpd"] && row.data()["idrerpdl"] != 0 && row.data()["idrerpdl"] != "") {
                         $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "" });
                     }
                 })
@@ -245,10 +245,10 @@ $(function () {
         }
         function resaltarbco(e) {
             var row = table.row(e.target.parentElement)
-            if (row.data()["linkconciliadobco"] == -1) {
+            if (row.data()["idrbcodl"] == -1) {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["idrerpd"] == rowe.data()["linkconciliadoerp"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != "") {
+                    if (row.data()["idrerpd"] == rowe.data()["idrerpdl"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != "") {
                         $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#84cf84" });
                     }
 
@@ -256,7 +256,7 @@ $(function () {
             } else {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["linkconciliadobco"] == rowe.data()["idrbcod"] && row.data()["linkconciliadobco"] != 0 && row.data()["linkconciliadobco"] != "") {
+                    if (row.data()["idrbcodl"] == rowe.data()["idrbcod"] && row.data()["idrbcodl"] != 0 && row.data()["idrbcodl"] != "") {
                         $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#84cf84" });
                     }
                 })
@@ -264,17 +264,17 @@ $(function () {
         }
         function desresaltarbco(e) {
             var row = table.row(e.target.parentElement)
-            if (row.data()["linkconciliadobco"] == -1) {
+            if (row.data()["idrbcodl"] == -1) {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["idrerpd"] == rowe.data()["linkconciliadoerp"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != "") {
+                    if (row.data()["idrerpd"] == rowe.data()["idrerpdl"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != "") {
                         $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "" });
                     }
                 })
             } else {
                 table.rows(function (idx, data, node) {
                     var rowe = table.row(idx)
-                    if (row.data()["linkconciliadobco"] == rowe.data()["idrbcod"] && row.data()["linkconciliadobco"] != 0 && row.data()["linkconciliadobco"] != "") {
+                    if (row.data()["idrbcodl"] == rowe.data()["idrbcod"] && row.data()["idrbcodl"] != 0 && row.data()["idrbcodl"] != "") {
                         $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "" });
                     }
                 })
@@ -383,11 +383,11 @@ $(function () {
 
                 { "data": 'estadobco', className: "dt-comunColor" },
                 { "data": 'codtcobco', className: "dt-comunColor" },
-                { "data": 'linkconciliadoerp', className: "dt-comunColor" },
+                { "data": 'idrerpdl', className: "dt-comunColor" },
 
                 { "data": 'estadoerp', className: "dt-comunColor" },
                 { "data": 'codtcoerp', className: "dt-comunColor" },
-                { "data": 'linkconciliadobco', className: "dt-comunColor" },
+                { "data": 'idrbcodl', className: "dt-comunColor" },
                 { "data": 'idrerpd' },
                 {
                     "data": "fechatraerp", name: "fechatraerp", "render": function (data, type, full, meta) {
@@ -626,7 +626,7 @@ $(function () {
                     }
                 },
                 {
-                    targets: ["linkconciliadoerp"],
+                    targets: ["idrerpdl"],
                     createdCell: function (cell) {
                         let original
                         var row = table.row(cell)
@@ -640,7 +640,7 @@ $(function () {
 
                             cell.addEventListener('focus', function (e) {
                                 var row = table.row(e.target.parentElement)
-                                original = row.data()["linkconciliadoerp"]
+                                original = row.data()["idrerpdl"]
                                 desresaltarerp(e)
                             })
                         }
@@ -657,7 +657,7 @@ $(function () {
                                     table.rows(function (idx, data, node) {
                                         var rowb = table.row(idx)
                                         if (rowb.data()['idrerpd'] == e.target.textContent) {
-                                            if (rowb.data()['linkconciliadobco'] < 1 || rowb.data()['linkconciliadobco'] == null) {
+                                            if (rowb.data()['idrbcodl'] < 1 || rowb.data()['idrbcodl'] == null) {
                                                 existe = true
                                             }
                                         }
@@ -670,15 +670,15 @@ $(function () {
                                         var tr = $(this);
                                         tr.css('color', '#ff0000');
                                         globalVariable.editado = 1
-                                        row.data()['linkconciliadoerp'] = e.target.textContent
+                                        row.data()['idrerpdl'] = e.target.textContent
                                         var debebco = 0
                                         var haberbco = 0
                                         var aConciliarVarios = 0
                                         if (original > 0) {
                                             table.rows(function (idx, data, node) {
                                                 var rowe = table.row(idx)
-                                                if (rowe.data()["linkconciliadobco"] == row.data()["idrbcod"]) {
-                                                    rowe.data()["linkconciliadobco"] = 0
+                                                if (rowe.data()["idrbcodl"] == row.data()["idrbcod"]) {
+                                                    rowe.data()["idrbcodl"] = 0
                                                 }
                                             })
                                         }
@@ -690,7 +690,7 @@ $(function () {
                                           Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
                                         */
                                         table.rows(function (idx, data, node) {
-                                            if (data.linkconciliadoerp == e.target.textContent) {
+                                            if (data.idrerpdl == e.target.textContent) {
                                                 var rowc = table.row(idx)
                                                 aConciliarVarios = aConciliarVarios + 1
                                                 debebco = debebco + parseFloat(rowc.data()['debebco'])
@@ -702,7 +702,7 @@ $(function () {
                                             if (rowb.data()['idrerpd'] == e.target.textContent && rowb.data()['debeerp'] == haberbco && rowb.data()['habererp'] == debebco && (debebco != 0 || haberbco != 0)) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadoerp"] == e.target.textContent) {
+                                                    if (rowc.data()["idrerpdl"] == e.target.textContent) {
                                                         rowc.data()["estadobco"] = 1
                                                     }
                                                 });
@@ -710,17 +710,17 @@ $(function () {
                                                 rowb.data()['historial'] = "4"
                                                 table.rows(function (idx, data, node) {
                                                     var rowx = table.row(idx)
-                                                    if (rowx.data()["idrbcod"] == rowb.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowb.data()["fechatraerp"]) {
+                                                    if (rowx.data()["idrbcod"] == rowb.data()["idrbcodl"] && rowx.data()["fechatrabco"] != rowb.data()["fechatraerp"]) {
                                                         rowb.data()['historial'] = "2"
                                                     }
 
                                                 })
 
-                                                if (aConciliarVarios > 1) { rowb.data()['linkconciliadobco'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['linkconciliadobco'] = row.data()['idrbcod'] }
+                                                if (aConciliarVarios > 1) { rowb.data()['idrbcodl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrbcodl'] = row.data()['idrbcod'] }
                                             } else if (rowb.data()['idrerpd'] == e.target.textContent) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadoerp"] == e.target.textContent) {
+                                                    if (rowc.data()["idrerpdl"] == e.target.textContent) {
                                                         rowc.data()["estadobco"] = 0
                                                     }
                                                 });
@@ -728,7 +728,7 @@ $(function () {
                                                 if (rowb.data()['historial'] == "2" || rowb.data()['historial'] == "3" || rowb.data()['historial'] == "4") {
                                                     rowb.data()['historial'] = "5"
                                                 }
-                                                rowb.data()['linkconciliadobco'] = 0
+                                                rowb.data()['idrbcodl'] = 0
                                             }
                                         });
                                         row = table.row(e.target.parentElement)
@@ -744,7 +744,7 @@ $(function () {
                                         */
 
                                         table.rows(function (idx, data, node) {
-                                            if (data.linkconciliadoerp == original && original != 0) {
+                                            if (data.idrerpdl == original && original != 0) {
                                                 var rowc = table.row(idx)
                                                 aConciliarVarios = aConciliarVarios + 1
                                                 debebco = debebco + parseFloat(rowc.data()['debebco'])
@@ -756,7 +756,7 @@ $(function () {
                                             if (rowb.data()['idrerpd'] == original && original != 0 && (debebco != 0 || haberbco != 0)) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadoerp"] == original && original != 0) {
+                                                    if (rowc.data()["idrerpdl"] == original && original != 0) {
                                                         rowc.data()["estadobco"] = 1
                                                     }
                                                 });
@@ -764,16 +764,16 @@ $(function () {
                                                 rowb.data()['historial'] = "4"
                                                 table.rows(function (idx, data, node) {
                                                     var rowx = table.row(idx)
-                                                    if (rowx.data()["idrbcod"] == rowb.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowb.data()["fechatraerp"]) {
+                                                    if (rowx.data()["idrbcod"] == rowb.data()["idrbcodl"] && rowx.data()["fechatrabco"] != rowb.data()["fechatraerp"]) {
                                                         rowb.data()['historial'] = "2"
                                                     }
 
                                                 })
-                                                if (aConciliarVarios > 1) { rowb.data()['linkconciliadobco'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['linkconciliadobco'] = row.data()['idrbcod'] }
+                                                if (aConciliarVarios > 1) { rowb.data()['idrbcodl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrbcodl'] = row.data()['idrbcod'] }
                                             } if (rowb.data()['idrerpd'] == original && original != 0) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadoerp"] == original && original != 0) {
+                                                    if (rowc.data()["idrerpdl"] == original && original != 0) {
                                                         rowc.data()["estadobco"] = 0
                                                     }
                                                 });
@@ -781,7 +781,7 @@ $(function () {
                                                 if (rowb.data()['historial'] == "2" || rowb.data()['historial'] == "3" || rowb.data()['historial'] == "4") {
                                                     rowb.data()['historial'] = "5"
                                                 }
-                                                rowb.data()['linkconciliadobco'] = 0
+                                                rowb.data()['idrbcodl'] = 0
                                             }
                                         });
 
@@ -902,7 +902,7 @@ $(function () {
                 },
 
                 {
-                    targets: ["linkconciliadobco"],
+                    targets: ["idrbcodl"],
                     createdCell: function (cell) {
                         let original
                         let estadooriginal
@@ -912,7 +912,7 @@ $(function () {
 
                         cell.addEventListener('focus', function (e) {
                             var row = table.row(e.target.parentElement)
-                            original = row.data()["linkconciliadobco"]
+                            original = row.data()["idrbcodl"]
                             estadooriginal = row.data()["historial"]
                             desresaltarbco(e)
 
@@ -931,7 +931,7 @@ $(function () {
                                     table.rows(function (idx, data, node) {
                                         var rowb = table.row(idx)
                                         if (rowb.data()['idrbcod'] == e.target.textContent) {
-                                            if (rowb.data()['linkconciliadoerp'] < 1 || rowb.data()['linkconciliadoerp'] == null) {
+                                            if (rowb.data()['idrerpdl'] < 1 || rowb.data()['idrerpdl'] == null) {
                                                 existe = true
                                             }
                                         }
@@ -944,15 +944,15 @@ $(function () {
                                         var tr = $(this);
                                         tr.css('color', '#ff0000');
                                         globalVariable.editado = 1
-                                        row.data()['linkconciliadobco'] = e.target.textContent
+                                        row.data()['idrbcodl'] = e.target.textContent
                                         var debeerp = 0
                                         var habererp = 0
                                         var aConciliarVarios = 0
                                         if (original > 0) {
                                             table.rows(function (idx, data, node) {
                                                 var rowe = table.row(idx)
-                                                if (rowe.data()["linkconciliadoerp"] == row.data()["idrerpd"]) {
-                                                    rowe.data()["linkconciliadoerp"] = 0
+                                                if (rowe.data()["idrerpdl"] == row.data()["idrerpd"]) {
+                                                    rowe.data()["idrerpdl"] = 0
                                                 }
                                             })
                                         }
@@ -964,7 +964,7 @@ $(function () {
                                           Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
                                         */
                                         table.rows(function (idx, data, node) {
-                                            if (data.linkconciliadobco == e.target.textContent) {
+                                            if (data.idrbcodl == e.target.textContent) {
                                                 var rowc = table.row(idx)
                                                 aConciliarVarios = aConciliarVarios + 1
                                                 debeerp = debeerp + parseFloat(rowc.data()['debeerp'])
@@ -976,12 +976,12 @@ $(function () {
                                             if (rowb.data()['idrbcod'] == e.target.textContent && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadobco"] == e.target.textContent) {
+                                                    if (rowc.data()["idrbcodl"] == e.target.textContent) {
                                                         rowc.data()["estadoerp"] = 1
                                                         rowc.data()["historial"] = "4"
                                                         table.rows(function (idx, data, node) {
                                                             var rowx = table.row(idx)
-                                                            if (rowx.data()["idrbcod"] == rowc.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]) {
+                                                            if (rowx.data()["idrbcod"] == rowc.data()["idrbcodl"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]) {
                                                                 rowc.data()['historial'] = "2"
                                                             }
 
@@ -989,11 +989,11 @@ $(function () {
                                                     }
                                                 });
                                                 rowb.data()['estadobco'] = 1
-                                                if (aConciliarVarios > 1) { rowb.data()['linkconciliadoerp'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['linkconciliadoerp'] = row.data()['idrerpd'] }
+                                                if (aConciliarVarios > 1) { rowb.data()['idrerpdl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrerpdl'] = row.data()['idrerpd'] }
                                             } else if (rowb.data()['idrbcod'] == e.target.textContent) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadobco"] == e.target.textContent) {
+                                                    if (rowc.data()["idrbcodl"] == e.target.textContent) {
                                                         rowc.data()["estadoerp"] = 0
                                                         if (rowc.data()["historial"] == "2" || rowc.data()["historial"] == "4" || rowc.data()["historial"] == "3") {
                                                             rowc.data()["historial"] = "5"
@@ -1001,7 +1001,7 @@ $(function () {
                                                     }
                                                 });
                                                 rowb.data()['estadobco'] = 0
-                                                rowb.data()['linkconciliadoerp'] = 0
+                                                rowb.data()['idrerpdl'] = 0
                                             }
                                         });
                                         row = table.row(e.target.parentElement)
@@ -1016,7 +1016,7 @@ $(function () {
                                           Caso contrario suma todos los que tengan el mismo link conciliado y se verifica si suman igual y se cambian los correspondientes
                                         */
                                         table.rows(function (idx, data, node) {
-                                            if (data.linkconciliadobco == original && original != 0) {
+                                            if (data.idrbcodl == original && original != 0) {
                                                 var rowc = table.row(idx)
                                                 aConciliarVarios = aConciliarVarios + 1
                                                 debeerp = debeerp + parseFloat(rowc.data()['debeerp'])
@@ -1028,12 +1028,12 @@ $(function () {
                                             if (rowb.data()['idrbcod'] == original && original != 0 && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadobco"] == original && original != 0) {
+                                                    if (rowc.data()["idrbcodl"] == original && original != 0) {
                                                         rowc.data()["estadoerp"] = 1
                                                         rowc.data()["historial"] = "5"
                                                         table.rows(function (idx, data, node) {
                                                             var rowx = table.row(idx)
-                                                            if (rowx.data()["idrbcod"] == rowc.data()["linkconciliadobco"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]) {
+                                                            if (rowx.data()["idrbcod"] == rowc.data()["idrbcodl"] && rowx.data()["fechatrabco"] != rowc.data()["fechatraerp"]) {
                                                                 rowc.data()['historial'] = "5"
                                                             }
 
@@ -1041,11 +1041,11 @@ $(function () {
                                                     }
                                                 });
                                                 rowb.data()['estadobco'] = 1
-                                                if (aConciliarVarios > 1) { rowb.data()['linkconciliadoerp'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['linkconciliadoerp'] = row.data()['idrerpd'] }
+                                                if (aConciliarVarios > 1) { rowb.data()['idrerpdl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrerpdl'] = row.data()['idrerpd'] }
                                             } else if (rowb.data()['idrbcod'] == original && original != 0) {
                                                 table.rows(function (idx, data, node) {
                                                     var rowc = table.row(idx)
-                                                    if (rowc.data()["linkconciliadobco"] == original && original != 0) {
+                                                    if (rowc.data()["idrbcodl"] == original && original != 0) {
                                                         rowc.data()["estadoerp"] = 0
                                                         if (rowc.data()["historial"] == "2" || rowc.data()["historial"] == "4" || rowc.data()["historial"] == "3") {
                                                             rowc.data()["historial"] = "5"
@@ -1053,7 +1053,7 @@ $(function () {
                                                     }
                                                 });
                                                 rowb.data()['estadobco'] = 0
-                                                rowb.data()['linkconciliadoerp'] = 0
+                                                rowb.data()['idrerpdl'] = 0
                                             }
                                         });
                                         if (row.data()['historial'] == "0") {
@@ -1146,7 +1146,7 @@ $(function () {
                     }
                 },
                 {
-                    targets: ["linkconciliadoerp"],
+                    targets: ["idrerpdl"],
                     className: "p-0 pb-0 ",
                     orderable: true,
                     render: function (data, type, row) {
@@ -1185,7 +1185,7 @@ $(function () {
                     }
                 },
                 {
-                    targets: ["linkconciliadobco"],
+                    targets: ["idrbcodl"],
                     className: "p-0 pb-0 ",
                     orderable: true,
                     render: function (data, type, row) {
@@ -1322,7 +1322,7 @@ $(function () {
             rowCallback: function (row, data, index) {
                 var sortInfo = $(this).dataTable().fnSettings().aaSorting;
                 if ((sortInfo[0][0] === 0) || (sortInfo[0][0] === 1) || (sortInfo[0][0] === 10)) {
-                    if (data['blockcolor'] === 0) {
+                    if (data['pautado'] === 0) {
                         $(row).addClass('odd');
                     } else {
                         $(row).addClass('even');

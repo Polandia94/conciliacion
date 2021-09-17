@@ -132,17 +132,17 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         fallo = True
                         aCbrbod.idrenc = None
                         aCbrbod.save(aCbrbod)
-                        aCbrbode = Cbrbode(idrbod=aCbrbod ,idterr = Cbterr(error))
+                        aCbrbode = Cbrbode(idrbod=aCbrbod , coderr=error)
                         aCbrbode.save()
                 except Exception as e:
                     print(e)
                     fallo = True
                     try:
                         aCbrbod.save(aCbrbod) 
-                        aCbrbode = Cbrbode(idrbod=aCbrbod ,idterr = Cbterr(99))
+                        aCbrbode = Cbrbode(idrbod=aCbrbod ,coderr = Cbterr(99))
                         aCbrbode.save()
                     except Exception as e:
-                        aCbrbode = Cbrbode(idterr = Cbterr(99))
+                        aCbrbode = Cbrbode(coderr = Cbterr(99))
                         aCbrbode.save()
                         print(e)
 
@@ -178,6 +178,8 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 idrbcoe=tableBcoEnc,
                     )
                 saldo = registro.saldo
+                tableBco.fechact = dt.datetime.now(tz=timezone.utc)
+                tableBco.idusu = request.user.username
                 tableBco.save( aCbrenc )
             aCbrenc.recordbco = len( dataBco )
             aCbrenc.saldobco = saldo
@@ -307,7 +309,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         fallo = True
                         aCbrgal.idrenc = None
                         aCbrgal.save(aCbrgal)
-                        aCbrgale = Cbrgale(idrgal=aCbrgal ,idterr = Cbterr(error))
+                        aCbrgale = Cbrgale(idrgal=aCbrgal ,coderr = error)
                         aCbrgale.save()
             except Exception as e:
                 if dataErp.loc[i, dataErp.columns[4]] != " Van:" and dataErp.loc[i, dataErp.columns[4]] != "TOTALES . . . . . . . " and pausa == False and iniciado:
@@ -368,6 +370,8 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 idrerpe=tableErpEnc,
                     )
                 saldo = registro.saldo
+                tableErp.fechact = dt.datetime.now(tz=timezone.utc)
+                tableErp.idusu = request.user.username
                 tableErp.save( aCbrenc )
             aCbrenc.recorderp = len( dataErp )
             aCbrenc.saldoerp = saldo

@@ -1,8 +1,6 @@
 
-from json.decoder import JSONDecoder
-from django.db.models.aggregates import Count
-from django.db.models.fields import NullBooleanField
-from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale
+from django.db.models.query import prefetch_related_objects
+from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbsresc, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
@@ -154,10 +152,10 @@ class CbrencCreateView( CreateView ):
                 #Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
                 HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
                 try:
-                    imgbco = base64.b64encode(open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.imgbcoroute ), 'rb').read())
+                    imgbco = base64.b64encode(open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.archivoimg ), 'rb').read())
                     aCbrenci = Cbrenci(idrenc = self.CbrencNew.idrenc, imgbco= imgbco)
                     aCbrenci.save()
-                    os.remove(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.imgbcoroute ))
+                    os.remove(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.archivoimg ))
                 except:
                     print("No hay imagen de banco")
                 try:
@@ -194,6 +192,7 @@ class CbrencCreateView( CreateView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF03", idrenc = aCbrencl.idrenc)
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 1
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -390,21 +389,21 @@ class CbrencListView( ListView ):
             aCbttco.save()
             aCbttco= Cbttco(9,2,"AERR","Abonos Erroneos",0,2,"H",0)
             aCbttco.save()
-        if Cbterr.objects.filter(idterr = 99).exists() == False:
-            aCbterr = Cbterr(idterr = 1, descerr = "Día Fuera de Calendario")
+        if Cbterr.objects.filter(coderr = 99).exists() == False:
+            aCbterr = Cbterr(coderr = 1, descerr = "Día Fuera de Calendario")
             aCbterr.save()
-            aCbterr = Cbterr(idterr = 2, descerr = "Sin Código de Oficina")
+            aCbterr = Cbterr(coderr = 2, descerr = "Sin Código de Oficina")
             aCbterr.save()
-            aCbterr = Cbterr(idterr = 3, descerr = "Debe Inválido")
+            aCbterr = Cbterr(coderr = 3, descerr = "Debe Inválido")
             aCbterr.save()
-            aCbterr = Cbterr(idterr = 4, descerr = "Haber Inválido")
+            aCbterr = Cbterr(coderr = 4, descerr = "Haber Inválido")
             aCbterr.save()
-            aCbterr = Cbterr(idterr = 5, descerr = "Saldo Inválido")
+            aCbterr = Cbterr(coderr = 5, descerr = "Saldo Inválido")
             aCbterr.save()
-            aCbterr = Cbterr(idterr = 99, descerr = "Error Desconocido")
+            aCbterr = Cbterr(coderr = 99, descerr = "Error Desconocido")
             aCbterr.save()
-        if Cbterr.objects.filter(idterr = 6).exists() == False:
-            aCbterr = Cbterr(idterr = 6, descerr = "Incumple Logica de aplicación")
+        if Cbterr.objects.filter(coderr = 6).exists() == False:
+            aCbterr = Cbterr(coderr = 6, descerr = "Incumple Logica de aplicación")
             aCbterr.save()
         data={}
         try:
@@ -534,6 +533,7 @@ class CbsresListView( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -639,7 +639,6 @@ class CbsresListView( ListView ):
             print(e)
 
         tiposDeConciliacion = json.loads(getTiposDeConciliacion(self.request).content)
-        print(tiposDeConciliacion)
         context['debebcototal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["debebcototal"]))
         context['haberbcototal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["haberbcototal"]))
         context['saldobcototal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["saldobcototal"]))
@@ -695,6 +694,7 @@ class CbsresviewListView( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc ).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -768,6 +768,7 @@ class CbrbcodDetailView( UpdateView ):
             bCbrenct.save()
         aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = self.kwargs.get( 'idrbcoe' ) ).first())
         aCbrenct.idusu = request.user.username
+        aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
         aCbrenct.accion = 8
         aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
         aCbrenct.save()
@@ -803,6 +804,7 @@ class CbrerpdDetailView( UpdateView ):
             bCbrenct.save()
         aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = self.kwargs.get( 'idrerpe' ) ).first())
         aCbrenct.idusu = request.user.username
+        aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
         aCbrenct.accion = 9
         aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
         aCbrenct.save()
@@ -923,7 +925,7 @@ def conciliarSaldos(request):
                                     mes = Cbrenc.objects.get( idrenc=idrenc).mes,
                                     estadobco = 0,
                                     codtcobco = " ",
-                                    blockcolor = color
+                                    pautado = color
                                     # --------------------
                                 )
                                 insCbsres.save()
@@ -943,7 +945,7 @@ def conciliarSaldos(request):
                         #            insCbsres = Cbsres.objects.filter(idrenc=idrenc, idrerpd = 0, fechatrabco =fechatrabco).annotate(abs_diff=Func(F('debebco') - vwRow.haber + F('haberbco') - vwRow.debe, function='ABS')).order_by('abs_diff').first()
                                 else:
                                     try:
-                                        insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ), blockcolor = color)
+                                        insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ), pautado = color)
                                     except:
                                         insCbsres=Cbsres(idrenc=Cbrenc.objects.get( idrenc=idrenc ))
                                 Unir(vwRow,insCbsres,idrenc,color)
@@ -1000,13 +1002,13 @@ def conciliarSaldos(request):
                                 bCbsres = Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco,debeerp=aCbsres.haberbco,habererp=aCbsres.debebco).first()
                                 aCbsres.estadobco = 1
                                 bCbsres.estadoerp = 1
-                                aCbsres.linkconciliadoerp = bCbsres.idrerpd
-                                bCbsres.linkconciliadobco = aCbsres.idrbcod
+                                aCbsres.idrerpdl = bCbsres.idrerpd
+                                bCbsres.idrbcodl = aCbsres.idrbcod
                                 aCbsres.save()
                                 bCbsres.save()
                                 if bCbsres.debeerp == bCbsres.haberbco and bCbsres.habererp == bCbsres.debebco:
                                      bCbsres.estadobco = 1
-                                     bCbsres.linkconciliadoerp = bCbsres.idrerpd
+                                     bCbsres.idrerpdl = bCbsres.idrerpd
                                      bCbsres.save()
                         n = n+1
 
@@ -1021,6 +1023,7 @@ def conciliarSaldos(request):
                         bCbrenct.save()
                     aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc ).first())
                     aCbrenct.idusu = request.user.username
+                    aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                     aCbrenct.accion = 2
                     aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                     aCbrenct.save()
@@ -1066,7 +1069,7 @@ def Unir(vwRow,insCbsres,idrenc,color):
     insCbsres.referp = vwRow.ref
     insCbsres.glosaerp = vwRow.glosa
     insCbsres.fechaconerp = vwRow.fechacon
-    insCbsres.blockcolor = color
+    insCbsres.pautado = color
 
     insCbsres.estadobco = 0
     insCbsres.estadoerp = 0
@@ -1110,13 +1113,13 @@ def editCbwres(request):
                 saldodiferencia = float(fila["saldodiferencia"])
                 historial = int(fila["historial"]) 
                 try:
-                    linkconciliadobco = int(fila["linkconciliadobco"])
+                    idrbcodl = int(fila["idrbcodl"])
                 except:
-                    linkconciliadobco = int(0)
+                    idrbcodl = int(0)
                 try:
-                    linkconciliadoerp = int(fila["linkconciliadoerp"])
+                    idrerpdl = int(fila["idrerpdl"])
                 except:
-                    linkconciliadoerp = int(0)
+                    idrerpdl = int(0)
                 codtcobco = fila["codtcobco"]
                 codtcoerp = fila["codtcoerp"]          
                 idrenc= Cbrenc.objects.filter(idrenc = idrenc).first()
@@ -1134,7 +1137,7 @@ def editCbwres(request):
                 mes= aCbsres.mes
                 fechatrabco= aCbsres.fechatrabco
                 horatrabco= aCbsres.horatrabco
-                blockcolor= aCbsres.blockcolor
+                pautado= aCbsres.pautado
                 debebco= aCbsres.debebco
                 haberbco= aCbsres.haberbco
                 saldobco= aCbsres.saldobco
@@ -1155,7 +1158,7 @@ def editCbwres(request):
                 fechaconerp= aCbsres.fechaconerp
                 idrerpd= aCbsres.idrerpd   
                 Cbwres.objects.filter( idsres = idsres ).delete()
-                aCbwres = Cbwres(linkconciliadobco=linkconciliadobco,linkconciliadoerp=linkconciliadoerp,idsres=idsres, idrenc= idrenc, cliente=cliente, empresa=empresa, codbco=codbco, nrocta=nrocta, ano=ano, mes=mes, fechatrabco=fechatrabco, horatrabco=horatrabco, debebco=debebco, haberbco=haberbco, saldobco=saldobco, saldoacumesbco=saldoacumesbco, saldoacumdiabco=saldoacumdiabco, oficina=oficina, desctra=desctra, reftra=reftra, codtra=codtra, idrbcod=idrbcod,nrotraerp=nrotraerp,fechatraerp=fechatraerp,nrocomperp=nrocomperp, auxerp=auxerp, referp=referp,glosaerp=glosaerp,debeerp=debeerp,habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp,fechaconerp=fechaconerp,idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco,estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp)
+                aCbwres = Cbwres(idrbcodl=idrbcodl,idrerpdl=idrerpdl,idsres=idsres, idrenc= idrenc, cliente=cliente, empresa=empresa, codbco=codbco, nrocta=nrocta, ano=ano, mes=mes, fechatrabco=fechatrabco, horatrabco=horatrabco, debebco=debebco, haberbco=haberbco, saldobco=saldobco, saldoacumesbco=saldoacumesbco, saldoacumdiabco=saldoacumdiabco, oficina=oficina, desctra=desctra, reftra=reftra, codtra=codtra, idrbcod=idrbcod,nrotraerp=nrotraerp,fechatraerp=fechatraerp,nrocomperp=nrocomperp, auxerp=auxerp, referp=referp,glosaerp=glosaerp,debeerp=debeerp,habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp,fechaconerp=fechaconerp,idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco,estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp)
                 aCbwres.save()
                 if comienzo == -1:
                     break
@@ -1182,6 +1185,7 @@ def cerrarConciliacion(request):
                 bCbrenct.save()
             aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc ).first())
             aCbrenct.idusu = request.user.username
+            aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
             aCbrenct.accion = 2
             aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
             aCbrenct.save()
@@ -1279,6 +1283,7 @@ class DetalleBcoListView( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF06", idrenc = Cbrenc.objects.filter(idrenc = idrbcoe).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -1298,7 +1303,7 @@ class DetalleBcoListView( ListView ):
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
         aCbrenc= Cbrenc.objects.filter(idrenc=idrenc).first()
         context['imagen']=False
-        if aCbrenc.imgbcoroute != "":
+        if aCbrenc.archivoimg != "":
             context['imagen']=True
         return context
 
@@ -1333,6 +1338,7 @@ class DetalleErpListView( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF07", idrenc = Cbrenc.objects.filter(idrenc = idrerpe).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -1388,6 +1394,7 @@ class DetalleTiempoListView( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF05", idrenc = Cbrenc.objects.filter(idrenc = idrenc).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -1445,6 +1452,7 @@ class DetalleLogListView( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF04", idrenc = Cbrenc.objects.filter(idrenc = idrenc).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()
@@ -1524,6 +1532,7 @@ class ConciliacionDeleteForm( CreateView ):
                 bCbrenct.save()
             aCbrenct = Cbrenct(formulario = "CBF10", idrenc = Cbrenc.objects.filter(idrenc = idrenc).first())
             aCbrenct.idusu = request.user.username
+            aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
             aCbrenct.accion = 7
             aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
             aCbrenct.save()
@@ -1603,8 +1612,10 @@ def verificarCarga(request):
     else:
         saldobcoanterior = aCberencAnterior.saldobco
         saldoerpanterior = aCberencAnterior.saldoerp
-    saldobco = aCbrenc.saldobco
-    saldoerp = aCbrenc.saldoerp
+    primerRegistroBco = Cbrbcod.objects.filter(idrbcoe=idrenc).order_by("idrbcoe").first()
+    saldobco = primerRegistroBco.saldo + primerRegistroBco.debe - primerRegistroBco.haber
+    primerRegistroErp = Cbrerpd.objects.filter(idrerpe=idrenc).order_by("idrerpe").first()
+    saldoerp = primerRegistroErp.saldo - primerRegistroErp.debe + primerRegistroErp.haber
     if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:
         return redirect("../../")
     errorBco = False
@@ -1651,6 +1662,7 @@ def conservarGuardado(request):
         bCbrenct.save()
     aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenca ).first())
     aCbrenct.idusu = request.user.username
+    aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
     aCbrenct.accion = 4
     aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
     aCbrenct.save()
@@ -1664,15 +1676,30 @@ def conservarGuardado(request):
         aCbsres.saldoacumeserp = aCbwres.saldoacumeserp
         aCbsres.saldoacumdiaerp = aCbwres.saldoacumdiaerp
         aCbsres.saldodiferencia = aCbwres.saldodiferencia
-        aCbsres.linkconciliadobco = aCbwres.linkconciliadobco
+        aCbsres.idrbcodl = aCbwres.idrbcodl
         aCbsres.codtcobco = aCbwres.codtcobco
         aCbsres.estadobco = aCbwres.estadobco
-        aCbsres.linkconciliadoerp = aCbwres.linkconciliadoerp
+        aCbsres.idrerpdl = aCbwres.idrerpdl
         aCbsres.codtcoerp = aCbwres.codtcoerp
         aCbsres.estadoerp = aCbwres.estadoerp
         aCbsres.save()
         aCbwres.delete()
     tiposDeConciliacion = json.loads(getTiposDeConciliacion(request).content)
+
+    print(tiposDeConciliacion)
+    for idsres in tiposDeConciliacion["listado"]:
+        print("va uno")
+        dato = tiposDeConciliacion[str(idsres)]
+        try:
+            Cbsresc.objects.filter(idsres=idsres).delete()
+        except:
+            pass
+        if dato[0] != "":
+            aCbsresc = Cbsresc(idsres = idsres, codtco = dato[0], debebco = dato[4], haberbco = dato[5], saldoacumesbco = dato[6], saldoacumeserp = dato[7])
+            aCbsresc.save()
+        if dato[1] != "":
+            aCbsresc = Cbsresc(idsres = idsres, codtco = dato[1], debeerp = dato[2], habererp = dato[3], saldoacumesbco = dato[6], saldoacumeserp = dato[7])
+            aCbsresc.save()
     try:
         aCbsres = Cbsres.objects.filter(idrenc=idrenca).order_by('-idsres').first()
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenca).first()
@@ -1692,7 +1719,7 @@ def conservarGuardado(request):
             idusu = request.user.username)
         aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)+huso
         aCbrencl.save(aCbrencl)
-        if Cbsres.objects.filter(idrenc=idrenca, linkconciliadobco = 0).exists() or Cbsres.objects.filter(idrenc=idrenca, linkconciliadoerp = 0).exists():
+        if Cbsres.objects.filter(idrenc=idrenca, idrbcodl = 0).exists() or Cbsres.objects.filter(idrenc=idrenca, idrerpdl = 0).exists():
             aCbrenc.estado = 1
             aCbrenc.save()
             return redirect("../../cbsres/?idrenc="+idrenca)
@@ -1718,6 +1745,7 @@ def eliminarGuardado(request):
         bCbrenct.save()
     aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc ).first())
     aCbrenct.idusu = request.user.username
+    aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
     aCbrenct.accion = 10
     aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
     aCbrenct.save()
@@ -1754,7 +1782,8 @@ class DetalleErroresBodListView(ListView):
                 item['haber'] = detalle.haber
                 item['saldo'] = detalle.saldo
                 item['position']=position
-                item['coderr']= i.idterr.descerr
+                aCbterr = Cbterr.objects.filter(coderr = i.coderr).first()
+                item['coderr']= aCbterr.descerr
                 item['ID']=position
                 data.append( item )
                 position+=1
@@ -1799,7 +1828,8 @@ class DetalleErroresGalListView(ListView):
                 item['saldo'] = detalle.saldo
                 item['fechacon'] = detalle.fechacon
                 item['position']=position
-                item['coderr']= i.idterr.descerr
+                aCbterr = Cbterr.objects.filter(coderr = i.coderr).first()
+                item['coderr']= aCbterr.descerr
                 item['fechact']= detalle.fechact
                 item['ID']=position
                 data.append( item )
@@ -1844,7 +1874,11 @@ def getTiposDeConciliacion(request):
                     listadoSumaHaberErp.append(tipo.codtco)
     saldoextrabco = 0
     saldoextraerp = 0
+    #Listado de quienes tienen codigo para la tabla de respectiva
+    data["listado"] = []
+    
     #calcula primero las del cbwres y si no existen las del cbsres
+    
     for registro in Cbsres.objects.filter(idrenc=idrenc).order_by("idsres").all():
         if Cbwres.objects.filter(idsres = registro.idsres).exists():
             registroAnalizado = Cbwres.objects.filter(idsres = registro.idsres).first()
@@ -1852,7 +1886,7 @@ def getTiposDeConciliacion(request):
             registroAnalizado = registro
 
         try:
-            data["debeerptotal"] = registroAnalizado.debeerp + data["debeerptotal"]
+            data["debeerptotal"] = registroAnalizado.debeerp + data["debeerptotal"]        
         except:
             pass
         try:
@@ -1880,24 +1914,45 @@ def getTiposDeConciliacion(request):
         if registroAnalizado.codtcobco in listadoSumaDebeErp:
             try:
                 data["debeerptotal"] = registroAnalizado.haberbco + data["debeerptotal"]
+                print("alfa")
+                data[str(registroAnalizado.idsres)] = [registroAnalizado.codtcobco,"", 0,0,registroAnalizado.haberbco,0,registroAnalizado.saldoacumesbco,registroAnalizado.saldoacumeserp]
+                data["listado"].append(registroAnalizado.idsres)
                 saldoextraerp = saldoextraerp + registroAnalizado.haberbco
             except Exception as e:
                 pass
         elif registroAnalizado.codtcobco in listadoSumaHaberErp:
             try:
                 data["habererptotal"] = registroAnalizado.debebco + data["habererptotal"]
+                data["listado"].append(registroAnalizado.idsres)
+                data[str(registroAnalizado.idsres)] = [registroAnalizado.codtcobco,"", 0,0,0,registroAnalizado.debebco,registroAnalizado.saldoacumesbco,registroAnalizado.saldoacumeserp]
                 saldoextraerp = saldoextraerp - registroAnalizado.debebco
             except Exception as e:
                 pass
         if registroAnalizado.codtcoerp in listadoSumaDebeBco:
             try:
                 data["debebcototal"] = registroAnalizado.habererp + data["debebcototal"]
+                data["listado"].append(registroAnalizado.idsres)
+                try:
+                    data[str(registroAnalizado.idsres)][1] = registroAnalizado.codtcoerp
+                    data[str(registroAnalizado.idsres)][2] = registroAnalizado.habererp
+                    data[str(registroAnalizado.idsres)][6] = registroAnalizado.saldoacumesbco
+                    data[str(registroAnalizado.idsres)][7] = registroAnalizado.saldoacumeserp
+                except:
+                    data[str(registroAnalizado.idsres)] = ["",registroAnalizado.codtcoerp, registroAnalizado.habererp,0,0,0,registroAnalizado.saldoacumesbco,registroAnalizado.saldoacumeserp]
                 saldoextrabco = saldoextrabco + registroAnalizado.habererp
             except:
                 pass
         elif registroAnalizado.codtcoerp in listadoSumaHaberBco:
             try:
                 data["haberbcototal"] = registroAnalizado.debeerp + data["haberbcototal"]
+                data["listado"].append(registroAnalizado.idsres)
+                try:
+                    data[str(registroAnalizado.idsres)][1] = registroAnalizado.codtcoerp
+                    data[str(registroAnalizado.idsres)][3] = registroAnalizado.debeerp
+                    data[str(registroAnalizado.idsres)][6] = registroAnalizado.saldoacumesbco
+                    data[str(registroAnalizado.idsres)][7] = registroAnalizado.saldoacumeserp
+                except:
+                    data[str(registroAnalizado.idsres)] = ["",registroAnalizado.codtcoerp, 0,registroAnalizado.debeerp,0,0,registroAnalizado.saldoacumesbco,registroAnalizado.saldoacumeserp]
                 saldoextrabco = saldoextrabco + registroAnalizado.debeerp
             except Exception as e:
                 pass
@@ -2056,6 +2111,7 @@ class DetalleTiposDeConciliacion( ListView ):
                     bCbrenct.save()
                 aCbrenct = Cbrenct(formulario = "CBF11", idrenc = Cbrenc.objects.filter(idrenc = idrenc).first())
                 aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.accion = 7
                 aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
                 aCbrenct.save()

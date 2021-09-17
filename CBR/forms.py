@@ -59,7 +59,7 @@ class CbrencaForm( ModelForm ):
 
     class Meta:
         model = Cbrenc
-        fields = ['idrenc', 'empresa', 'codbco', 'nrocta', 'ano', 'mes', 'archivoerp', 'archivobco','imgbcoroute' ]
+        fields = ['idrenc', 'empresa', 'codbco', 'nrocta', 'ano', 'mes', 'archivoerp', 'archivobco','archivoimg' ]
         # fields = '__all__'
         widgets = {
             'idrenc': TextInput(
@@ -93,7 +93,7 @@ class CbrencaForm( ModelForm ):
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             ),
-            'imgbcoroute': FileInput(
+            'archivoimg': FileInput(
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             )

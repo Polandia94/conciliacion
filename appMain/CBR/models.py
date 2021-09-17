@@ -175,7 +175,7 @@ class Cbsres(models.Model):
     habererp = models.DecimalField(db_column='habererp', max_digits=16, decimal_places=2, blank=True, null=True)
     saldoerp = models.DecimalField(db_column='saldoerp', max_digits=16, decimal_places=2, blank=True, null=True)
     fechacon_erp = models.DateField(db_column='FECHACON_ERP', blank=True, null=True)
-    blockcolor=models.BigIntegerField( db_column='BLOCKCOLOR', blank=True, null=True )
+    pautado=models.BigIntegerField( db_column='BLOCKCOLOR', blank=True, null=True )
     def toJSON(self):
         item = model_to_dict(self)
         return item

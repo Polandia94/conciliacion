@@ -77,11 +77,11 @@
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
-                            <label for="imgbcoroute-text" class="col-form-label">{{ form.imgbcoroute.label }}</label>
+                            <label for="archivoimg-text" class="col-form-label">{{ form.archivoimg.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.imgbcoroute|attr:"readonly:readonly" }}
+                                {{ form.archivoimg|attr:"readonly:readonly" }}
                             {% else %}
-                                {{ form.imgbcoroute|attr:"accept:pdf/*,.pdf" }}
+                                {{ form.archivoimg|attr:"accept:pdf/*,.pdf" }}
                             {% endif %}
                         </div>
                     </div>
