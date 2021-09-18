@@ -200,16 +200,22 @@ function primeraCargaCbsres(){
             }})
         console.log("4")
         if(cargadoIncompleto){
-                            console.log("9")
-                            var contador = 0;
-                            setTimeout(refreshIntervalId = setInterval(start,1000),7000)
+                            console.log("9");
+                            // var contador = 0;
+                            console.log("b");
+                            start(0)
+                            console.log("c");
                             }
-        function start(){
-            contador += 1;
+        function start(contador){
+            contador = contador +1
+            console.log("a");
             if(cargadoIncompleto && contador < 100){
+                console.log("cuenta")
                 cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
+                setTimeout(function(){
+                    start(contador); 
+                 },1000)
             }else{
-                clearInterval(refreshIntervalId);
                 cargando.innerHTML = ""
             };
         }

@@ -155,6 +155,7 @@ class CbrencCreateView( CreateView ):
                     imgbco = base64.b64encode(open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.archivoimg ), 'rb').read())
                     aCbrenci = Cbrenci(idrenc = self.CbrencNew.idrenc, imgbco= imgbco)
                     aCbrenci.save()
+                    time.sleep(2)
                     os.remove(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.archivoimg ))
                 except:
                     print("No hay imagen de banco")
@@ -711,20 +712,59 @@ class CbsresviewListView( ListView ):
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['editable']= "No Editable"
-        alertac = ""
+        # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
+        from CBR.models import Cbttco
         n = 0
+        indtco_erp = ""
+        for i in Cbttco.objects.filter(indtco = "1").all():
+            if n>0:
+                indtco_erp = indtco_erp +","
+            indtco_erp = indtco_erp + i.codtco
+            n= n+1
+        context['indtco_erp'] = indtco_erp
+        indtco_bco = ""        
+        n= 0
+        n = 0
+        for i in Cbttco.objects.filter(indtco = "2").all():
+            if n>0:
+                indtco_bco = indtco_bco +","
+            indtco_bco = indtco_bco + i.codtco
+            n = n+1
+        alertaa = ""
+        n = 0
+        for i in Cbttco.objects.filter(indtco = "1").all():
+            if n>0:
+                alertaa = alertaa +"\\n"
+            alertaa = alertaa  + i.codtco + " : " + i.destco
+            n= n+1
+        context['alertaa'] = alertaa
+        alertab = ""
+        n = 0
+        for i in Cbttco.objects.filter(indtco = "2").all():
+            if n>0:
+                alertab = alertab +"\\n"
+            alertab = alertab  + i.codtco + " : " + i.destco
+            n= n+1
+        context['alertab'] = alertab
+        alertac = ""
+        n=0
         for i in Cbttco.objects.filter().all():
             if n>0:
                 alertac = alertac +"\\n"
             alertac = alertac + i.codtco + " : " + i.destco
+
             n= n+1
         context['alertac'] = alertac
+        context['indtco_bco'] = indtco_bco         
         debeerp = 0
         habererp = 0
+        saldoerp = 0
         debebco = 0
         haberbco = 0
+        saldobco = 0
+        saldodiferencia = 0
         try:
-            listado = Cbsres.objects.filter(idrenc = self.request.GET.get( 'idrenc' ))
+            listado = Cbsres.objects.order_by("idsres").filter(idrenc = self.request.GET.get( 'idrenc' ))
             for registro in listado:
                 try:
                     debeerp = debeerp + registro.debeerp
@@ -735,6 +775,11 @@ class CbsresviewListView( ListView ):
                 except:
                     pass
                 try:
+                    if registro.saldoerp is not None:
+                        saldoerp = registro.saldoacumeserp                    
+                except:
+                    pass
+                try:
                     debebco = debebco + registro.debebco
                 except:
                     pass
@@ -742,13 +787,34 @@ class CbsresviewListView( ListView ):
                     haberbco = haberbco + registro.haberbco
                 except:
                     pass
+                try:
+                    if registro.saldobco is not None:
+                        saldobco = registro.saldoacumesbco
+                except:
+                    pass
+                try:
+                    if registro.saldodiferencia is not None:
+                        saldodiferencia = registro.saldodiferencia
+                except:
+                    pass
         except Exception as e:
             print(e)
+
+        tiposDeConciliacion = json.loads(getTiposDeConciliacion(self.request).content)
+        context['debebcototal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["debebcototal"]))
+        context['haberbcototal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["haberbcototal"]))
+        context['saldobcototal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["saldobcototal"]))
+        context['debeerptotal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["debeerptotal"]))
+        context['habererptotal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["habererptotal"]))
+        context['saldoerptotal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["saldoerptotal"]))
+        context['saldodiferenciatotal'] = "$"+'{:,}'.format(float(tiposDeConciliacion["saldodiferenciatotal"]))
         context['habererp']="$"+'{:,}'.format(habererp)
         context['debeerp']="$"+'{:,}'.format(debeerp)
         context ['debebco']="$"+'{:,}'.format(debebco)
         context ['haberbco']="$"+'{:,}'.format(haberbco)
-
+        context ['saldobco']="$"+'{:,}'.format(saldobco)
+        context ['saldoerp']="$"+'{:,}'.format(saldoerp)
+        context ['saldodiferencia']="$"+'{:,}'.format(saldodiferencia)
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
 
         return context
@@ -1612,9 +1678,9 @@ def verificarCarga(request):
     else:
         saldobcoanterior = aCberencAnterior.saldobco
         saldoerpanterior = aCberencAnterior.saldoerp
-    primerRegistroBco = Cbrbcod.objects.filter(idrbcoe=idrenc).order_by("idrbcoe").first()
+    primerRegistroBco = Cbrbcod.objects.filter(idrbcoe=idrenc).order_by("idrbcod").first()
     saldobco = primerRegistroBco.saldo + primerRegistroBco.debe - primerRegistroBco.haber
-    primerRegistroErp = Cbrerpd.objects.filter(idrerpe=idrenc).order_by("idrerpe").first()
+    primerRegistroErp = Cbrerpd.objects.filter(idrerpe=idrenc).order_by("idrerpd").first()
     saldoerp = primerRegistroErp.saldo - primerRegistroErp.debe + primerRegistroErp.haber
     if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:
         return redirect("../../")

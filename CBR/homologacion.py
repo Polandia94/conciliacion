@@ -5,6 +5,7 @@ from django.utils import timezone
 import datetime as dt
 import math
 from pathlib import Path
+import time
 
 
 
@@ -127,6 +128,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     aCbrbod.debe = debe
                     aCbrbod.haber = haber
                     aCbrbod.saldo = saldo
+                    time.sleep(0.001)
                     aCbrbod.save(aCbrbod)                
                     for error in errores:
                         fallo = True
@@ -303,6 +305,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.saldo = saldo
                     aCbrgal.fechacon = fechacon
                     aCbrgal.fechatra = fechatra
+                    time.sleep(0.001)
                     aCbrgal.save(aCbrgal)
                     for error in errores:
                         print(error)
