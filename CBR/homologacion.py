@@ -128,7 +128,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     aCbrbod.debe = debe
                     aCbrbod.haber = haber
                     aCbrbod.saldo = saldo
-                    time.sleep(0.001)
+                    time.sleep(0.01)
                     aCbrbod.save(aCbrbod)                
                     for error in errores:
                         fallo = True
@@ -305,7 +305,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.saldo = saldo
                     aCbrgal.fechacon = fechacon
                     aCbrgal.fechatra = fechatra
-                    time.sleep(0.001)
+                    time.sleep(0.01)
                     aCbrgal.save(aCbrgal)
                     for error in errores:
                         print(error)

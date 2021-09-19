@@ -1678,9 +1678,9 @@ def verificarCarga(request):
     else:
         saldobcoanterior = aCberencAnterior.saldobco
         saldoerpanterior = aCberencAnterior.saldoerp
-    primerRegistroBco = Cbrbcod.objects.filter(idrbcoe=idrenc).order_by("idrbcod").first()
+    primerRegistroBco = Cbrbcod.objects.filter(idrbcoe=idrenc).order_by("idrbcod").order_by("fechatra").first()
     saldobco = primerRegistroBco.saldo + primerRegistroBco.debe - primerRegistroBco.haber
-    primerRegistroErp = Cbrerpd.objects.filter(idrerpe=idrenc).order_by("idrerpd").first()
+    primerRegistroErp = Cbrerpd.objects.filter(idrerpe=idrenc).order_by("idrerpd").order_by("fechatra").first()
     saldoerp = primerRegistroErp.saldo - primerRegistroErp.debe + primerRegistroErp.haber
     if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:
         return redirect("../../")

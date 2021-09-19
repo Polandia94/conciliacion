@@ -153,7 +153,7 @@ class Cbttco(models.Model):
 #**********************************************************************************************************************#
 
 class Cbrbod(models.Model):
-    idrbod = models.IntegerField(db_column='idrbod', primary_key=True)
+    idrbod = models.AutoField(db_column='idrbod', primary_key=True)
     idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
     diatra = models.TextField(verbose_name='Dia de Transaccion', db_column='diatra')
     oficina = models.TextField(verbose_name='Oficina', db_column='oficina')
@@ -176,10 +176,6 @@ class Cbrbod(models.Model):
         return item
 
     def save(self, *args, **kwargs):
-        try:
-            self.idrbod = Cbrbod.objects.order_by('-idrbod')[0].idrbod + 1
-        except:
-            self.idrbod = 0
         super( Cbrbod, self ).save( *args, **kwargs )
 
         # - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -189,7 +185,7 @@ class Cbrbod(models.Model):
 #**********************************************************************************************************************#
 
 class Cbrgal(models.Model):
-    idrgal = models.IntegerField(db_column='idrgal', primary_key=True)
+    idrgal = models.AutoField(db_column='idrgal', primary_key=True)
     idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
     fechatra = models.TextField(db_column='fechatra', null=True)
     nrocomp = models.TextField(verbose_name='Numero de Comprobante', db_column='nrocomp', null=True)
@@ -215,10 +211,6 @@ class Cbrgal(models.Model):
         return item
 
     def save(self, *args, **kwargs):
-        try:
-            self.idrgal = Cbrgal.objects.order_by('-idrgal')[0].idrgal + 1
-        except:
-            self.idrgal=1
         super( Cbrgal, self ).save( *args, **kwargs )
 
     def actualizar(self, *args, **kwargs):

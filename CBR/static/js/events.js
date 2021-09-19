@@ -174,11 +174,12 @@
 
 })(jQuery);
 
-function primeraCargaCbsres(){
+async function primeraCargaCbsres(){
         let cargadoIncompleto = true
         const csrftoken = getCookie('csrftoken');
         const urlParams = new URLSearchParams(window.location.search);
         const idrenc = urlParams.get('idrenc');
+        const idrencparam = String(parseInt(idrenc))
         console.log("1")
         console.log("2")
         
@@ -189,8 +190,9 @@ function primeraCargaCbsres(){
                 request.setRequestHeader("X-CSRFToken", csrftoken);
             },
             url: "../conciliarSaldos/",
-            data: {'idrenc': idrenc, "sobreescribir": 'false'},
+            data: {'idrenc': idrencparam, "sobreescribir": 'false'},
             success: function (respons) {
+                    console.log("falla aca:")
                     if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
                         window.location = window.location + '#loaded';
                         window.location.reload();
@@ -207,14 +209,14 @@ function primeraCargaCbsres(){
                             console.log("c");
                             }
         function start(contador){
-            contador = contador +1
+            contador = contador +3
             console.log("a");
             if(cargadoIncompleto && contador < 100){
                 console.log("cuenta")
                 cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
                 setTimeout(function(){
                     start(contador); 
-                 },1000)
+                 },3000)
             }else{
                 cargando.innerHTML = ""
             };
