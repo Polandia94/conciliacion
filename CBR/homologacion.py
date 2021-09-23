@@ -42,11 +42,16 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,11)), encoding= "ISO-8859-1" )
 
         fallo = False
+        n = 0
         for i in range(1, len( dataBco ) ):
             if pd.isnull(dataBco.loc[i, dataBco.columns[0]]) == False:
                 mes = int(aCbrenc.mes)
                 ano = int(aCbrenc.ano)
                 try:
+                    if n < 8:
+                        time.sleep(1)
+                        print(dataBco.loc[i, dataBco.columns[0]])
+                    n = n+1
                     aCbrbod = Cbrbod()
                     errores = []
                     # Crea un Cbrod vacio y una lista vacia de errores. Cada error se agrega a la lista, para al final determinar si debe guardarse o no
@@ -166,7 +171,11 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 )
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
             tableBcoEnc.save()
-            for registro in Cbrbod.objects.filter(idrenc=aCbrbod.idrenc).all():
+            n = 0
+            for registro in Cbrbod.objects.order_by("idrbod").filter(idrenc=aCbrbod.idrenc).all():
+                if n < 8:
+                    time.sleep(1)
+                n = n + 1
                 tableBco=Cbrbcod(
                 fechatra=dt.datetime(aCbrenc.ano, aCbrenc.mes, int(registro.diatra)),
                 horatra="00:00:00",
@@ -217,9 +226,17 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
         fallo = False
         haberTotal = 0
         debeTotal = 0
+        n = 0
         for i in range(1, len( dataErp ) ):
             try:
                 if dataErp.loc[i, dataErp.columns[0]].find("/")>-1:
+                    if n < 8:
+                        time.sleep(1)
+                    else:
+                        time.sleep(0.01)
+                    if n < 40:
+                        print(dataErp.loc[i, dataErp.columns[0]])
+                    n= n+1
                     errores = []
                     pausa = False
                     iniciado = True
@@ -234,6 +251,8 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         try:
                             s_date2 = s_date[0:-2]+"20"+s_date[-2:]
                             fechatra=dt.datetime.strptime( s_date2, '%d/%m/%Y' )
+                            if fechatra.year != aCbrenc.ano or fechatra.month != aCbrenc.mes:
+                                errores.append(1)
                         except:
                             fechatra=dataErp.loc[i, dataErp.columns[0]]
                             errores.append(1)
@@ -273,11 +292,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
 
                     except:
                         try:
-                            print("saldo original")
-                            print(float(dataErp.loc[i, dataErp.columns[7]][1:-1].replace(",","")))
                             saldo = "-" + dataErp.loc[i, dataErp.columns[7]][1:-1].replace(",","")
-                            print("saldomal")
-                            print(saldo) 
                         except:
                             errores.append(5)
                     s_date=dataErp.loc[i, dataErp.columns[8]]
@@ -305,7 +320,6 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.saldo = saldo
                     aCbrgal.fechacon = fechacon
                     aCbrgal.fechatra = fechatra
-                    time.sleep(0.01)
                     aCbrgal.save(aCbrgal)
                     for error in errores:
                         print(error)
@@ -356,7 +370,15 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 aCbrenc.save()
             tableErpEnc.save()
             n = 0
-            for registro in Cbrgal.objects.filter(idrenc=aCbrenc.idrenc).all():
+            for registro in Cbrgal.objects.order_by("idrgal").filter(idrenc=aCbrenc.idrenc).all():
+                if n < 8:
+                    time.sleep(1)
+                    print("a")
+                    print(registro.fechatra)
+                else:
+                    time.sleep(0.01)
+                n = n+1
+                
                 fechatra = registro.fechatra[0:10]
                 fechacon = registro.fechacon[0:10]
                 tableErp=Cbrerpd(

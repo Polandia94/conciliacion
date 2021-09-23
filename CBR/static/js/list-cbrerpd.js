@@ -4,7 +4,7 @@ $(function () {
     const idrerpe = urlParams.get('idrerpe');
     $('#data').DataTable({
         targets: 'no-sort',
-        bSort: false,
+        //bSort: false,
         order: [],
         responsive: true,
         autoWidth: true,

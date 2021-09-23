@@ -205,7 +205,7 @@ async function primeraCargaCbsres(){
                             console.log("9");
                             // var contador = 0;
                             console.log("b");
-                            start(0)
+                            //start(0)
                             console.log("c");
                             }
         function start(contador){
