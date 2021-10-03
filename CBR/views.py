@@ -1,6 +1,8 @@
 
 from django.db.models.query import prefetch_related_objects
-from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbsresc, Cbtbco, Cbsres, Cbtcta, Cbrencl,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbsresc, Cbtbco, Cbsres, Cbtcta, Cbrencl, Cbtusu,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale, Cbtpai, Cbtcli, Cbsusu
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
@@ -9,7 +11,6 @@ from CBR.homologacion import *
 import datetime as dt
 import base64
 import json
-from django.contrib.auth.decorators import login_required
 from django.db.models import Max, Func, F
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse, HttpResponseRedirect, FileResponse, request
@@ -20,9 +21,86 @@ import requests
 import os
 from wsgiref.util import FileWrapper
 from pathlib import Path
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.dispatch import receiver
+from django.contrib.auth import logout
+from django.contrib.auth.hashers import make_password
+from django.conf import settings
+from django.utils.http import is_safe_url
+
 
 huso = dt.timedelta(hours=0)
 
+@receiver(user_logged_out)
+def post_logout(sender, user, request, **kwargs):
+    try:
+        if request.POST.get("autocierre") != True:
+            aCbsusu = Cbsusu.objects.filter(idusu1=request.user.username).order_by("corrusu").last()
+            aCbsusu.finlogin =  dt.datetime.now(tz=timezone.utc)+huso
+            aCbsusu.save()
+        else:        
+            data={}
+            data['error']="Debe cerrar sesión en el otro navegador"
+            print(data)
+            print(request.POST)
+            print("yanise")
+            return JsonResponse( data )
+    except:
+        pass
+
+def login(request):
+    usuario = request.GET.get("usuario")
+    aCbsusu = Cbtusu.objects.filter(idusu1=usuario).first()
+    data= {}
+    try:
+        data["reinicia"] = aCbsusu.pasusu
+    except:
+        data["reinicia"] = False
+    return JsonResponse( data )
+
+def reiniciarUsuario(request):
+    usuario = request.GET.get("usuario")
+    contra = request.GET.get("contra")
+    aCbsusu = Cbtusu.objects.filter(idusu1=usuario).first()
+    if aCbsusu.pasusu:
+        user = User.objects.filter(username=usuario).first()
+        user.password = make_password(contra)
+        user.save()
+        aCbsusu.pasusu = False
+        aCbsusu.save()
+    data = {}
+    return JsonResponse(data)
+
+@receiver(user_logged_in)
+def post_login(sender, user, request, **kwargs):
+    aCbtusu = Cbtusu.objects.filter(idusu1 = request.user.username).first()
+    aCbsusu = Cbsusu.objects.filter(idusu1 = request.user.username).order_by("corrusu").last()
+    try:
+        if aCbsusu.finlogin == None:
+            request.POST._mutable = True
+            request.POST["autocierre"]=True
+
+            logout(request)
+            print("estoexiste")
+            print(request)
+            data={}
+            data['error']="Debe cerrar sesión en el otro navegador"
+            return JsonResponse( data )
+        else:
+            cliente = aCbtusu.cliente
+            idusu1 = request.user.username
+            iniciologin = dt.datetime.now(tz=timezone.utc)+huso
+            aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
+            aCbsusu.guardar(aCbsusu)
+    except Exception as e:
+        print("gamma")
+        print(e)
+        #cliente = aCbtusu.cliente
+        #idusu1 = request.user.username
+        #iniciologin = dt.datetime.now(tz=timezone.utc)+huso
+        #aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
+        #aCbsusu.guardar(aCbsusu)        
+         
 
 class CbrbcodView( View ):
     model=Cbrbcod
@@ -40,6 +118,7 @@ class CbrbcodView( View ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Detalle de Anotación en Banco'
 
 
@@ -220,6 +299,7 @@ class CbrencCreateView( CreateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Carga de Datos'
         context['codigo']='CBF03'
 
@@ -279,6 +359,7 @@ class CbtctaCreateView( CreateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Nueva Cuenta'
         context['codigo']='CBF09'
 
@@ -346,6 +427,7 @@ class CbtctaEditView( CreateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Nueva Cuenta'
         context['codigo']='CBF09'
         context['action']='edit'
@@ -371,6 +453,9 @@ class CbrencListView( ListView ):
 
     def post(self, request, *args, **kwargs):
         # si no existe la base de datos de CBTTCO la crea, esto solo para pruebas, no mantener en produccion
+        if Cbtcli.objects.filter(cliente="pablo").exists() == False:
+            aCbtcli = Cbtcli(cliente="pablo", descli="describo a pablo")
+            aCbtcli.save()
         if Cbttco.objects.filter(codtco = "DPTR").exists() == False:
             aCbttco= Cbttco(1,1,"DPTR","Depositos en Transito (+)",0,1,"H",1)
             aCbttco.save()
@@ -434,11 +519,13 @@ class CbrencListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Lista de Conciliaciones'
         context['codigo']='CBF01'
         context['create_url']=reverse_lazy( 'CBR:cbrenc_nueva' )
         context['account_url']=reverse_lazy( 'CBR:cbtcta-list' )
         context['list_url']=reverse_lazy( 'CBR:cbrenc-list' )
+        context['usuarios_url']=reverse_lazy('CBR:cbtusu-list')
         return context
 
 
@@ -479,6 +566,7 @@ class CbtctaListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Lista de Cuentas'
         context['codigo']='CBF08'
         context['create_url']=reverse_lazy( 'CBR:cbrenc_nueva' )
@@ -547,6 +635,7 @@ class CbsresListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Resultados'
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
@@ -708,6 +797,7 @@ class CbsresviewListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Resultados'
         context['codigo']='CBF02'
         context['idrenc']=self.request.GET.get( 'idrenc' )
@@ -846,6 +936,7 @@ class CbrbcodDetailView( UpdateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Registro original del archivo del Banco'
         context['id']=self.kwargs.get( 'idrbcod' )
         context['nombre_id']='IDRBCOD'
@@ -882,6 +973,7 @@ class CbrerpdDetailView( UpdateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Registro original del archivo del ERP'
         context['id']=self.kwargs.get( 'idrerpd' )
         context['nombre_id']='IDRERPD'
@@ -1362,6 +1454,7 @@ class DetalleBcoListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         idrenc=self.request.GET['idrbcoe']
         context['title']='Detalle de carga del archivo de Banco'
         context['codigo']='CBF06'
@@ -1416,6 +1509,7 @@ class DetalleErpListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Detalle de carga del archivo del ERP'
         context['codigo']='CBF07'
         context['idrerpe']=self.request.GET.get( 'idrerpe' )
@@ -1472,6 +1566,7 @@ class DetalleTiempoListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Log de Tiempo'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
@@ -1531,6 +1626,7 @@ class DetalleLogListView( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Log'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
@@ -1629,6 +1725,7 @@ class ConciliacionDeleteForm( CreateView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='eliminar'
         context['codigo']='CBF10'
         context['idrenc']=self.request.GET.get( 'idrenc' )
@@ -1641,7 +1738,6 @@ class ConciliacionDeleteForm( CreateView ):
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
-
 
 def verificarGuardado(request):
     return render(request, "cbrenc/confirmation-form.html")
@@ -1858,6 +1954,7 @@ class DetalleErroresBodListView(ListView):
         return JsonResponse( data, safe=False )
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Detalle de Errores Banco'
         context['codigo']='CBF10'
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
@@ -1905,6 +2002,7 @@ class DetalleErroresGalListView(ListView):
         return JsonResponse( data, safe=False )
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Detalle de Errores ERP'
         context['codigo']='CBF11'
         context['return_url']=reverse_lazy( 'CBR:cbrenc-list' )
@@ -2189,6 +2287,7 @@ class DetalleTiposDeConciliacion( ListView ):
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
         context['title']='Tipos de Conciliacion'
         context['idrenc']=self.request.GET.get( 'idrenc' )
         context['codigo']='CBF11'
@@ -2209,3 +2308,68 @@ class DescargarArchivoView(View):
         response = HttpResponse(wrapper, content_type='application/pdf')
         response['Content-Disposition'] = 'inline; filename=' + 'imagenbanco.pdf'
         return response
+
+def getPais(codigo):
+    idpais = codigo[0:1]
+    aCbtpai = Cbtpai.objects.filter(codpai=idpais).first()
+    return aCbtpai.despai
+
+def getCliente(request, context):
+    print("hola")
+    try:
+        aCbtusu = Cbtusu.objects.filter(idusu1 = request.user.username).first()
+        aCbtcli = Cbtcli.objects.filter(cliente = aCbtusu.cliente).first()
+        context["cliente"]=aCbtcli.cliente + "-" + aCbtcli.descli
+        print(context["cliente"])
+    except:
+        pass
+
+
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+class ListaUsuarioView( ListView ):
+    model=Cbtusu
+    template_name='cbtusu/list.html'
+
+    # @method_decorator( csrf_exempt )
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+
+    def post(self, request, *args, **kwargs):
+        print(request)
+        print(request.POST)
+        try:
+            print(request.POST.get("idusu1"))
+        except:
+            pass
+        position=1
+        data=[]
+        for i in Cbtusu.objects.all():
+            item=i.toJSON()
+            item['position']=position
+            data.append( item )
+            position+=1
+        return JsonResponse( data, safe=False )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        context['title']='Usuarios'
+        context['codigo']='CBF15'
+        getCliente(self.request, context)
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbrenc-list' )
+        return context
+
+#  ********************************************************************************************************************
+@login_required
+def resetPassword(request):
+    usuario = request.GET.get("usuario")
+    print(usuario)
+    print(request.GET)
+    print("esefue")
+    aCbtusu = Cbtusu.objects.filter(idusu1=usuario).first()
+    aCbtusu.pasusu = True
+    aCbtusu.save()
+    return redirect("../")

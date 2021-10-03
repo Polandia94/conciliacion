@@ -12,6 +12,8 @@
     <link rel="stylesheet" type="text/css" href="{% static '/css/style.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static '/css/bootstrap.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static '/css/StyleStatus.css' %}">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
 </head>
 <body>
 <section class="bg-login">
@@ -38,7 +40,7 @@
 
                                         <div class="form-group">
                                             <label class="col-form-label">Nombre de usuario</label>
-                                            <input type="text" class="form-control" placeholder="Nombre de usuario" name="username">
+                                            <input id="usuario" type="text" class="form-control" placeholder="Nombre de usuario" name="username">
                                         </div>
                                         <div class="form-group">
                                             <label class="col-form-label">Contraseña:</label>
@@ -50,8 +52,9 @@
 
                                         <div class="form-group">
                                             <div class="col-sm-12 mt-4">
-                                                <button id="btnEntrar" class="btn btn-primary btn-block btn-login"
-                                                        type="submit">Entrar
+
+                                                <button id="entrada" class="btn btn-primary btn-block btn-login"
+                                                        type="button">Entrar
                                                 </button>
                                             </div>
                                         </div>
@@ -79,6 +82,40 @@
 {#        })#}
 {##}
 {#    </script>#}
-
+<script>
+    console.log("a")
+    $("#entrada").on("click", function (event) {
+        const usuarioValor = usuario.value
+        const contraValor = id_password.value
+        console.log(contraValor)
+        console.log(usuarioValor)
+        $.ajax({
+                method: 'GET',
+                //beforeSend: function (request) {
+                //    request.setRequestHeader("X-CSRFToken", csrftoken);
+                //},
+                url: '/login?usuario='+usuarioValor,
+                //data: {'idrenc': idrenc},
+                success: function (respons) {
+                    console.log(respons)
+                    console.log(respons.reinicia)
+                    if (respons.reinicia==true) {
+                        $.ajax({
+                            method: 'GET',
+                            //beforeSend: function (request) {
+                            //    request.setRequestHeader("X-CSRFToken", csrftoken);
+                            //},
+                            url: "/reiniciarusuario?usuario=" + usuarioValor +"&contra=" + contraValor,
+                            //data: {'idrenc': idrenc},
+                            success: function (respons) {
+                                loginForm.submit()
+                            }
+                        })
+                    } else {
+                        loginForm.submit()
+                    }}
+            });
+        });
+</script>
 </body>
 </html> 

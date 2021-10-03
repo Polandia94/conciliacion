@@ -11,6 +11,7 @@
     });
     /******************************************************************************************************************/
     /******************************************************************************************************************/
+
     $("#btnSalir").on('click', function (e) {
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
@@ -114,33 +115,42 @@
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
         
-
-        
-        ajax_confirm("../conciliarSaldos/", 'Notificación',
-            '¿Ejecutar el proceso de conciliación?', parameters,
-            function (response) {
-                if (response.hasOwnProperty('idrenc')) {
-                    location.href = `../cbsres/?idrenc=${response['idrenc']}`;
-                    return false;
-                }
-                if (response.hasOwnProperty('existe_info')) {
-                    const mensaje = `<label> ${response['existe_info']}</label><p class="m-0">Generado por:</p>  <label class="m-0">Usuairo: <strong> ${response['idusucons']}</strong></label><label>Fecha: <strong> ${response['fechacons']}</strong></label> `
-                    ajax_confirm("../conciliarSaldos/", 'Confirmación',
-                        mensaje, {'idrenc': idrenc, "sobreescribir": 'true'},
-                        
-                        function (response) {  
-                            location.href = `../cbsres/?idrenc=${response['idrenc']}`;
-                        },
-                        true
-                        )
+        $.ajax({
+            url: "../conciliarSaldos/", //window.location.pathname
+            type: 'POST',
+            beforeSend: function(request) {
+                request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            },
+            data: parameters,
+            // dataType: 'json',
+            // processData: false,
+            // contentType: false,
+        }).done(function (response) {
+            console.log(response)
+            if (response.hasOwnProperty('idrenc')) {
+                location.href = `../cbsres/?idrenc=${response['idrenc']}`;
+                return false;
+            }
+            if (response.hasOwnProperty('existe_info')) {
+                const mensaje = `<label> ${response['existe_info']}</label><p class="m-0">Generado por:</p>  <label class="m-0">Usuairo: <strong> ${response['idusucons']}</strong></label><label>Fecha: <strong> ${response['fechacons']}</strong></label> `
+                ajax_confirm("../conciliarSaldos/", 'Confirmación',
+                    mensaje, {'idrenc': idrenc, "sobreescribir": 'true'},
                     
-                    return false;
-                }
-                if (response.hasOwnProperty('info')) {
-                    message_info(response['info'], null, null)
-                    return false;
-                }
-            });            
+                    function (response) {  
+                        location.href = `../cbsres/?idrenc=${response['idrenc']}`;
+                    },
+                    true
+                    )
+                
+                return false;
+            }
+            if (response.hasOwnProperty('info')) {
+                message_info(response['info'], null, null)
+                return false;
+            }
+
+        });
+            
     });
     /******************************************************************************************************************/
     /******************************************************************************************************************/
