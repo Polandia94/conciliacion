@@ -6,7 +6,7 @@ from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrer
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
-from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm
+from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm, CbtusuForm
 from CBR.homologacion import *
 import datetime as dt
 import base64
@@ -48,51 +48,78 @@ def post_logout(sender, user, request, **kwargs):
     except:
         pass
 
+@csrf_exempt
+def cerrarsesionusuario(request):
+    usuario = request.POST.get("usuario")
+    data = {}
+    aCbsusu = Cbsusu.objects.filter(idusu1=usuario).last()
+    aCbsusu.finlogin = dt.datetime.now(tz=timezone.utc)+huso
+    aCbsusu.save()
+    return JsonResponse( data )
+
 def login(request):
     usuario = request.GET.get("usuario")
-    aCbsusu = Cbtusu.objects.filter(idusu1=usuario).first()
+    aCbtusu = Cbtusu.objects.filter(idusu1=usuario).first()
+    aCbsusu = Cbsusu.objects.filter(idusu1=usuario).last()
     data= {}
     try:
-        data["reinicia"] = aCbsusu.pasusu
+        print("coso")
+        print(aCbsusu.finlogin)
+        if aCbsusu.finlogin == None:
+            data["yaconectado"]= True 
+            print("no puede iniciar sesion")
+        else:
+            data["yaconectado"]= False
+            print("puede iniciar sesion")
+    except Exception as e:
+        data["yaconectado"]= False
+        print(e)
+    try:
+        data["reinicia"] = aCbtusu.pasusu
     except:
         data["reinicia"] = False
     return JsonResponse( data )
 
 def reiniciarUsuario(request):
-    usuario = request.GET.get("usuario")
-    contra = request.GET.get("contra")
-    aCbsusu = Cbtusu.objects.filter(idusu1=usuario).first()
-    if aCbsusu.pasusu:
-        user = User.objects.filter(username=usuario).first()
-        user.password = make_password(contra)
-        user.save()
-        aCbsusu.pasusu = False
-        aCbsusu.save()
-    data = {}
-    return JsonResponse(data)
+    if request.method == "GET":
+        usuario = request.GET.get("usuario")
+        return render(request, "registration/reset.html", {"usuario":usuario})
+    elif request.method == "POST":
+        print("paso como post")
+        print(request.POST)
+        usuario = request.POST.get("username")
+        print(usuario)
+        contra = request.POST.get("password1")
+        aCbsusu = Cbtusu.objects.filter(idusu1=usuario).first()
+        if aCbsusu.pasusu:
+            user = User.objects.filter(username=usuario).first()
+            user.password = make_password(contra[0])
+            user.save()
+            aCbsusu.pasusu = False
+            aCbsusu.save()
+        data = {}
+        return redirect("/")
+
 
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
     aCbtusu = Cbtusu.objects.filter(idusu1 = request.user.username).first()
     aCbsusu = Cbsusu.objects.filter(idusu1 = request.user.username).order_by("corrusu").last()
     try:
-        if aCbsusu.finlogin == None:
-            request.POST._mutable = True
-            request.POST["autocierre"]=True
-
-            logout(request)
-            print("estoexiste")
-            print(request)
-            data={}
-            data['error']="Debe cerrar sesión en el otro navegador"
-            return JsonResponse( data )
-        else:
-            cliente = aCbtusu.cliente
-            idusu1 = request.user.username
-            iniciologin = dt.datetime.now(tz=timezone.utc)+huso
-            aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
-            aCbsusu.guardar(aCbsusu)
+        cliente = aCbtusu.cliente
+        idusu1 = request.user.username
+        iniciologin = dt.datetime.now(tz=timezone.utc)+huso
+        aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
+        aCbsusu.guardar(aCbsusu)
+        request.session["iddesesion"]= aCbsusu.corrusu
+        print("perosilohizo")
     except Exception as e:
+        cliente = aCbtusu.cliente
+        idusu1 = request.user.username
+        iniciologin = dt.datetime.now(tz=timezone.utc)+huso
+        aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
+        aCbsusu.guardar(aCbsusu)
+        request.session["iddesesion"]= aCbsusu.corrusu
         print("gamma")
         print(e)
         #cliente = aCbtusu.cliente
@@ -541,6 +568,9 @@ class CbtctaListView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        print("pasoporaqui")
+        chequearNoDobleConexion(request)
+        print("paso por alli")
         data={}
         try:
             action=request.POST['action']
@@ -2360,6 +2390,7 @@ class ListaUsuarioView( ListView ):
         getCliente(self.request, context)
         # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
         context['list_url']=reverse_lazy( 'CBR:cbrenc-list' )
+        context['new_user_url'] = reverse_lazy( 'CBR:usuario-nuevo' )
         return context
 
 #  ********************************************************************************************************************
@@ -2373,3 +2404,70 @@ def resetPassword(request):
     aCbtusu.pasusu = True
     aCbtusu.save()
     return redirect("../")
+
+class CbtusuCreateView( CreateView ):
+    model=Cbtusu
+    form_class=CbtusuForm
+    template_name='cbtusu/add-edit.html'
+
+    success_url=reverse_lazy( 'CBR:cbtusu-list' )
+    url_redirect=success_url
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+    
+    def post(self, request, *args, **kwargs):
+        data={}
+        try:
+            #Lee las respuetas al formulario
+            
+            idusu1=request.POST['idusu1']
+            descusu=request.POST['descusu']
+            print("aca")
+            print(request.POST)
+            tipusu=request.POST.get('tipousu')
+
+            print("alla")
+            if Cbtusu.objects.filter(idusu1=idusu1).exists():
+                data['error']="Nombre de Usuario Existente"
+                return JsonResponse( data, safe=False)
+
+            # CREATE
+            print("llego fu")
+            CbtusuNew=Cbtusu(idusu1=idusu1, descusu=descusu,actpas="A")
+            if tipusu == "on":
+                CbtusuNew.tipousu = "S"
+            else:
+                CbtusuNew.tipousu = ""
+            CbtusuNew.pasusu = True
+            CbtusuNew.fechact=dt.datetime.now(tz=timezone.utc)+huso
+            CbtusuNew.idusu=request.user.username
+            CbtusuNew.cliente = Cbtusu.objects.filter(idusu1 = request.user.username).first().cliente
+            print("llego aca")
+            CbtusuNew.save()
+            usuario = User(username = idusu1, password=make_password("ninguno"))
+            usuario.save()
+        except Exception as e:
+
+            data['error']=str( e )
+            print(e)
+            return JsonResponse( data )
+
+        return JsonResponse( data )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
+        context['title']='Nueva Cuenta'
+        context['codigo']='CBF09'
+
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbtcta-list' )
+        return context
+
+def chequearNoDobleConexion(request):
+    aCbsusu = Cbsusu.objects.filter(idusu1=request.user.username).order_by("corrusu").last()
+
+    if request.session["iddesesion"] < aCbsusu.corrusu:
+        logout(request)

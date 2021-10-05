@@ -15,6 +15,7 @@ app_name='CBR'
 urlpatterns=[
     path( 'login/', views.login, name='login' ),
     path( 'reiniciarusuario/', views.reiniciarUsuario, name='reiniciarUsuario' ),
+    path( 'cerrarsesionusuario/', views.cerrarsesionusuario, name='cerrarsesionusuario' ),
     path( 'getAnoMes/', views.getanomes, name='getAnoMes' ),
     path( 'getGuardado/', views.getguardado, name='getGuardado' ),
     path( 'getTiposDeConciliacion/', views.getTiposDeConciliacion, name='getTiposDeConciliacion' ),
@@ -42,6 +43,7 @@ urlpatterns=[
     
 
     path( 'cbtusu/', views.ListaUsuarioView.as_view(), name='cbtusu-list' ),
+    path( 'cbtusu/new', views.CbtusuCreateView.as_view(), name='usuario-nuevo' ),
     path( 'cbtusu/res/', views.resetPassword, name='reset-password'),
     path( 'cbrbcod/', views.DetalleBcoListView.as_view(), name='cbrbcod-list' ),
     path( 'cbrerpd/', views.DetalleErpListView.as_view(), name='cbrerpd-list' ),

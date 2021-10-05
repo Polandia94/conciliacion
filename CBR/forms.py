@@ -1,5 +1,5 @@
 from django.forms import *
-from .models import Cbrenc, Cbrbcod, Cbrencl, Cbrerpd, Cbtcta
+from .models import Cbrenc, Cbrbcod, Cbrencl, Cbrerpd, Cbtcta, Cbtusu
 
 
 class CbrbcodForm(ModelForm):
@@ -238,5 +238,48 @@ class CbrencVerificarGuardado( ModelForm ):
             data['error']=str( e )
         return data
     
+class CbtusuForm( ModelForm ):
+    def __init__(self, *args, **kwargs):
+        super(CbtusuForm, self).__init__(*args, **kwargs)
+        self.fields['tipousu'].required = False
+        for form in self.visible_fields():
+            form.field.widget.attrs['autocomplete'] = 'off'
 
+
+
+    def save(self, commit=True):
+        data={}
+        form=super()
+
+        try:            
+            if form.is_valid():
+                print(form.cleaned_data)
+                data = form.save(commit=True)
+            else:
+                print("aca hubo una falla2")
+                data['error']=form.errors
+        except Exception as e:
+            print("aca hubo una falla")
+            print(e)
+            data['error']=str( e )
+        return data
+
+    class Meta:
+        model = Cbtusu
+        fields = ['idusu1', 'descusu','tipousu']
+        # fields = '__all__'
+        widgets = {
+            'idusu1': TextInput(
+                attrs = { 'placeholder': 'Usuario',
+                          'class': 'form-control'}
+            ),            
+            'descusu': TextInput(
+                attrs = { 'placeholder': 'Descripcion del usuario',
+                          'class': 'form-control'}
+            ),
+            'tipousu': CheckboxInput(
+                attrs = { 'placeholder': 'Cuenta',
+                          'class': 'form-control'}
+            )            
+        }
 
