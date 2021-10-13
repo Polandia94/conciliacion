@@ -36,8 +36,8 @@
                                 <div class="card-body" id="card">
                                     <div class="card-title text-center">
                                         <img src="{% static '/img/logo.ico' %}" alt="" class="">
-                                        <h5 class="mt-3"><b>[Nomre de la aplicación]</b></h5>
-                                        <span>Entrar a [Nombre pendiente]</span>
+                                        <h5 class="mt-3"><b>Conciliacion Bancaria</b></h5>
+                                        <span>Entrar a PMA</span>
                                     </div>
                                     <form method="POST" id="loginForm" class="form mt-5 col-md"
                                           style="text-align: center;">
@@ -58,7 +58,6 @@
 
                                         <div class="form-group">
                                             <div class="col-sm-12 mt-4">
-
                                                 <button id="entrada" class="btn btn-primary btn-block btn-login"
                                                         type="button">Entrar
                                                 </button>
@@ -94,8 +93,6 @@
     $("#entrada").on("click", function (event) {
         const usuarioValor = usuario.value
         const contraValor = id_password.value
-        console.log(contraValor)
-        console.log(usuarioValor)
         $.ajax({
                 method: 'GET',
                 //beforeSend: function (request) {
@@ -104,8 +101,6 @@
                 url: '/login?usuario='+usuarioValor,
                 //data: {'idrenc': idrenc},
                 success: function (respons) {
-                    console.log(respons)
-                    console.log(respons.reinicia)
                     if (respons.reinicia==true) {
                             //beforeSend: function (request) {
                             //    request.setRequestHeader("X-CSRFToken", csrftoken);
@@ -115,51 +110,49 @@
 
                             
                     } else {
-                        if(respons.yaconectado){
-                            console.log("pasa por aca")
-                            var parameters = {'idusu1': usuarioValor};
-                            $.confirm({
-                                theme: 'material',
-                                title: "Cerrar Sesion",
-                                icon: 'fa fa-info',
-                                content: "cerrar",
-                                columnClass: 'large',
-                                typeAnimated: true,
-                                cancelButtonClass: 'btn-primary',
-                                draggable: true,
-                                dragWindowBorder: false,
-                                buttons: {
-                                    info: {
-                                        text: "Si",
-                                        btnClass: 'btn-primary',
-                                        action: function () {
-                                            console.log("si")
-                                            $.ajax({
-                                                method: 'POST',
-                                                url: '/cerrarsesionusuario/',
-                                                data:{"usuario":usuarioValor},
-                                                success: function (respons) {
-                                                    loginForm.submit();
-                                                }
-                                            })
-                                            
-                                        }
-                                    },
-                                    danger: {
-                                        text: "No",
-                                        btnClass: 'btn-red',
-                                        action: function () {
-                                            console.log("no")
-                                            // cancel();
-                                        }
-                                    },
-                                }
-                            })
-                            console.log("a")
-  
-                                
-                        }else{
-                        loginForm.submit()
+                        if(respons.activo){
+                            if(respons.yaconectado){
+                                var parameters = {'idusu1': usuarioValor};
+                                $.confirm({
+                                    theme: 'material',
+                                    title: "Cerrar Sesion",
+                                    icon: 'fa fa-info',
+                                    content: "cerrar",
+                                    columnClass: 'large',
+                                    typeAnimated: true,
+                                    cancelButtonClass: 'btn-primary',
+                                    draggable: true,
+                                    dragWindowBorder: false,
+                                    buttons: {
+                                        info: {
+                                            text: "Si",
+                                            btnClass: 'btn-primary',
+                                            action: function () {
+                                                $.ajax({
+                                                    method: 'POST',
+                                                    url: '/cerrarsesionusuario/',
+                                                    data:{"usuario":usuarioValor},
+                                                    success: function (respons) {
+                                                        loginForm.submit();
+                                                    }
+                                                })
+                                                
+                                            }
+                                        },
+                                        danger: {
+                                            text: "No",
+                                            btnClass: 'btn-red',
+                                            action: function () {
+                                                // cancel();
+                                            }
+                                        },
+                                    }
+                                })
+    
+                                    
+                            }else{
+                            loginForm.submit()
+                            }
                         }
                     }}
             });
@@ -168,6 +161,7 @@
 
 </script>
 <script src="{% static 'lib/jquery-confirm-v3.3.4/jquery-confirm.min.js' %}" type="text/javascript"></script>
+
 
 </body>
 </html> 

@@ -2,11 +2,11 @@
 from django.db.models.query import prefetch_related_objects
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbsresc, Cbtbco, Cbsres, Cbtcta, Cbrencl, Cbtusu,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale, Cbtpai, Cbtcli, Cbsusu
+from CBR.models import Cbrenci, Cbrbcoe, Cbrenc,Cbrenct, Cbrbcod, Cbrerpd, Cbrerpe, Cbsresc, Cbtbco, Cbsres, Cbtcol, Cbtcta, Cbrencl, Cbtemp, Cbtusu, Cbtusuc, Cbtusue,Cbwres,Cbttco,Cbterr,Cbrbode,Cbrgale, Cbtpai, Cbtcli, Cbsusu,Cbtlic, Cbmbco
 from django.views.generic import ListView, UpdateView, View, CreateView
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
-from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm, CbtusuForm
+from CBR.forms import CbrencaForm, CbrbcodForm, CbrerpdForm, CbtctaForm, CbrencDeleteForm, CbtusuForm, CbtempForm, CbtusucForm
 from CBR.homologacion import *
 import datetime as dt
 import base64
@@ -41,9 +41,6 @@ def post_logout(sender, user, request, **kwargs):
         else:        
             data={}
             data['error']="Debe cerrar sesión en el otro navegador"
-            print(data)
-            print(request.POST)
-            print("yanise")
             return JsonResponse( data )
     except:
         pass
@@ -63,17 +60,16 @@ def login(request):
     aCbsusu = Cbsusu.objects.filter(idusu1=usuario).last()
     data= {}
     try:
-        print("coso")
-        print(aCbsusu.finlogin)
         if aCbsusu.finlogin == None:
             data["yaconectado"]= True 
-            print("no puede iniciar sesion")
         else:
             data["yaconectado"]= False
-            print("puede iniciar sesion")
     except Exception as e:
         data["yaconectado"]= False
         print(e)
+    data["activo"]=aCbtusu.actpas=="A"
+    conectados = Cbsusu.objects.filter(finlogin=None).filter(cliente=aCbtusu.cliente).count()
+    conectadosMaximos = Cbtlic.objects.filter(cliente=aCbtusu.cliente)
     try:
         data["reinicia"] = aCbtusu.pasusu
     except:
@@ -85,15 +81,12 @@ def reiniciarUsuario(request):
         usuario = request.GET.get("usuario")
         return render(request, "registration/reset.html", {"usuario":usuario})
     elif request.method == "POST":
-        print("paso como post")
-        print(request.POST)
         usuario = request.POST.get("username")
-        print(usuario)
         contra = request.POST.get("password1")
         aCbsusu = Cbtusu.objects.filter(idusu1=usuario).first()
         if aCbsusu.pasusu:
             user = User.objects.filter(username=usuario).first()
-            user.password = make_password(contra[0])
+            user.password = make_password(contra)
             user.save()
             aCbsusu.pasusu = False
             aCbsusu.save()
@@ -112,16 +105,17 @@ def post_login(sender, user, request, **kwargs):
         aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
         aCbsusu.guardar(aCbsusu)
         request.session["iddesesion"]= aCbsusu.corrusu
-        print("perosilohizo")
     except Exception as e:
-        cliente = aCbtusu.cliente
-        idusu1 = request.user.username
-        iniciologin = dt.datetime.now(tz=timezone.utc)+huso
-        aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
-        aCbsusu.guardar(aCbsusu)
-        request.session["iddesesion"]= aCbsusu.corrusu
-        print("gamma")
-        print(e)
+        try:
+            cliente = aCbtusu.cliente
+            idusu1 = request.user.username
+            iniciologin = dt.datetime.now(tz=timezone.utc)+huso
+            aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
+            aCbsusu.guardar(aCbsusu)
+            request.session["iddesesion"]= aCbsusu.corrusu
+            print(e)
+        except Exception as e:
+            print(e)
         #cliente = aCbtusu.cliente
         #idusu1 = request.user.username
         #iniciologin = dt.datetime.now(tz=timezone.utc)+huso
@@ -141,6 +135,7 @@ class CbrbcodView( View ):
 
     @method_decorator( login_required )
     def dispatch(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         return super().dispatch( request, *args, **kwargs )
 
     def get_context_data(self, **kwargs):
@@ -164,11 +159,16 @@ class CbrencCreateView( CreateView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
+            diccionario = clienteYEmpresas(request)
             #Lee las respuetas al formulario
-            cliente= "PMA"
+            cliente= diccionario["cliente"]
             empresa=request.POST['empresa']
+            if empresa not in diccionario["empresas"]:
+                data["error"] = "Empresa no habilitada"
+                return JsonResponse(data)
             codbco=request.POST['codbco']
             nrocta=request.POST['nrocta']
             ano=request.POST['ano']
@@ -257,6 +257,8 @@ class CbrencCreateView( CreateView ):
                 archivoerp=request.POST.get( 'archivoerp', None )
                 #Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
                 HomologacionErpGAL( request, self.CbrencNew, data, saldoerpanterior )
+                self.CbrencNew.cliente = diccionario["cliente"]
+                self.CbrencNew.save()
                 try:
                     imgbco = base64.b64encode(open(str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( self.CbrencNew.archivoimg ), 'rb').read())
                     aCbrenci = Cbrenci(idrenc = self.CbrencNew.idrenc, imgbco= imgbco)
@@ -358,12 +360,23 @@ class CbtctaCreateView( CreateView ):
         return super().dispatch( request, *args, **kwargs )
     
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             #Lee las respuetas al formulario
-
+            diccionario = clienteYEmpresas(request)
             empresa=request.POST['empresa']
+            if empresa not in diccionario["empresas"]:
+                data['error'] = "Empresa no habilitada"
+                return JsonResponse(data)
             codbco=request.POST['codbco']
+            aCbtbco = Cbtbco.objects.filter(cliente= diccionario["cliente"], codbco=codbco).first()
+            if aCbtbco== None:
+                data['error'] = "El código de banco no existe"
+                return JsonResponse( data, safe=False)
+            if aCbtbco.actpas!="A":
+                data['error'] = "El código de banco se encuentra inactivo"
+                return JsonResponse( data, safe=False)
             nrocta=request.POST['nrocta']
             if Cbtcta.objects.filter(empresa=empresa,codbco=codbco,nrocta=nrocta).exists():
                 data['error']="Cuenta Existente"
@@ -371,6 +384,7 @@ class CbtctaCreateView( CreateView ):
 
             # CREATE
             form=self.get_form()
+            form.cliente = diccionario["cliente"]
             form.idtcta = 25
             form.fechalt=dt.datetime.now(tz=timezone.utc)+huso
             form.idusualt=request.user.username
@@ -389,7 +403,7 @@ class CbtctaCreateView( CreateView ):
         getCliente(self.request, context)
         context['title']='Nueva Cuenta'
         context['codigo']='CBF09'
-
+        context['action']='edit'
         # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
         context['list_url']=reverse_lazy( 'CBR:cbtcta-list' )
         return context
@@ -421,12 +435,29 @@ class CbtctaEditView( CreateView ):
         return super().dispatch( request, *args, **kwargs )
     
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             #Lee las respuetas al formulario
-            
-            cliente= "PMA"
+            diccionario = clienteYEmpresas(request)
+            cliente= diccionario["cliente"]
             idtcta=request.POST['idtcta']
+            empresa = request.POST["empresa"]
+            if empresa not in diccionario["empresas"]:
+                data={}
+                data['error']= "Empresa no habilitada"
+                return JsonResponse( data )
+            try:
+                getPais(empresa)
+            except:
+                try:
+                    data={}
+                    data['error']="El código de pais"+ empresa[0:2] + "no existe."
+                    return JsonResponse( data )
+                except:
+                    data={}
+                    data['error']="La empresa debe tener al menos dos dígitos."
+                    return JsonResponse( data )                    
             Cbtcta.objects.filter( idtcta = idtcta ).delete()
             codbco=request.POST['codbco']
             nrocta=request.POST['nrocta']
@@ -437,6 +468,13 @@ class CbtctaEditView( CreateView ):
             mes=request.POST['mes']
             saldoinibco=request.POST['saldoinibco']
             saldoinierp=request.POST['saldoinierp']
+            aCbtbco = Cbtbco.objects.filter(cliente= diccionario["cliente"], codbco=codbco).first()
+            if aCbtbco== None:
+                data['error'] = "El código de banco no existe"
+                return JsonResponse( data, safe=False)
+            if aCbtbco.actpas!="A":
+                data['error'] = "El código de banco se encuentra inactivo"
+                return JsonResponse( data, safe=False)
 
             # CREATE
             form=self.get_form()
@@ -457,13 +495,189 @@ class CbtctaEditView( CreateView ):
         getCliente(self.request, context)
         context['title']='Nueva Cuenta'
         context['codigo']='CBF09'
-        context['action']='edit'
+        context["editable"]=True
         context['idtcta']=self.request.GET.get( 'idtcta' )
         #context['idtcta']=self.object.idtcta
 
 
         # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
         context['list_url']=reverse_lazy( 'CBR:cbtcta-list' )
+        return context
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+class CbtusuEditView( CreateView ):
+    model=Cbtusu
+    form_class=CbtusuForm
+    def get_initial(self):
+        try:
+            idusu1=self.request.GET.get( 'idusu1' )
+            aCbtusu = Cbtusu.objects.filter(idusu1=idusu1).first()
+            if aCbtusu.tipousu == "S":
+                tipousu=True
+            else:
+                tipousu=False
+            return {'idusu1': aCbtusu.idusu1, 'descusu': aCbtusu.descusu, 'tipousu': tipousu}
+        except:
+            pass
+    
+    template_name='cbtusu/add-edit.html'
+
+    success_url=reverse_lazy( 'CBR:cbtusu-list' )
+    url_redirect=success_url
+    def get_object(self):
+        idusu1=self.kwargs.get( 'idusu1' )
+        return get_object_or_404( Cbtusu, idusu1=idusu1 )
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+    
+
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data={}
+        try:
+            #Lee las respuetas al formulario
+            
+            idusu1=request.POST['idusu1']
+            descusu=request.POST['descusu']
+            tipusu=request.POST.get('tipousu')
+
+            Cbtusu.objects.filter(idusu1=idusu1).delete()
+            cliente = clienteYEmpresas(request)["cliente"]
+            licencias = Cbtlic.objects.filter(cliente=cliente).first().nrousuario
+            usuariosActivos = Cbtusu.objects.filter(actpas="A", cliente=cliente).count()
+            if licencias <= usuariosActivos:
+                data['error']="Máximo número de usuarios activos alcanzados"
+                return JsonResponse( data, safe=False)
+            # CREATE
+            CbtusuNew=Cbtusu(idusu1=idusu1, descusu=descusu,actpas="A")
+            if tipusu == "on":
+                CbtusuNew.tipousu = "S"
+            else:
+                CbtusuNew.tipousu = ""
+            CbtusuNew.pasusu = True
+            CbtusuNew.fechact=dt.datetime.now(tz=timezone.utc)+huso
+            CbtusuNew.idusu=request.user.username
+            CbtusuNew.cliente = Cbtusu.objects.filter(idusu1 = request.user.username).first().cliente
+            CbtusuNew.save()
+        except Exception as e:
+
+            data['error']=str( e )
+            print(e)
+            return JsonResponse( data )
+
+        return JsonResponse( data )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
+        context['title']='Nueva Cuenta'
+        context['codigo']='CBF09'
+        context['modificable']=True
+        idusu1 = self.request.GET.get("idusu1")
+        if Cbrenc.objects.filter(idusucons=idusu1).exists():
+            context['modificable']=False
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbtusu-list' )
+        return context
+
+
+# ******************************************************************************************************************** #
+# ***************************************************************************
+class CbtempEditView( CreateView ):
+    model=Cbtemp
+    form_class=CbtempForm
+    def get_initial(self):
+        try:
+            idtemp=self.request.GET.get( 'idtemp' )
+            aCbtemp = Cbtemp.objects.filter(idtemp=idtemp).first()
+            actpas = aCbtemp.actpas == "A"
+            return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas}
+        except Exception as e:
+            print("error de get initial en cbtemp")
+            print(e)
+    
+    template_name='cbtemp/add-edit.html'
+
+    success_url=reverse_lazy( 'CBR:cbtemp-list' )
+    url_redirect=success_url
+    def get_object(self):
+        idtemp=self.kwargs.get( 'idtemp' )
+        return get_object_or_404( Cbtemp, idtemp=idtemp )
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+    
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data={}
+        try:
+            #Lee las respuetas al formulario
+            diccionario = clienteYEmpresas(request)
+            cliente= diccionario["cliente"]
+            empresa = request.POST["empresa"]
+            desemp = request.POST["desemp"]
+            actpas = request.POST["actpas"]
+            if actpas == "on":
+                actpas = "A"
+            else:
+                actpas = "P"
+            try:
+                getPais(empresa)
+            except:
+                try:
+                    data={}
+                    data["error"]="el código de país "+ empresa[0:2]+ " no existe."
+                    return JsonResponse(data)
+                except:
+                    data={}
+                    data["error"]="La Empresa debe tener más de dos digitos."
+                    return JsonResponse(data)
+            empresasMaximas = Cbtlic.objects.filter(cliente=diccionario["cliente"]).first().nroempresa
+            empresasActivas = Cbtemp.objects.filter(cliente=diccionario["cliente"], actpas = "A").count()
+            if empresasActivas >= empresasMaximas and actpas == "A":
+                data={}
+                data["error"]="Se alcanzó el limite máximo de empresas activas"
+                return JsonResponse(data)
+            aCbtusue=Cbtusue(idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first(), actpas="A", empresa=empresa)            
+            aCbtusue.idusu = request.user.username
+            aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)+huso
+            aCbtusue.save()
+            # CREATE
+            idtemp=self.request.POST.get( 'idtemp' )
+            Cbtemp.objects.filter(idtemp=idtemp).delete()
+            aCbtemp = Cbtemp(empresa=empresa, desemp=desemp,actpas=actpas )
+            aCbtemp.fechact=dt.datetime.now(tz=timezone.utc)+huso
+            aCbtemp.idusu=request.user.username
+            aCbtemp.cliente=diccionario["cliente"]
+            aCbtemp.save()
+        except Exception as e:
+            data={}
+            data['error']=str( e )
+            print(e)
+            return JsonResponse( data )
+
+        return JsonResponse( data )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
+        context['title']='Editar Empresa'
+        context['codigo']='CBF20'
+        context['action']='edit'
+        context['idtemp']=self.request.GET.get( 'idtemp' )
+        context["editable"]=True
+        empresa = Cbtemp.objects.filter(idtemp=context['idtemp']).first().empresa
+        if Cbrenc.objects.exclude(estado=3).filter(empresa=empresa).exists():
+            context["editable"]=False
+        #context['idtcta']=self.object.idtcta
+
+
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbtemp-list' )
         return context
 
 # ******************************************************************************************************************** #
@@ -479,10 +693,16 @@ class CbrencListView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         # si no existe la base de datos de CBTTCO la crea, esto solo para pruebas, no mantener en produccion
         if Cbtcli.objects.filter(cliente="pablo").exists() == False:
             aCbtcli = Cbtcli(cliente="pablo", descli="describo a pablo")
             aCbtcli.save()
+        if Cbtcol.objects.filter(codcol=1).exists() == False:
+            aCbtcol = Cbtcol(codcol = 0, descol="idsres", inddef=1)
+            aCbtcol.save()
+            aCbtcol = Cbtcol(codcol = 1, descol="Fecha Transaccion del Banco", inddef=1)
+            aCbtcol.save()
         if Cbttco.objects.filter(codtco = "DPTR").exists() == False:
             aCbttco= Cbttco(1,1,"DPTR","Depositos en Transito (+)",0,1,"H",1)
             aCbttco.save()
@@ -524,13 +744,15 @@ class CbrencListView( ListView ):
             if action == 'searchdata':
                 data=[]
                 position=1
+                diccionario = clienteYEmpresas(request)
                 for i in Cbrenc.objects.all():
                     item=i.toJSON()
-                    item['position']=position
-                    item['archivobco']=i.archivobco.name
-                    item['archivoerp']=i.archivoerp.name
-                    data.append( item )
-                    position+=1
+                    if item['empresa'] in diccionario["empresas"] and item["cliente"] == diccionario["cliente"]:
+                        item['position']=position
+                        item['archivobco']=i.archivobco.name
+                        item['archivoerp']=i.archivoerp.name
+                        data.append( item )
+                        position+=1
                 if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
                     bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
                     bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
@@ -553,6 +775,11 @@ class CbrencListView( ListView ):
         context['account_url']=reverse_lazy( 'CBR:cbtcta-list' )
         context['list_url']=reverse_lazy( 'CBR:cbrenc-list' )
         context['usuarios_url']=reverse_lazy('CBR:cbtusu-list')
+        context['empresas_url']=reverse_lazy('CBR:cbtemp-list')
+        aCbtusu = Cbtusu.objects.filter(idusu1 = self.request.user.username).first()
+        if aCbtusu.tipousu == "S":
+            context['superusuario']=True
+
         return context
 
 
@@ -568,9 +795,7 @@ class CbtctaListView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
-        print("pasoporaqui")
         chequearNoDobleConexion(request)
-        print("paso por alli")
         data={}
         try:
             action=request.POST['action']
@@ -578,16 +803,23 @@ class CbtctaListView( ListView ):
                 data=[]
                 position=1
                 for i in Cbtcta.objects.all():
+                    diccionario = clienteYEmpresas(request)
                     item=i.toJSON()
-                    item['position']=position
-                    if Cbrenc.objects.exclude(estado = "3").filter( codbco=i.codbco,
-                        nrocta=i.nrocta,
-                        empresa=i.empresa,
-                        ).exists():
-                        item['modificable']= False
-                    else:
-                        item['modificable']= True
-                    data.append( item )
+                    if item["empresa"] in diccionario["empresas"] and item["cliente"] in diccionario["cliente"]:
+                        item['position']=position
+                        aCbmbco = Cbmbco.objects.filter(codbco=item["codbco"]).first()
+                        try:
+                            item["codbco"] = item["codbco"] + " : " + aCbmbco.desbco
+                        except Exception as e:
+                            print(e)
+                        if Cbrenc.objects.exclude(estado = "3").filter( codbco=i.codbco,
+                            nrocta=i.nrocta,
+                            empresa=i.empresa,
+                            ).exists():
+                            item['modificable']= False
+                        else:
+                            item['modificable']= True
+                        data.append( item )
             else:
                 data['error']='Ha ocurrido un error'
         except Exception as e:
@@ -616,20 +848,25 @@ class CbsresListView( ListView ):
     def dispatch(self, request, *args, **kwargs):
         try:
             idrenca=request.GET['idrenc']  
+            diccionario = clienteYEmpresas(request)
             if Cbwres.objects.filter(idrenc=idrenca).exists():
-                return redirect('/verificar/?idrenc='+idrenca, idrenc= idrenca )
+                aCbwres = Cbwres.objects.filter(idrenc=idrenca).first()
+                if aCbwres.cliente == diccionario["cliente"] and aCbwres.empresa in diccionario["empresas"]:
+                    return redirect('/verificar/?idrenc='+idrenca, idrenc= idrenca )
             else:
                 if Cbsres.objects.filter(idrenc=idrenca).exists() == False:
                     try:
                         conciliarSaldos(request)
                     except Exception as e:
                         print(e)
-                    
-                return super().dispatch( request, *args, **kwargs )
+                aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
+                if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
+                    return super().dispatch( request, *args, **kwargs )
         except:
             return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -789,9 +1026,14 @@ class CbsresviewListView( ListView ):
 
     @method_decorator( login_required )
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch( request, *args, **kwargs )
+        idrenca=request.GET['idrenc']  
+        diccionario = clienteYEmpresas(request)
+        aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
+        if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
+            return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -947,6 +1189,7 @@ class CbrbcodDetailView( UpdateView ):
 
     @method_decorator( login_required )
     def dispatch(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
             bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
             bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
@@ -984,6 +1227,7 @@ class CbrerpdDetailView( UpdateView ):
 
     @method_decorator( login_required )
     def dispatch(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
             bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
             bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
@@ -1018,21 +1262,83 @@ class CbrerpdDetailView( UpdateView ):
 @login_required
 def cbtctaDelete(request):
     if request.method == 'POST':
+        chequearNoDobleConexion(request)
         try:
             data={}
             idtcta=request.POST['idtcta']
-            aCbtcta = Cbtcta.objects.get( idtcta
-            =idtcta )
-            
-            #verifica que no haya registros posteriores
-            if Cbrenc.objects.exclude(estado = "3").filter( codbco=aCbtcta.codbco,
-                        nrocta=aCbtcta.nrocta,
-                        empresa=aCbtcta.empresa,
-                        ).exists():
-                            data['error']="Existen meses posteriores cargados"
-                            return JsonResponse( data, safe=False)
-            else:
-                aCbtcta.delete()
+            aCbtcta = Cbtcta.objects.get( idtcta=idtcta )
+            diccionario = clienteYEmpresas(request)
+            if aCbtcta.empresa in diccionario["empresas"] and aCbtcta.cliente == diccionario["cliente"]:
+                
+                #verifica que no haya registros posteriores
+                if Cbrenc.objects.exclude(estado = "3").filter( codbco=aCbtcta.codbco,
+                            nrocta=aCbtcta.nrocta,
+                            empresa=aCbtcta.empresa,
+                            ).exists():
+                                data['error']="Existen meses posteriores cargados"
+                                return JsonResponse( data, safe=False)
+                else:
+                    aCbtcta.delete()
+
+        
+        except Exception as e:
+            print(e)
+            data={}
+            data['error']=str( e )
+        return JsonResponse( data )
+    else:
+        return request
+
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+@login_required
+def cbtusuDelete(request):
+    if request.method == 'POST':
+        chequearNoDobleConexion(request)
+        try:
+            data={}
+            idusu1=request.POST['idusu1']
+            aCbtusu = Cbtusu.objects.get( idusu1=idusu1 )
+            diccionario = clienteYEmpresas(request)
+            aCbtusurequest = Cbtusu.objects.filter(idusu1 = request.user.username).first()
+            if aCbtusu.cliente == diccionario["cliente"] and aCbtusurequest.tipousu == "S":
+                
+                #verifica que no haya registros posteriores
+                if Cbrenc.objects.filter(idusucons=idusu1).exists() == False:
+                    aCbtusu.delete()
+
+        
+        except Exception as e:
+            print(e)
+            data={}
+            data['error']=str( e )
+        return JsonResponse( data )
+    else:
+        return request
+
+
+# ******************************************************************************************************************** #
+# ********************
+@login_required
+def cbtempDelete(request):
+    if request.method == 'POST':
+        chequearNoDobleConexion(request)
+        try:
+            data={}
+            idtemp=request.POST['idtemp']
+            aCbtemp = Cbtemp.objects.get( idtemp=idtemp )
+            diccionario = clienteYEmpresas(request)
+            if aCbtemp.empresa in diccionario["empresas"] and aCbtemp.cliente == diccionario["cliente"]:
+                
+                #verifica que no haya registros Cargados
+                if Cbrenc.objects.exclude(estado = "3").filter( 
+                            empresa=aCbtemp.empresa,
+                            ).exists():
+                                data['error']="Existen meses cargados con esta empresa"
+                                return JsonResponse( data, safe=False)
+                else:
+                    aCbtemp.delete()
 
         
         except Exception as e:
@@ -1052,6 +1358,7 @@ def cbtctaDelete(request):
 @csrf_exempt
 def conciliarSaldos(request):
     if request.method == 'POST':
+        chequearNoDobleConexion(request)
         try:
             idrenc=request.POST.get( 'idrenc' )
             try:
@@ -1116,6 +1423,8 @@ def conciliarSaldos(request):
                                     pautado = color
                                     # --------------------
                                 )
+                                insCbsres.fechact=dt.datetime.now(tz=timezone.utc)+huso
+                                insCbsres.idusualt=request.user.username
                                 insCbsres.save()
                                 cambio = True
                         #for vwRow in erpDataSet:
@@ -1161,6 +1470,8 @@ def conciliarSaldos(request):
                             aCbsres.saldoacumdiabco=saldoacumdiabco
                             aCbsres.saldoacumeserp=saldoacumeserp
                             aCbsres.saldoacumdiaerp=saldoacumdiaerp
+                            aCbsres.fechact=dt.datetime.now(tz=timezone.utc)+huso
+                            aCbsres.idusualt=request.user.username
                             aCbsres.save()
                         else:
                             diabco=aCbsres.fechatrabco
@@ -1181,6 +1492,8 @@ def conciliarSaldos(request):
                             aCbsres.saldodiferencia= saldodiferencia
                             diabcoant=diabco
                             diaerpant=diaerp
+                            aCbsres.fechact=dt.datetime.now(tz=timezone.utc)+huso
+                            aCbsres.idusualt=request.user.username
                             aCbsres.save()
                     n = 0
                     while n < Cbsres.objects.filter(idrenc=idrenc).count():
@@ -1269,7 +1582,7 @@ def Unir(vwRow,insCbsres,idrenc,color):
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 def editCbwres(request):
-        
+        chequearNoDobleConexion(request)
         try:
             tabla = list(dict(request.POST).keys())[0][1:-1]
             while True:
@@ -1359,24 +1672,27 @@ def editCbwres(request):
 
 @login_required
 def cerrarConciliacion(request):
+    chequearNoDobleConexion(request)
     if request.method == 'POST':
         try:
             idrenc=request.POST.get( 'idrenc' )
             CbrencUpd=Cbrenc.objects.get( idrenc=idrenc )
-            CbrencUpd.estado=2
-            CbrencUpd.save()
-            data={"idrenc": idrenc}
-            if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
-                bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
-                bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
-                bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
-                bCbrenct.save()
-            aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc ).first())
-            aCbrenct.idusu = request.user.username
-            aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
-            aCbrenct.accion = 2
-            aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
-            aCbrenct.save()
+            diccionario = clienteYEmpresas(request)
+            if CbrencUpd.empresa in diccionario["empresas"] and CbrencUpd.cliente == diccionario["cliente"]:
+                CbrencUpd.estado=2
+                CbrencUpd.save()
+                data={"idrenc": idrenc}
+                if Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).exists():
+                    bCbrenct = Cbrenct.objects.filter(idusu = request.user.username, fechorafin = None).first()
+                    bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)+huso
+                    bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
+                    bCbrenct.save()
+                aCbrenct = Cbrenct(formulario = "CBF02", idrenc = Cbrenc.objects.filter(idrenc = idrenc ).first())
+                aCbrenct.idusu = request.user.username
+                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)+huso
+                aCbrenct.accion = 2
+                aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)+huso
+                aCbrenct.save()
 
         except Exception as e:
             data['error']=str( e )
@@ -1389,6 +1705,7 @@ def cerrarConciliacion(request):
 # ******************************************************************************************************************** #
 @login_required
 def getanomes(request):
+    chequearNoDobleConexion(request)
     codbco=request.GET.get( 'banco' )
     nrocta=request.GET.get( 'cuenta' )
     try:
@@ -1421,6 +1738,7 @@ def getanomes(request):
 
 @login_required
 def getguardado(request):
+    chequearNoDobleConexion(request)
     data={"guardado":"si"} 
     idrenc=request.GET.get( 'idrenc' )
     if Cbwres.objects.filter(idrenc=idrenc,debeerp=0,habererp=0).exists():
@@ -1430,8 +1748,6 @@ def getguardado(request):
         for registro in Cbwres.objects.filter(idrenc=idrenc).all():
             aCbsres = Cbsres.objects.filter(idsres = registro.idsres).first()
             if (aCbsres.debeerp != registro.debeerp or aCbsres.habererp != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
-                print("aca el error")
-                print(registro.codtcoerp)
                 data={"guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
     return JsonResponse( data )
 
@@ -1450,6 +1766,7 @@ class DetalleBcoListView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -1506,6 +1823,7 @@ class DetalleErpListView( ListView ):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch( request, *args, **kwargs )
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -1555,6 +1873,7 @@ class DetalleTiempoListView( ListView ):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch( request, *args, **kwargs )
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -1622,6 +1941,7 @@ class DetalleLogListView( ListView ):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch( request, *args, **kwargs )
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -1690,6 +2010,7 @@ class ConciliacionDeleteForm( CreateView ):
         return super().dispatch( request, *args, **kwargs )
     
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             #Lee las respuetas al formulario
@@ -1820,8 +2141,6 @@ def verificarCarga(request):
     saldobco = "$"+'{:,}'.format(float(saldobco))
     saldoerpanterior = "$"+'{:,}'.format(float(saldoerpanterior))
     saldobcoanterior = "$"+'{:,}'.format(float(saldobcoanterior))
-    print(errorERP)
-    print(errorBco)
     return render(request, "cbrenc/confirmarcarga.html",{"saldobcoanterior":saldobcoanterior,  "saldoerpanterior": saldoerpanterior, "saldobco": saldobco, "saldoerp":saldoerp, "errorBco":errorBco, "errorERP":errorERP})
 
 # ******************************************************************************************************************** #
@@ -1878,9 +2197,7 @@ def conservarGuardado(request):
         aCbwres.delete()
     tiposDeConciliacion = json.loads(getTiposDeConciliacion(request).content)
 
-    print(tiposDeConciliacion)
     for idsres in tiposDeConciliacion["listado"]:
-        print("va uno")
         dato = tiposDeConciliacion[str(idsres)]
         try:
             Cbsresc.objects.filter(idsres=idsres).delete()
@@ -1898,9 +2215,6 @@ def conservarGuardado(request):
         aCbrenc.saldobco = tiposDeConciliacion["saldobcototal"]
         aCbrenc.saldoerp= tiposDeConciliacion["saldoerptotal"]
         aCbrenc.difbcoerp = tiposDeConciliacion["saldodiferenciatotal"]
-        print(tiposDeConciliacion["saldodiferenciatotal"])
-        print(aCbrenc.difbcoerp)
-        print("aca")
         aCbrenc.save()
         aCbrencl = Cbrencl(
             idrenc = Cbrenc.objects.filter(idrenc=idrenca).first(),
@@ -1959,6 +2273,7 @@ class DetalleErroresBodListView(ListView):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -2003,6 +2318,7 @@ class DetalleErroresGalListView(ListView):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             action=request.POST['action']
@@ -2044,6 +2360,7 @@ class DetalleErroresGalListView(ListView):
 
 @login_required
 def getTiposDeConciliacion(request):
+    chequearNoDobleConexion(request)
     idrenc = request.GET["idrenc"]
     data = {"debebcototal":0, "haberbcototal":0,"saldobcototal":0,"debeerptotal":0,"habererptotal":0, "saldoerptotal":0,"saldodiferenciatotal":0 }
     yaTomadas = []
@@ -2108,7 +2425,6 @@ def getTiposDeConciliacion(request):
         if registroAnalizado.codtcobco in listadoSumaDebeErp:
             try:
                 data["debeerptotal"] = registroAnalizado.haberbco + data["debeerptotal"]
-                print("alfa")
                 data[str(registroAnalizado.idsres)] = [registroAnalizado.codtcobco,"", 0,0,registroAnalizado.haberbco,0,registroAnalizado.saldoacumesbco,registroAnalizado.saldoacumeserp]
                 data["listado"].append(registroAnalizado.idsres)
                 saldoextraerp = saldoextraerp + registroAnalizado.haberbco
@@ -2167,6 +2483,7 @@ class DetalleTiposDeConciliacion( ListView ):
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch( request, *args, **kwargs )
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             idrenc=request.POST['idrenc']
@@ -2325,6 +2642,7 @@ class DetalleTiposDeConciliacion( ListView ):
 
 class DescargarArchivoView(View):
     def get(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         idrenc = request.GET['idrenc']
         imgbco = Cbrenci.objects.filter(idrenc=idrenc).first().imgbco
         try:
@@ -2340,19 +2658,17 @@ class DescargarArchivoView(View):
         return response
 
 def getPais(codigo):
-    idpais = codigo[0:1]
+    idpais = codigo[0:2]
     aCbtpai = Cbtpai.objects.filter(codpai=idpais).first()
     return aCbtpai.despai
 
 def getCliente(request, context):
-    print("hola")
     try:
         aCbtusu = Cbtusu.objects.filter(idusu1 = request.user.username).first()
         aCbtcli = Cbtcli.objects.filter(cliente = aCbtusu.cliente).first()
         context["cliente"]=aCbtcli.cliente + "-" + aCbtcli.descli
-        print(context["cliente"])
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
 
 
@@ -2368,20 +2684,20 @@ class ListaUsuarioView( ListView ):
         return super().dispatch( request, *args, **kwargs )
 
     def post(self, request, *args, **kwargs):
-        print(request)
-        print(request.POST)
-        try:
-            print(request.POST.get("idusu1"))
-        except:
-            pass
-        position=1
-        data=[]
-        for i in Cbtusu.objects.all():
-            item=i.toJSON()
-            item['position']=position
-            data.append( item )
-            position+=1
-        return JsonResponse( data, safe=False )
+        chequearNoDobleConexion(request)
+        if Cbtusu.objects.filter(idusu1 = request.user.username).first().tipousu == "S":
+            position=1
+            data=[]
+            for i in Cbtusu.objects.all():
+                item=i.toJSON()
+                item['position']=position
+                item["modificable"]=True
+                if Cbrenc.objects.filter(idusucons=item["idusu1"]).exists():
+                    item["modificable"]=False
+                
+                data.append( item )
+                position+=1
+            return JsonResponse( data, safe=False )
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
@@ -2394,16 +2710,68 @@ class ListaUsuarioView( ListView ):
         return context
 
 #  ********************************************************************************************************************
+
+class ListaEmpresaView( ListView ):
+    model=Cbtemp
+    template_name='cbtemp/list.html'
+
+    # @method_decorator( csrf_exempt )
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        diccionario = clienteYEmpresas(request)
+        position=1
+        data=[]
+        for i in Cbtemp.objects.all():
+            item=i.toJSON()
+            if item['empresa'] in diccionario["empresas"] and item["cliente"] == diccionario["cliente"]:
+                item['position']=position
+                item['pais']=getPais(item['empresa'])
+                data.append( item )
+                position+=1
+        return JsonResponse( data, safe=False )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        context['title']='Administracion de Empresas'
+        context['codigo']='CBF14'
+        getCliente(self.request, context)
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbrenc-list' )
+        context['new_empresa_url'] = reverse_lazy( 'CBR:empresa-nueva' )
+        return context
+#  ********************************************************************************************************************
 @login_required
 def resetPassword(request):
     usuario = request.GET.get("usuario")
-    print(usuario)
-    print(request.GET)
-    print("esefue")
+
     aCbtusu = Cbtusu.objects.filter(idusu1=usuario).first()
     aCbtusu.pasusu = True
     aCbtusu.save()
     return redirect("../")
+
+def CbtusucGuardar(request):
+    print(request)
+    try:
+        Cbtusuc.objects.filter(idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first().idtusu).delete()
+        i = 0
+        while i < 34:
+            clave = 'cbtusuc['+str(i)+']'
+            
+            if request.POST[clave]=="true":
+                aCbtusuc=Cbtusuc(codcol=i)
+                aCbtusuc.fechact =dt.datetime.now(tz=timezone.utc)+huso
+                aCbtusuc.idusu=request.user.username
+                aCbtusuc.idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first().idtusu
+                aCbtusuc.save()
+            i=i+1
+    except Exception as e:
+        print(e)
+        pass
+    return JsonResponse({})
 
 class CbtusuCreateView( CreateView ):
     model=Cbtusu
@@ -2418,23 +2786,25 @@ class CbtusuCreateView( CreateView ):
         return super().dispatch( request, *args, **kwargs )
     
     def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
         data={}
         try:
             #Lee las respuetas al formulario
             
             idusu1=request.POST['idusu1']
             descusu=request.POST['descusu']
-            print("aca")
-            print(request.POST)
             tipusu=request.POST.get('tipousu')
 
-            print("alla")
             if Cbtusu.objects.filter(idusu1=idusu1).exists():
                 data['error']="Nombre de Usuario Existente"
                 return JsonResponse( data, safe=False)
-
+            cliente = clienteYEmpresas(request)["cliente"]
+            licencias = Cbtlic.objects.filter(cliente=cliente).first().nrousuario
+            usuariosActivos = Cbtusu.objects.filter(actpas="A", cliente=cliente).count()
+            if licencias <= usuariosActivos:
+                data['error']="Máximo número de usuarios activos alcanzados"
+                return JsonResponse( data, safe=False)
             # CREATE
-            print("llego fu")
             CbtusuNew=Cbtusu(idusu1=idusu1, descusu=descusu,actpas="A")
             if tipusu == "on":
                 CbtusuNew.tipousu = "S"
@@ -2444,7 +2814,6 @@ class CbtusuCreateView( CreateView ):
             CbtusuNew.fechact=dt.datetime.now(tz=timezone.utc)+huso
             CbtusuNew.idusu=request.user.username
             CbtusuNew.cliente = Cbtusu.objects.filter(idusu1 = request.user.username).first().cliente
-            print("llego aca")
             CbtusuNew.save()
             usuario = User(username = idusu1, password=make_password("ninguno"))
             usuario.save()
@@ -2459,15 +2828,203 @@ class CbtusuCreateView( CreateView ):
     def get_context_data(self, **kwargs):
         context=super().get_context_data( **kwargs )
         getCliente(self.request, context)
+        context['modificable']= True
         context['title']='Nueva Cuenta'
         context['codigo']='CBF09'
 
         # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
-        context['list_url']=reverse_lazy( 'CBR:cbtcta-list' )
+        context['list_url']=reverse_lazy( 'CBR:cbtusu-list' )
         return context
+
+
+class CbtempCreateView( CreateView ):
+    model=Cbtemp
+    form_class=CbtempForm
+    template_name='cbtemp/add-edit.html'
+
+    success_url=reverse_lazy( 'CBR:cbtemp-list' )
+    url_redirect=success_url
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+    
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data={}
+        try:
+            #Lee las respuetas al formulario
+            diccionario = clienteYEmpresas(request)
+            cliente= diccionario["cliente"]
+            empresa = request.POST["empresa"]
+            desemp = request.POST["desemp"]
+            actpas = request.POST["actpas"]
+            if actpas == "on":
+                actpas = "A"
+            else:
+                actpas = "P"
+            try:
+                getPais(empresa)
+            except:
+                try:
+                    data={}
+                    data["error"]="el código de país "+ empresa[0:2]+ " no existe."
+                    return JsonResponse(data)
+                except:
+                    data={}
+                    data["error"]="La Empresa debe tener más de dos digitos."
+                    return JsonResponse(data)
+            empresasMaximas = Cbtlic.objects.filter(cliente=diccionario["cliente"]).first().nroempresa
+            empresasActivas = Cbtemp.objects.filter(cliente=diccionario["cliente"], actpas = "A").count()
+            if empresasActivas >= empresasMaximas and actpas == "A":
+                data={}
+                data["error"]="Se alcanzó el limite máximo de empresas activas"
+                return JsonResponse(data)
+            aCbtusue=Cbtusue(idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first(), actpas="A", empresa=empresa)            
+            aCbtusue.idusu = request.user.username
+            aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)+huso
+            aCbtusue.save()
+            # CREATE
+            aCbtemp = Cbtemp(empresa=empresa, desemp=desemp,actpas=actpas )
+            aCbtemp.fechact=dt.datetime.now(tz=timezone.utc)+huso
+            aCbtemp.idusu=request.user.username
+            aCbtemp.cliente=diccionario["cliente"]
+            aCbtemp.save()
+        except Exception as e:
+            data={}
+            data['error']=str( e )
+            print(e)
+            return JsonResponse( data )
+
+        return JsonResponse( data )
+
+    def get_context_data(self, **kwargs):
+        context=super().get_context_data( **kwargs )
+        getCliente(self.request, context)
+        context['title']='Nueva Empresa'
+        context['codigo']='CBF20'
+        context['editable']=True
+        #context['idtcta']=self.object.idtcta
+
+
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbtemp-list' )
+        return context
+
 
 def chequearNoDobleConexion(request):
     aCbsusu = Cbsusu.objects.filter(idusu1=request.user.username).order_by("corrusu").last()
-
     if request.session["iddesesion"] < aCbsusu.corrusu:
         logout(request)
+        return redirect("/")
+
+
+def cerrarOtraPestana(request):
+    return render(request, "utils/cerrarotrapestana.html")
+
+def clienteYEmpresas(request):
+    aCbtusu = Cbtusu.objects.filter(idusu1 = request.user.username).first()
+    empresasHabilitadas = []
+    if aCbtusu.tipousu == "S":
+        empresas = Cbtemp.objects.filter(cliente= aCbtusu.cliente).all()
+        for empresa in empresas:
+            empresasHabilitadas.append(empresa.empresa)
+    else:
+        for empresa in Cbtusue.objects.filter(idtusu=aCbtusu.idtusu).all():
+            empresasHabilitadas.append(empresa.empresa)
+    return{"cliente":aCbtusu.cliente, "empresas":empresasHabilitadas}
+
+def getColumnas(request):
+    n = 0
+    columnas = {}
+    while n < 33:
+        if Cbtusuc.objects.filter(idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first().idtusu,codcol=n).exists():
+            columnas[n]=True
+        else:
+            columnas[n]=False
+        n = n+1
+    print(request)
+    print(request.POST)
+    print(request.user.username)
+    print(columnas)
+    return JsonResponse(columnas)
+
+
+class definirColumnas( CreateView ):
+    model=Cbtusuc
+    form_class=CbtusucForm
+    template_name='cbtusuc/add-edit.html'
+
+    success_url=reverse_lazy( 'CBR:cbrenc-list' )
+    url_redirect=success_url
+
+    def get_initial(self):
+
+        diccionario = {}
+        columnas = Cbtcol.objects.all()
+        for columna in columnas:
+            if columna.inddef == 1:
+                diccionario[columna.descol]=True
+            else:
+                diccionario[columna.descol]=False
+        return diccionario
+
+
+    @method_decorator( login_required )
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch( request, *args, **kwargs )
+    
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data={}
+        try:
+            #Lee las respuetas al formulario
+            diccionario = clienteYEmpresas(request)
+            columnas = Cbtcol.objects.all()
+            resultado = {}
+            print("sa")
+            Cbtusuc.objects.filter(idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first().idtusu).delete()
+            print("pe")
+            for columna in columnas:
+                print("di")
+                print(request.POST)
+                print(columna.descol)
+                print(request.POST.get(columna.descol))
+                if request.POST.get(columna.descol)=="on":
+                    aCbtusuc=Cbtusuc(codcol=columna.codcol)
+                    aCbtusuc.fechact =dt.datetime.now(tz=timezone.utc)+huso
+                    aCbtusuc.idusu=request.user.username
+                    aCbtusuc.idtusu=Cbtusu.objects.filter(idusu1=request.user.username).first().idtusu
+                    aCbtusuc.save()
+            print("aca")
+            print(resultado)
+            # CREATE
+            form=self.get_form()
+            
+            form.fechalt=dt.datetime.now(tz=timezone.utc)+huso
+            form.idusu=request.user.username
+
+            self.CbrencNew=form.save()
+        except Exception as e:
+
+            data['error']=str( e )
+            print(e)
+            return JsonResponse( data )
+
+        return JsonResponse( data )
+
+    def get_context_data(self, **kwargs):
+        lista = []
+        columnas = Cbtcol.objects.all()
+        for columna in columnas:
+            lista.append(columna.descol)
+        #context=super().get_context_data( **kwargs )
+        context={}
+        context["columnas"]=lista
+        getCliente(self.request, context)
+        context['title']='Nueva Cuenta'
+        context['codigo']='CBF09'
+        context['action']='edit'
+        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
+        context['list_url']=reverse_lazy( 'CBR:cbtcta-list' )
+        return context

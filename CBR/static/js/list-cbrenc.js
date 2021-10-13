@@ -1,4 +1,5 @@
 $(function () {
+    
         // Setup - add a text input to each footer cell
     $('#data thead tr').clone(true).appendTo( '#data thead' );
     $('#data thead tr:eq(1) th').each( function (i) {

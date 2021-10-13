@@ -11,7 +11,7 @@
                 <small class="card-title float-md-right">{{ cliente }}::{{ codigo }}</small>
             </div>
             <!-- /.card-header -->
-            <form method="post" action="../conciliacion" enctype="multipart/form-data"  data-ajax="false" >
+            <form method="post" action="/" enctype="multipart/form-data"  data-ajax="false" >
                 <!-- form start -->
                 {% csrf_token %}
                 <input type="hidden" name="action" value="{{ action }}">
@@ -24,36 +24,24 @@
                             {{ form.errors }}
                         </div>
                     {% endif %}
-                    <div class="row">
-                        {% if modificable %}
-                        <div class="form-group col-6">
-                            <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                                {{ form.idusu1}}
-                        {% else %}
-                        <div class="form-group col-6">
-                            <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                            <input type="text" readonly name="idusu1" value="{{form.idusu1.value}}" placeholder="Usuario" class="form-control" maxlength="16" autocomplete="off" required="" id="id_idusu1">                        {% endif %}
 
-                        </div>
+                        {%for columna in columnas%}
+                        <div class="row">
                             <div class="form-group col-6">
-                            <label for="descusu" class="col-form-label">{{ form.descusu.label }}</label>
-                                {{ form.descusu}}
-
+                                {{columna}}
+                            </div>
+                            <div class="form-group col-6">
+                                <input type="checkbox" style="height: 30px" class="col-8" name="{{columna}}" id = "{{columna}}">
+                            </div>
                         </div>
+                        {%endfor%}
+                        {{ form.idsres}}
+                        
                     </div>
-                    <div class="row">
-                        <div class="form-group col-6">
-                            <label for="tipousu" class="col-form-label">¿Es Superusuario?</label>
-                                {{ form.tipousu}}
-
-                        </div>
-                    </div>
-                    
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Crear</button>
-                        <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
-                                onclick="location.href='{{ list_url }}'">Cancelar</button>
+                        <button id="btnGuardarColumnas" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
+
                     </div>
             </form>
             <div class="progress">
@@ -67,8 +55,9 @@
         $('form').on('submit', function (e) {
             e.preventDefault();
             var parameters = new FormData(this);
+            
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                location.href = "{% url 'CBR:cbtusu-list' %}";
+               location.href = "{% url 'CBR:cbtcta-list' %}";
             });
         });
         $('.form-control').on("change", function(e){

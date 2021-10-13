@@ -38,17 +38,27 @@ $(function () {
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');
-
+                    var classEliminar = '';
+                    if (row['modificable'] != true){
+                    classEliminar = 'disabled'; 
+                    }
     
                     var classMain = 'btn btn-app';
 
-                    // ##### CONCILIAR #####
 
-                    // ##### ELIMINAR #####
                     $elDiv.children().append($(
                         `<a id="btnResetear${row.idusu1}" data-idusu1="${row.idusu1}" class="${classMain}" "><i  class="fas fa-undo"></i>Resetear</a>`));
-
+                    
+                    $elDiv.children().append($(
+                            `<a id="btnEditar${row.idusu1}" data-idusu1="${row.idusu1}" href="edit/?idusu1=${row.idusu1}" class="${classMain}" "><i  class="fas fa-edit"></i>editar</a>`));
+                        
+                    $elDiv.children().append($(
+                        `<a id="btnEliminarU${row.idusu1}" class="${classMain}" data-idusu1="${row.idusu1}""><i  class="fas fa-trash-alt"></i>Eliminar</a>`)
+                        .addClass(classEliminar));
+                    
                     return $elDiv.clone().html();
+
+
 
                 },
 
@@ -57,13 +67,9 @@ $(function () {
         ],
         
         initComplete: function (settings, json) {
-            console.log("existe")
             $(document).on("click", "a[id^=btnResetear]", function (event) {
-                console.log("se apreto")
-                console.log($(this))
                 var idusu1 = $(this).data('idusu1');
                 var parameters = {'idusu1': idusu1};
-                console.log(idusu1)
                 ajax_confirm("", 'Confirmación',
                     `¿Resetear el Password de ${$(this).data('idusu1')}?`, parameters,
                     function (response) {
@@ -71,6 +77,20 @@ $(function () {
                         return true;
                     })
                 })
+                $(document).on("click", "a[id^=btnEliminarU]", function (event) {
+                    var idusu1 = $(this).data('idusu1');
+                    var parameters = {'idusu1': idusu1, 'index': $(this).data('index')};
+                    ajax_confirm("del/", 'Confirmación',
+                        `¿Eliminar el usuario ${$(this).data('idusu1')}?`, parameters,
+                        function (response) {
+                            if (response.hasOwnProperty('info')) {
+                                message_info(response['info'], null, null)
+                                return false;
+                            };
+                            location.href = '/cbtusu';
+                            return true;
+                        }
+                    )})
             }
     })
     

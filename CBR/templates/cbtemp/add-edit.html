@@ -24,34 +24,43 @@
                             {{ form.errors }}
                         </div>
                     {% endif %}
+                    {% if action == "edit" %}
+                    <input type="hidden" name="idtemp" value="{{ idtemp }}"> 
+                    {% endif %}
                     <div class="row">
-                        {% if modificable %}
+                        {% if editable %}
                         <div class="form-group col-6">
-                            <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                                {{ form.idusu1}}
+                            <label for="empresa" class="col-form-label">{{ form.empresa.label }}</label>
+                                {{ form.empresa}}
+                        </div>
                         {% else %}
                         <div class="form-group col-6">
-                            <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                            <input type="text" readonly name="idusu1" value="{{form.idusu1.value}}" placeholder="Usuario" class="form-control" maxlength="16" autocomplete="off" required="" id="id_idusu1">                        {% endif %}
-
+                        <label for="empresa" class="col-form-label">{{ form.empresa.label }}</label>
+                        <input id=id_empresa name="empresa" class= 'form-control' type="text" readonly value={{form.empresa.value}}                        
                         </div>
+                        {% endif %}
+                    </div>
                             <div class="form-group col-6">
-                            <label for="descusu" class="col-form-label">{{ form.descusu.label }}</label>
-                                {{ form.descusu}}
+                            <label for="desemp" class="col-form-label">{{ form.desemp.label }}</label>
+                                {{ form.desemp}}
 
                         </div>
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
-                            <label for="tipousu" class="col-form-label">¿Es Superusuario?</label>
-                                {{ form.tipousu}}
+                            <label for="actpas" class="col-form-label">¿Es Empresa Activa?</label>
+                                {{ form.actpas}}
 
                         </div>
                     </div>
                     
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Crear</button>
+                        {% if action == "edit" %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Editar</button>
+                        {% else %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
+                        {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_url }}'">Cancelar</button>
                     </div>
@@ -68,7 +77,7 @@
             e.preventDefault();
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                location.href = "{% url 'CBR:cbtusu-list' %}";
+                location.href = "{% url 'CBR:cbtemp-list' %}";
             });
         });
         $('.form-control').on("change", function(e){

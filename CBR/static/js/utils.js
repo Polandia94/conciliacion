@@ -90,7 +90,6 @@ function submit_(url, title, content, parameters, callback,contador) {
                 action: function () {
                     try{
                         if(contador){
-                            console.log("empieza")
                             start(0)
                         }
                     }

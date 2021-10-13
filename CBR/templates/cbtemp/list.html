@@ -1,0 +1,39 @@
+{% extends 'Classes/list.html' %}
+{% load static %}
+{% block head_list %}
+    <script src="{% static 'js/list-cbtemp.js' %}"></script>
+{% endblock %}
+{% block botones %}
+    <div class="row">
+    
+        <a href="{{ list_url }}" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
+           title="Atras">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <a href="{{ new_empresa_url }}" class="btn btn-primary btn-flat mb-3 margin-left-big" data-toggle="tooltip" data-placement="bottom"
+        title="Crear Nueva Empresa">
+         <i class="fas fa-plus"></i>
+        </a>
+
+
+
+    </div>
+{% endblock %}
+{% block columns %}
+    <tr>
+        <th scope="col" style="width: 2% !important;">IDTEMP</th>
+        <th scope="col" style="width: 2% !important;">Pais</th>
+        <th scope="col" style="width: 2% !important;">Empresa</th>
+        <th scope="col" style="width: 3%;">Descripcion</th>
+        <th scope="col" style="width: 5%;">Activo/Pasivo</th>
+        <th scope="col" style="width: 5%;">Accciones</th>
+
+    </tr>
+{% endblock %}
+{% block rows %}
+{% endblock %}
+{% block footer %}
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+{% endblock %}

@@ -50,7 +50,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 try:
                     if n < 8:
                         time.sleep(1)
-                        print(dataBco.loc[i, dataBco.columns[0]])
                     n = n+1
                     aCbrbod = Cbrbod()
                     errores = []
@@ -234,8 +233,6 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                         time.sleep(1)
                     else:
                         time.sleep(0.01)
-                    if n < 40:
-                        print(dataErp.loc[i, dataErp.columns[0]])
                     n= n+1
                     errores = []
                     pausa = False
@@ -322,7 +319,6 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.fechatra = fechatra
                     aCbrgal.save(aCbrgal)
                     for error in errores:
-                        print(error)
                         fallo = True
                         aCbrgal.idrenc = None
                         aCbrgal.save(aCbrgal)
@@ -373,8 +369,6 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             for registro in Cbrgal.objects.order_by("idrgal").filter(idrenc=aCbrenc.idrenc).all():
                 if n < 8:
                     time.sleep(1)
-                    print("a")
-                    print(registro.fechatra)
                 else:
                     time.sleep(0.01)
                 n = n+1

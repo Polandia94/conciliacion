@@ -38,5 +38,36 @@
 <script src="{% static 'lib/jquery-confirm-v3.3.4/jquery-confirm.min.js' %}" type="text/javascript"></script>
 <!-- Jquery DataTables -->
 {% block scripts %}{% endblock %}
+<script>
+    var cargado;
+    window.onload = function(){
+        
+        cargado = true
+        var estaabierta = localStorage[document.title];
+        if (estaabierta == undefined || document.title == "||"){
+            localStorage[document.title] = false;
+        }
+
+        if(estaabierta=="true"){
+            cargado = false
+            window.location.href = "/cerrarotrapestana/"           
+        }else{
+            localStorage[document.title] = true
+        }
+    };
+    window.onbeforeunload  = function(){
+        try{
+        if (globalVariable.editado == 1){
+        return 'Do you really want to leave??';
+        }
+        }
+        finally{
+        if(cargado){
+        localStorage[document.title] = false
+        }
+    }
+    };
+    
+</script>
 {% block scripts_cbr %}{% endblock %}
 </html>

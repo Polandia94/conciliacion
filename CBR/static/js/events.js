@@ -14,19 +14,50 @@
 
     
     $("#btnSalir").on('click', function (e) {
+        const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
+        console.log(visibilidad)
+        let enviar = {}
+        for(let i=0; i<visibilidad.length;i++){
+            console.log(visibilidad[i]["visible"])
+            enviar[i]=visibilidad[i]["visible"]
+        }
+        console.log(enviar)
+
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
         if (globalVariable.editado == 1){
             ajax_confirm("../verificar/eliminar/?idrenc="+idrenc, 'Notificación',
                 'Se han modificado datos en la grilla, ¿desea salir sin guardar?', parameters,
                 function () {
-                    globalVariable.editado = 0
-                    location.href = `../`;
+                    $.ajax({
+                        method: 'POST',
+                        beforeSend: function (request) {
+                            request.setRequestHeader("X-CSRFToken", csrftoken);
+                        },
+                        url: '/cbtusuc/guardado/',
+                        data: {'cbtusuc': enviar},
+                        success: function (respons) {                    
+                            globalVariable.editado = 0
+                            location.href = `../`;
+                    }
+                });
+
                     return false;
                 });
             }else{
-                    location.href = `../`;
-                    return false;
+                    console.log("enviar")
+                    $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                    },
+                    url: '/cbtusuc/guardado/',
+                    data: {'cbtusuc': enviar},
+                    success: function (respons) {                    
+                        globalVariable.editado = 0
+                        location.href = `../`;
+                        }
+                    });
                 };
             
     });
@@ -127,7 +158,6 @@
             // processData: false,
             // contentType: false,
         }).done(function (response) {
-            console.log(response)
             if (response.hasOwnProperty('idrenc')) {
                 location.href = `../cbsres/?idrenc=${response['idrenc']}`;
                 return false;
@@ -191,19 +221,15 @@ async function primeraCargaCbsres(){
         const urlParams = new URLSearchParams(window.location.search);
         const idrenc = urlParams.get('idrenc');
         const idrencparam = String(parseInt(idrenc))
-        console.log("1")
-        console.log("2")
         
         $.ajax({
             method: 'POST',
             beforeSend: function (request) {
-                console.log("3")
                 request.setRequestHeader("X-CSRFToken", csrftoken);
             },
             url: "../conciliarSaldos/",
             data: {'idrenc': idrencparam, "sobreescribir": 'false'},
             success: function (respons) {
-                    console.log("falla aca:")
                     if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
                         window.location = window.location + '#loaded';
                         window.location.reload();
@@ -211,19 +237,10 @@ async function primeraCargaCbsres(){
                     cargadoIncompleto = false
         
             }})
-        console.log("4")
-        if(cargadoIncompleto){
-                            console.log("9");
-                            // var contador = 0;
-                            console.log("b");
-                            //start(0)
-                            console.log("c");
-                            }
+
         function start(contador){
             contador = contador +3
-            console.log("a");
             if(cargadoIncompleto && contador < 100){
-                console.log("cuenta")
                 cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
                 setTimeout(function(){
                     start(contador); 

@@ -1,5 +1,5 @@
 from django.forms import *
-from .models import Cbrenc, Cbrbcod, Cbrencl, Cbrerpd, Cbtcta, Cbtusu
+from .models import Cbrenc, Cbrbcod, Cbrencl, Cbrerpd, Cbtcta, Cbtusu, Cbtemp,Cbtcol
 
 
 class CbrbcodForm(ModelForm):
@@ -253,7 +253,6 @@ class CbtusuForm( ModelForm ):
 
         try:            
             if form.is_valid():
-                print(form.cleaned_data)
                 data = form.save(commit=True)
             else:
                 print("aca hubo una falla2")
@@ -283,3 +282,89 @@ class CbtusuForm( ModelForm ):
             )            
         }
 
+class CbtempForm( ModelForm ):
+    def __init__(self, *args, **kwargs):
+        super(CbtempForm, self).__init__(*args, **kwargs)
+        self.fields['actpas'].required = False
+        for form in self.visible_fields():
+            form.field.widget.attrs['autocomplete'] = 'off'
+
+
+
+    def save(self, commit=True):
+        data={}
+        form=super()
+
+        try:            
+            if form.is_valid():
+                data = form.save(commit=True)
+            else:
+                print("aca hubo una falla2")
+                print(form.errors)
+                data['error']=form.errors
+        except Exception as e:
+            print("aca hubo una falla")
+            print(e)
+            data['error']=str( e )
+        return data
+
+    class Meta:
+        model = Cbtemp
+        fields = ['empresa', 'desemp','actpas']
+        # fields = '__all__'
+        widgets = {
+            'empresa': TextInput(
+                attrs = { 'placeholder': 'Empresa',
+                          'class': 'form-control'}
+            ),            
+            'desemp': TextInput(
+                attrs = { 'placeholder': 'Descripcion de la Empresa',
+                          'class': 'form-control'}
+            ),
+            'actpas': CheckboxInput(
+                attrs = { 'placeholder': '¿Está activa?',
+                          'class': 'form-control'}
+            )            
+        }
+class CbtusucForm( Form ):
+    #def __init__(self, *args, **kwargs):
+        #super(CbtusucForm, self).__init__(*args, **kwargs)
+        #columnas = Cbtcol.objects.all()
+        #for columna in columnas:
+        #    self.fields[columna.descol].required = False
+        #for form in self.visible_fields():
+            #form.field.widget.attrs['autocomplete'] = 'off'
+
+    def save(self, commit=True):
+        data={}
+        form=super()
+
+        try:
+            if form.is_valid():
+                data = form.save(commit=True)
+            else:
+                data['error']=form.errors
+        except Exception as e:
+            print(e)
+            data['error']=str( e )
+        return data
+
+    class Meta:
+        #model = Cbtusuc
+        # try permite crear las migraciones sin fallar
+        try:
+            columnas = Cbtcol.objects.all()
+            lista=[]
+            diccionario = {}
+            for columna in columnas:
+                lista.append(columna.descol)
+                diccionario [columna.descol] = CheckboxInput(
+                    attrs = { 
+                            'class': 'form-control'}
+                ) 
+
+            fields = lista
+            # fields = '__all__'
+            widgets = diccionario
+        except:
+            pass

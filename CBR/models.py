@@ -455,7 +455,6 @@ class Cbrenc(models.Model):
     # def __str__(self):
     #     return str(self.idrenc)
     def save(self, *args, **kwargs):
-        self.cliente = "PMA"
         try:
             self.corr = Cbrenc.objects.filter(codbco=self.codbco,nrocta=self.nrocta,ano=self.ano, mes=self.mes,empresa=self.empresa).order_by('-corr')[0].corr + 1
         except:
@@ -724,6 +723,10 @@ class Cbtemp(models.Model):
     actpas = models.CharField(verbose_name='Descripcion de la empresa', db_column='actpas', max_length=1)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+    
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
 
     class Meta:
         managed = True
@@ -787,7 +790,7 @@ class Cbtusu(models.Model):
 
 class Cbtusue(models.Model):
     idtusue = models.AutoField( verbose_name='ID', db_column='idtusue', primary_key=True )
-    idtusu = models.IntegerField(verbose_name='Login del usuario',db_column='idtusu')
+    idtusu = models.ForeignKey( 'Cbtusu', models.DO_NOTHING, db_column='idtusu', default=0 )
     empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)

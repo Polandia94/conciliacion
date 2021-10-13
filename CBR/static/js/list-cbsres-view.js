@@ -177,8 +177,6 @@ $(function () { "use strict"
                                             catch{console.log("error al cargar " + respons.debeerptotal + "como debeerptotal")}
                                             try{habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
                                             catch{}
-                                            console.log("saldoerptotal")
-                                            console.log(Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2}))
                                             try{saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
                                             catch{}
                                             try{saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
@@ -329,19 +327,19 @@ $(function () { "use strict"
                     return "<td><nobr>" + data + "</nobr></td>"}else{return""}
                     }},
                 {"data": "horatrabco", className: "dt-bancoColor" },
-                {"data": "debebco", name: "debebco", render: $.fn.dataTable.render.number(',', '.', 2, '$'), className: "dt-bancoColor" },
-                {"data": "haberbco", name: "haberbco", render: $.fn.dataTable.render.number(',', '.', 2, '$'), className: "dt-bancoColor" },
-                {"data": "saldobco", name: "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$'), className: "dt-bancoColor" },
+                {"data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}, className: "dt-bancoColor" },
+                {"data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}, className: "dt-bancoColor" },
+                {"data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}, className: "dt-bancoColor" },
                 {
                     "data": "saldoacumesbco",
                     name: "saldoacumesbco",
-                    render: $.fn.dataTable.render.number(',', '.', 2, '$'), 
+                    render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}, 
                     className: "dt-bancoColor" 
                 },
                 {
                     "data": "saldoacumdiabco",
                     name: "saldoacumdiabco",
-                    render: $.fn.dataTable.render.number(',', '.', 2, '$'), 
+                    render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}, 
                     className: "dt-bancoColor" 
                 },
                 {"data": 'oficina', className: "dt-bancoColor" },
@@ -376,18 +374,18 @@ $(function () { "use strict"
                     if(data!=null){
                     return "<td><nobr>" + data + "</nobr></td>"}else{return""}
                     }},
-                {"data": "debeerp", name: "debeerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-                {"data": "habererp", name: "habererp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-                {"data": "saldoerp", name: "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+                {"data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}},
+                {"data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}},
+                {"data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}},
                 {
                     "data": "saldoacumeserp",
                     name: "saldoacumeserp",
-                    render: $.fn.dataTable.render.number(',', '.', 2, '$')
+                    render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}
                 },
                 {
                     "data": "saldoacumdiaerp",
                     name: "saldoacumdiaerp",
-                    render: $.fn.dataTable.render.number(',', '.', 2, '$')
+                    render: function (data, type, full, meta) {if(data != null){return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}else{return ""}}
                 },
                 {"data": "saldodiferencia", name: "saldodiferencia", render: $.fn.dataTable.render.number( ',', '.', 2, '$' )},
                 
@@ -583,7 +581,6 @@ $(function () { "use strict"
                         }
 
                         cell.addEventListener('blur', function(e) {
-                            console.log("s")
                             e.target.textContent = e.target.textContent.substring(0,10)
                             var row = table.row(e.target.parentElement)
                             if (original !== e.target.textContent) {
@@ -602,7 +599,6 @@ $(function () { "use strict"
                                   Si el valor es numero pasa a ser rojo, la variable editado se activa
                                 */
                             if(existe){ 
-                                console.log("existe")        
                                 var tr = $(this);
                                 tr.css('color', '#ff0000');
                                 globalVariable.editado = 1
@@ -610,8 +606,6 @@ $(function () { "use strict"
                                 var debebco = 0
                                 var haberbco = 0
                                 var aConciliarVarios = 0
-                                console.log("original")
-                                console.log(original)
                                 if(original>0){
                                     table.rows( function ( idx, data, node ) {
                                     var rowe = table.row(idx)
@@ -683,9 +677,7 @@ $(function () { "use strict"
                                         haberbco = haberbco + parseFloat(rowc.data()['haberbco'])}});
                                 table.rows( function ( idx, data, node ) { 
                                     var rowb = table.row(idx)
-                                    console.log("a")
                                     if(rowb.data()['idrerpd'] == original && original != 0 && (debebco != 0 || haberbco != 0)){
-                                        console.log("b")                                           
                                             table.rows( function ( idx, data, node ) {
                                                 var rowc = table.row(idx)
                                                 if(rowc.data()["idrerpdl"] == original && original != 0){
@@ -702,16 +694,13 @@ $(function () { "use strict"
                                                 })
                                                 if(aConciliarVarios>1){rowb.data()['idrbcodl']=-1}else if(aConciliarVarios==1){rowb.data()['idrbcodl']=row.data()['idrbcod']}
                                             }if(rowb.data()['idrerpd'] == original && original != 0){
-                                                console.log("e")
                                                 table.rows( function ( idx, data, node ) {
-                                                    console.log("m")
                                                     var rowc = table.row(idx)
                                                     if(rowc.data()["idrerpdl"] == original && original != 0){
                                                             rowc.data()["estadobco"]=0
                                                         }});
                                                     rowb.data()['estadoerp']=0
                                                     if(rowb.data()['historial']=="2" || rowb.data()['historial']=="3" || rowb.data()['historial']=="4"){
-                                                        console.log("p")
                                                         rowb.data()['historial']="5"}
                                                     rowb.data()['idrbcodl']=0
                                             }
@@ -838,7 +827,6 @@ $(function () { "use strict"
                             cell.setAttribute('spellcheck', false)
     
                             cell.addEventListener('focus', function(e) {
-                                console.log("h")
                                 var row = table.row(e.target.parentElement)
                                 original = row.data()["idrbcodl"]
                                 estadooriginal =  row.data()["historial"]
@@ -847,7 +835,6 @@ $(function () { "use strict"
                             })
     
                             cell.addEventListener('blur', function(e) {
-                                console.log("f")
 
                                 e.target.textContent = e.target.textContent.substring(0,10)
                                 var row = table.row(e.target.parentElement)

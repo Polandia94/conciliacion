@@ -139,7 +139,6 @@
           $('form').on('submit', function (e) {
             e.preventDefault();
             var parameters = new FormData(this);
-            console.log("primera")
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
                 location.href = "{% url 'CBR:cbrenc-car' %}";
             },true);
