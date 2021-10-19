@@ -775,8 +775,8 @@ class Cbtusu(models.Model):
     descusu = models.CharField(verbose_name='Descripcion del usuario', db_column='descusu', max_length=60)
     pasusu = models.BooleanField(verbose_name='Password Reseteable', db_column='pasusu', default=False)
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
-    tipousu = models.CharField(verbose_name='Tipo de usuario', db_column='tipousu', max_length=1, null=True)
-    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    tipousu = models.CharField(verbose_name='Tipo de usuario', db_column='tipousu', max_length=1, blank=True)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1, blank=True)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
     
@@ -796,9 +796,14 @@ class Cbtusue(models.Model):
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+        
     class Meta:
         managed = True
         db_table = 'cbtusue'
+    
 
 class Cbtusuc(models.Model):
     idtusuc = models.AutoField( verbose_name='ID', db_column='idtusuc', primary_key=True )

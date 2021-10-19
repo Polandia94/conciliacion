@@ -1,7 +1,7 @@
 {% extends 'Classes/list.html' %}
 {% load static %}
 {% block head_list %}
-    <script src="{% static 'js/list-cbtusu.js' %}"></script>
+    <script src="{% static 'js/list-cbtbco.js' %}"></script>
 {% endblock %}
 {% block botones %}
     <div class="row">
@@ -10,8 +10,8 @@
            title="Atras">
             <i class="fas fa-arrow-left"></i>
         </a>
-        <a href="{{ new_user_url }}" class="btn btn-primary btn-flat mb-3 margin-left-big" data-toggle="tooltip" data-placement="bottom"
-        title="Crear Nuevo Usuario">
+        <a href="{{ new_banco_url }}" class="btn btn-primary btn-flat mb-3 margin-left-big" data-toggle="tooltip" data-placement="bottom"
+        title="Crear Nuevo Banco">
          <i class="fas fa-plus"></i>
         </a>
 
@@ -21,12 +21,11 @@
 {% endblock %}
 {% block columns %}
     <tr>
-        <th scope="col" style="width: 2% !important;">idtusu</th>
-        <th scope="col" style="width: 2% !important;">Usuario</th>
-        <th scope="col" style="width: 3%;">Descripcion</th>
-        <th scope="col" style="width: 5% !important;">Superusuario</th>
+        <th scope="col" style="width: 2% !important;">IDTBCO</th>
+        <th scope="col" style="width: 2% !important;">Pais</th>
+        <th scope="col" style="width: 2% !important;">Banco</th>
         <th scope="col" style="width: 5%;">Activo/Pasivo</th>
-        <th scope="col" style="width: 5%;">Resetear Password</th>
+        <th scope="col" style="width: 5%;">Accciones</th>
 
     </tr>
 {% endblock %}

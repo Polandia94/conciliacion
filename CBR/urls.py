@@ -23,6 +23,7 @@ urlpatterns=[
     path( 'cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del' ),
     path( 'cbtcta/del/', views.cbtctaDelete, name='cbtcta_delete_cuenta' ),
     path( 'cbtemp/del/', views.cbtempDelete, name='cbtemp_delete_empresa' ),
+    path( 'cbtbco/del/', views.cbtbcoDelete, name='cbtbco_delete_banco' ),
     path( 'cerrarConciliacion/', views.cerrarConciliacion, name='cerrarConciliacion' ),
     path( 'cbrgale/', views.DetalleErroresGalListView.as_view(), name='DetalleErroresGalListView' ),
     path( 'cbrbode/', views.DetalleErroresBodListView.as_view(), name='DetalleErroresBodListView' ),
@@ -36,6 +37,7 @@ urlpatterns=[
     path( 'cbtcta/edit/', views.CbtctaEditView.as_view(), name='cbtcta_edit_cuenta' ),
     path( 'cbtusu/edit/', views.CbtusuEditView.as_view(), name='cbtusu_edit_usuario' ),
     path( 'cbtemp/edit/', views.CbtempEditView.as_view(), name='cbtemp_edit_empresa' ),
+    path( 'cbtbco/edit/', views.CbtbcoEditView.as_view(), name='cbtbco_edit_banco' ),
     path( 'cbtusuc/guardado/', views.CbtusucGuardar, name='cbtusuc_guardar' ),
     path( 'cbsres/', views.CbsresListView.as_view(), name='cbsres-list' ),
     path( 'cbsresview/', views.CbsresviewListView.as_view(), name='cbsresview-list' ),
@@ -48,9 +50,12 @@ urlpatterns=[
     path( 'verificar/eliminar/', views.eliminarGuardado, name='cbrenc-eli' ),
 
     path( 'cbtemp/', views.ListaEmpresaView.as_view(), name='cbtemp-list' ),
+    path( 'cbtbco/', views.ListaBancoView.as_view(), name='cbtbco-list' ),
     path( 'cbtemp/new', views.CbtempCreateView.as_view(), name='empresa-nueva' ),
+    path( 'cbtbco/new', views.CbtbcoCreateView.as_view(), name='banco-nuevo' ),
 
     path( 'cbtusu/', views.ListaUsuarioView.as_view(), name='cbtusu-list' ),
+    path( 'cbtusue/', views.ListaCbtusueView.as_view(), name='cbtusue-list' ),
     path( 'cbtusu/new', views.CbtusuCreateView.as_view(), name='usuario-nuevo' ),
     path( 'cbtusu/res/', views.resetPassword, name='reset-password'),
     path( 'cbtusu/del/', views.cbtusuDelete, name='cbtusu-del' ),
@@ -69,6 +74,7 @@ urlpatterns=[
     path( 'list/add/', views.CbrencCreateView.as_view(), name='cbrenc_nueva' ),
     path( 'list/addaccount/', views.CbtctaCreateView.as_view(), name='cbtcta_nueva_cuenta' ),
     path('updateScript/', views.editCbwres, name='edit_cbwres'),
+    path('updateCbtusue/', views.updateCbtusue, name='update-cbtusue'),
     path('descargarArchivos/', views.DescargarArchivoView.as_view(), name='descargar_archivo')
     #path( 'log/<int:idrenc>/', views.CbrecnlListView.as_view(), name='cbrecnl-list' ),
 

@@ -13,3 +13,17 @@
 /media/upload_files
 /.vscode
 /media/temp
+/CBR/__pycache__
+*.pyc
+.coverage
+actividades.txt
+prueba.py
+reunion.txt
+appMain/__pycache__/settings.cpython-38.pyc
+CBR/__pycache__/admin.cpython-38.pyc
+CBR/__pycache__/forms.cpython-38.pyc
+.gitignore
+CBR/__pycache__/models.cpython-38.pyc
+CBR/__pycache__/urls.cpython-38.pyc
+CBR/__pycache__/views.cpython-38.pyc
+CBR/migrations/__pycache__/0001_initial.cpython-38.pyc

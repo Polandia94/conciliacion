@@ -44,7 +44,7 @@
                                             <input readonly id="usuario" type="text" class="form-control" value={{usuario}} name="username">
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-form-label">Contraseña:</label>
+                                            <label class="col-form-label">Nueva Contraseña:</label>
 
                                             <input id="password1" type="password" class="form-control" placeholder="Contraseña" name="password1" autocomplete="off">
                                             
@@ -82,11 +82,12 @@
 
 </section>
 <script>
-    
+    document.onload = window.alert("Defina una nueva contraseña")
     // Function to check Whether both passwords
     // is same or not.
     const togglePassword = document.querySelector('#togglePassword');
     const password1 = document.querySelector('#password1');
+    
     const password2 = document.querySelector('#password2');
     togglePassword.addEventListener('click', function (e) {
     // toggle the type attribute
@@ -104,7 +105,10 @@
     function checkPassword(form) {
         password1value = form.password1.value;
         password2value = form.password2.value;
-
+        if (password1value.length < 6){
+            alert ("La contraseña debe tener un mínimo de 6 caracteres")
+            return false
+        }
         // If password not entered
         if (password1value == '')
             alert ("Ingrese la Contraseña");

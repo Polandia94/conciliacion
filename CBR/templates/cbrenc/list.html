@@ -27,16 +27,24 @@
            title="Tabla de Usuarios">
             <i class="fas fa-user"></i>
         </a>
-        {% endif %}
+        
         <a href="{{ empresas_url }}" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
         title="Tabla de Empresas">
          <i class="fas fa-building"></i>
+        
+        <a href="{{ usuario_empresas_url }}" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
+         title="Tabla de Usuarios/Empresas">
+          <i class="fas fa-key"></i>
+        
+          <a href="{{ bancos_url }}" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
+          title="Tabla de Bancos">
+           <i class="fas fa-piggy-bank"></i>
+         {% endif %}
      </a>
         <div class="custom-control custom-checkbox ml-5 mt-2">
             <input id="cbox_conciliados" class="custom-control-input" type="checkbox" value="option1">
             <label for="cbox_conciliados" class="custom-control-label">Conciliados</label>
         </div>
-        <div class="card-text ml-5 mt-2 bold" >Cliente: PMA</div>
 
     </div>
 {% endblock %}

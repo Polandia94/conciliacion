@@ -1,2 +1,24 @@
 {% extends 'index.html' %}
 {% load static %}
+{% block content %}
+
+
+        <div class="row justify-content-center p-0 rounded">
+            <div class="card card-primary w-50 col-6 p-0 rounded">
+                <div class="card-header rounded bg-light">
+                    <h1 class="card-title text-lg">Cerrar otra Pestaña</h1>
+                    <a href="/" type="button" class="close" aria-hidden="true">×</a>
+                    <small class="card-title float-md-right">{{ cliente }}::{{ codigo }}</small>
+                </div>
+                <div class="card-body pt-0">
+                    No puede abrir dos veces un mismo formulario. Cierre el formulario que se encuentre abierto antes de proseguir.
+                </div>
+                <!-- /.card-header -->
+            </div>
+        </div>
+    {% endblock %}
+    {% block scripts %}
+        <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+    {% endblock %}
+    
+    

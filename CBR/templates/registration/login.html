@@ -38,6 +38,13 @@
                                         <img src="{% static '/img/logo.ico' %}" alt="" class="">
                                         <h5 class="mt-3"><b>Conciliacion Bancaria</b></h5>
                                         <span>Entrar a PMA</span>
+                                        {% if form.non_field_errors %}
+                                        {% for error in form.non_field_errors %}
+                                            <script>
+                                                window.alert("Contraseña Incorrecta")
+                                            </script>
+                                        {% endfor %}
+                                  {% endif %}
                                     </div>
                                     <form method="POST" id="loginForm" class="form mt-5 col-md"
                                           style="text-align: center;">
@@ -101,6 +108,9 @@
                 url: '/login?usuario='+usuarioValor,
                 //data: {'idrenc': idrenc},
                 success: function (respons) {
+                    if(respons.noexiste==true){
+                        window.alert("El usuario no existe")
+                    }else{
                     if (respons.reinicia==true) {
                             //beforeSend: function (request) {
                             //    request.setRequestHeader("X-CSRFToken", csrftoken);
@@ -115,9 +125,9 @@
                                 var parameters = {'idusu1': usuarioValor};
                                 $.confirm({
                                     theme: 'material',
-                                    title: "Cerrar Sesion",
+                                    title: "Sesion Abierta",
                                     icon: 'fa fa-info',
-                                    content: "cerrar",
+                                    content: "El usuario "+ usuarioValor + " ya tiene una sesión abierta en otro navegador desde las "+ respons.iniciodesesion  + ". ¿Desea Cerrar sesión en el otro navegador?",
                                     columnClass: 'large',
                                     typeAnimated: true,
                                     cancelButtonClass: 'btn-primary',
@@ -154,7 +164,7 @@
                             loginForm.submit()
                             }
                         }
-                    }}
+                    }}}
             });
         });
     })(jQuery)

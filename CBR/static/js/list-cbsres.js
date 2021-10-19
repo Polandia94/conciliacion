@@ -9,6 +9,373 @@ var globalVariableSaldo = {
     saldo: 0
 };
 let columnasVisibles = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))
+if(columnasVisibles == null){
+    console.log("columnas null")
+    columnasVisibles = {
+        "time": 1634598466441,
+        "start": 0,
+        "length": 10,
+        "order": [
+            [
+                0,
+                "asc"
+            ]
+        ],
+        "search": {
+            "search": "",
+            "smart": true,
+            "regex": false,
+            "caseInsensitive": true
+        },
+        "columns": [
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": false,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            },
+            {
+                "visible": true,
+                "search": {
+                    "search": "",
+                    "smart": true,
+                    "regex": false,
+                    "caseInsensitive": true
+                }
+            }
+        ],
+        "ColReorder": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33
+        ]
+    }
+}
+console.log(columnasVisibles)
+
+console.log("anteinicio")
 $.ajax({
     type: "POST",
     url: '/getColumnas/',
@@ -17,10 +384,12 @@ $.ajax({
         'X-CSRFToken': getCookie('csrftoken')
     },
     success: function (response) {
-        console.log(response.size)
-        for(let i = 0;i<response.length;i++){
+        console.log("aca")
+        console.log(response.length)
+        for(const i in response){
+            console.log("aquie")
             
-            console.log(response[i])
+            console.log(i)
             columnasVisibles["columns"][i]["visible"] = response[i]
             console.log("aqui")
         }
@@ -1376,7 +1745,7 @@ $.ajax({
         
                     },
                     drawCallback: function () {
-                        cargando.innerHTML = " "
+                        cargando.innerHTML = ""
                        
                     },
                     createdRow: function (row, data, dataIndex) {

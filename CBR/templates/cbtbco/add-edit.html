@@ -16,7 +16,6 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="{{ action }}">
                 <input type="hidden" name="sobreescribir" value={{ sobreescribir }}>
-                <input type="hidden" name="idtusu" value={{ idtusu }}>
                 <div class="card-body pt-0">
                     {% if form.errors %}
                         <div class="alert alert-danger alert-dismissible">
@@ -25,34 +24,39 @@
                             {{ form.errors }}
                         </div>
                     {% endif %}
+                    {% if action == "edit" %}
+                    <input type="hidden" name="idtbco" value="{{ idtbco }}"> 
+                    {% endif %}
                     <div class="row">
-                        {% if modificable %}
+                        {% if editable %}
                         <div class="form-group col-6">
-                            <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                                {{ form.idusu1}}
+                            <label for="codbco" class="col-form-label">{{ form.codbco.label }}</label>
+                                {{ form.codbco}}
+                        </div>
                         {% else %}
                         <div class="form-group col-6">
-                            <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                            <input type="text" readonly name="idusu1" value="{{form.idusu1.value}}" placeholder="Usuario" class="form-control" maxlength="16" autocomplete="off" required="" id="id_idusu1">                        {% endif %}
-
+                        <label for="codbco" class="col-form-label">{{ form.codbco.label }}</label>
+                        <input id=codbco name="codbco" class= 'form-control' type="text" readonly value={{form.codbco.value}}>                        
                         </div>
-                            <div class="form-group col-6">
-                            <label for="descusu" class="col-form-label">{{ form.descusu.label }}</label>
-                                {{ form.descusu}}
+                        {% endif %}
+                    </div>
 
-                        </div>
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
-                            <label for="tipousu" class="col-form-label">¿Es Superusuario?</label>
-                                {{ form.tipousu}}
+                            <label for="actpas" class="col-form-label">¿Es Banco Activo?</label>
+                                {{ form.actpas}}
 
                         </div>
                     </div>
                     
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Crear</button>
+                        {% if action == "edit" %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Editar</button>
+                        {% else %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
+                        {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_url }}'">Cancelar</button>
                     </div>
@@ -69,7 +73,7 @@
             e.preventDefault();
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                location.href = "{% url 'CBR:cbtusu-list' %}";
+                location.href = "{% url 'CBR:cbtbco-list' %}";
             });
         });
         $('.form-control').on("change", function(e){

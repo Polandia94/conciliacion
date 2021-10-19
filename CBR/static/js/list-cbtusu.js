@@ -22,6 +22,7 @@ $(function () {
             dataSrc: ""
         },
         columns: [
+            {"data":"idtusu"},
             {"data": "idusu1"},
             {"data": "descusu"},
             {"data": "tipousu"},
@@ -30,11 +31,15 @@ $(function () {
         ],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3],
+                targets: [0],
+                visible: false
+            },
+            {
+                targets: [1, 2, 3, 4],
                 class: 'text-center pt-4',
             },
             {
-                targets: [4],
+                targets: [5],
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');
@@ -50,7 +55,7 @@ $(function () {
                         `<a id="btnResetear${row.idusu1}" data-idusu1="${row.idusu1}" class="${classMain}" "><i  class="fas fa-undo"></i>Resetear</a>`));
                     
                     $elDiv.children().append($(
-                            `<a id="btnEditar${row.idusu1}" data-idusu1="${row.idusu1}" href="edit/?idusu1=${row.idusu1}" class="${classMain}" "><i  class="fas fa-edit"></i>editar</a>`));
+                            `<a id="btnEditar${row.idusu1}" data-idusu1="${row.idusu1}" data-idtsu="${row.idusu}" href="edit/?idusu1=${row.idusu1}&idtusu=${row.idtusu}" class="${classMain}" "><i  class="fas fa-edit"></i>editar</a>`));
                         
                     $elDiv.children().append($(
                         `<a id="btnEliminarU${row.idusu1}" class="${classMain}" data-idusu1="${row.idusu1}""><i  class="fas fa-trash-alt"></i>Eliminar</a>`)
