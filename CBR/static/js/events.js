@@ -5,6 +5,24 @@
     $("#btnResetColumns").on('click', function (e) {
         confirmar_accion('Confirmación', '¿Reiniciar el orden de las columnas?',
             function () {
+                const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
+                console.log(visibilidad)
+                let enviar = {}
+                for(let i=0; i<visibilidad.length;i++){
+                    console.log(visibilidad[i]["visible"])
+                    enviar[i]=true
+                }
+                $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                    },
+                    url: '/cbtusuc/guardado/',
+                    data: {'cbtusuc': enviar},
+                    success: function (respons) {                    
+                        location.reload();
+                }
+            });
                 var table = $('#data').DataTable();
                 table.colReorder.reset();
             });
@@ -73,24 +91,43 @@
             /******************************************************************************************************************/
     /******************************************************************************************************************/
  
-    $("#btnGuardar").click(function () {        
+    $("#btnGuardar").click(function () {      
+        const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
+        console.log(visibilidad)
+        let enviar = {}
+        for(let i=0; i<visibilidad.length;i++){
+            console.log(visibilidad[i]["visible"])
+            enviar[i]=visibilidad[i]["visible"]
+        }  
         const idrenc = urlParams.get('idrenc');
         if(cargando.innerHTML == ""){
-            $.ajax({
-                method: 'GET',
-                beforeSend: function (request) {
-                    request.setRequestHeader("X-CSRFToken", csrftoken);
-                },
-                url: '/getGuardado',
-                data: {'idrenc': idrenc},
-                success: function (respons) {
-                    if (respons.guardado=="si") {
-                        globalVariable.editado = 0;
-                        location.href = "../verificar/conservar/?idrenc=" + idrenc;
-                    } else {
-                        alert(respons.guardado)
-                    }}
+                $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                    },
+                    url: '/cbtusuc/guardado/',
+                    data: {'cbtusuc': enviar},
+                    success: function (respons) {                    
+                        $.ajax({
+                            method: 'GET',
+                            beforeSend: function (request) {
+                                request.setRequestHeader("X-CSRFToken", csrftoken);
+                            },
+                            url: '/getGuardado',
+                            data: {'idrenc': idrenc},
+                            success: function (respons) {
+                                if (respons.guardado=="si") {
+                                    globalVariable.bloqueado = true;
+                                    globalVariable.editado = 0;
+                                    location.href = "../verificar/conservar/?idrenc=" + idrenc;
+                                } else {
+                                    alert(respons.guardado)
+                                }}
+                        });
+                }
             });
+            
         }else{
             alert("Espere a que termine de cargar")
         }
@@ -106,6 +143,13 @@
         /******************************************************************************************************************/
     /******************************************************************************************************************/
     $("#btnRecargar").on('click', function (e) {
+        const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
+        console.log(visibilidad)
+        let enviar = {}
+        for(let i=0; i<visibilidad.length;i++){
+            console.log(visibilidad[i]["visible"])
+            enviar[i]=visibilidad[i]["visible"]
+        }
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
         if (globalVariable.editado == 1){
@@ -113,27 +157,62 @@
                 'Ud. Perderá las modificaciones de conciliación realizadas, desea continuar ?', parameters,
                 function () {
                     globalVariable.editado = 0
-                    location.href = `/cbsres/?idrenc=`+idrenc;
-                    return false;
+                    $.ajax({
+                        method: 'POST',
+                        beforeSend: function (request) {
+                            request.setRequestHeader("X-CSRFToken", csrftoken);
+                        },
+                        url: '/cbtusuc/guardado/',
+                        data: {'cbtusuc': enviar},
+                        success: function (respons) {                    
+                            location.href =   `/cbsres/?idrenc=`+idrenc;
+                    }
+                });
                 });
             }else{
-                    globalVariable.editado = 0
-                    location.href = `/cbsres/?idrenc=`+idrenc;
-                    return false;
+                $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                    },
+                    url: '/cbtusuc/guardado/',
+                    data: {'cbtusuc': enviar},
+                    success: function (respons) {                    
+                        globalVariable.editado = 0
+                        location.href = `/cbsres/?idrenc=`+idrenc;
+                }
+            });
                 };
     });
         /******************************************************************************************************************/
     /******************************************************************************************************************/
 
     $("#btnCerrarConciliacion").on('click', function (e) {
+        const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
+        console.log(visibilidad)
+        let enviar = {}
+        for(let i=0; i<visibilidad.length;i++){
+            console.log(visibilidad[i]["visible"])
+            enviar[i]=visibilidad[i]["visible"]
+        }
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
         if (globalVariable.SaldoDiferenciaTotal == 0){
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
             function () {
-                location.href = `../cbsres/?idrenc=`+idrenc;
-                return false;
+                $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                    },
+                    url: '/cbtusuc/guardado/',
+                    data: {'cbtusuc': enviar},
+                    success: function (respons) {                    
+                        location.href = `../cbsres/?idrenc=`+idrenc;
+                }
+            });
+                
             });
         }
 
@@ -144,6 +223,13 @@
     /******************************************************************************************************************/
     /******************************************************************************************************************/
     $("#btnConciliar").on('click', function () {
+        const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
+        console.log(visibilidad)
+        let enviar = {}
+        for(let i=0; i<visibilidad.length;i++){
+            console.log(visibilidad[i]["visible"])
+            enviar[i]=visibilidad[i]["visible"]
+        }  
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
         

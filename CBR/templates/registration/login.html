@@ -127,7 +127,7 @@
                                     theme: 'material',
                                     title: "Sesion Abierta",
                                     icon: 'fa fa-info',
-                                    content: "El usuario "+ usuarioValor + " ya tiene una sesión abierta en otro navegador desde las "+ respons.iniciodesesion  + ". ¿Desea Cerrar sesión en el otro navegador?",
+                                    content: "El usuario "+ usuarioValor + " ya tiene una sesión abierta en otro navegador desde las "+ moment(respons.iniciodesesion).format('HH:mm:ss [del] DD/MM/YYYY ')  + ". ¿Desea Cerrar sesión en el otro navegador?",
                                     columnClass: 'large',
                                     typeAnimated: true,
                                     cancelButtonClass: 'btn-primary',

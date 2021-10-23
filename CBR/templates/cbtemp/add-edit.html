@@ -47,11 +47,20 @@
                         </div>
                     </div>
                     <div class="row">
+                        {% if editable %}
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label">¿Es Empresa Activa?</label>
                                 {{ form.actpas}}
 
                         </div>
+                        {% else %}
+                        <div class="form-group col-6">
+                            <label for="actpas" class="col-form-label" >¿Es Empresa Activa?</label>
+                                
+                            <input disabled type="checkbox" name="actpas" placeholder="¿Está activa?" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked>
+
+                        </div>
+                        {% endif %}
                     </div>
                     
                     <!-- /.card-body -->
@@ -62,7 +71,7 @@
                         <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
                         {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
-                                onclick="location.href='{{ list_url }}'">Cancelar</button>
+                                onclick="location.href='{{ empresas_url }}'">Cancelar</button>
                     </div>
             </form>
             <div class="progress">

@@ -265,7 +265,7 @@ class CbtusuForm( ModelForm ):
 
     class Meta:
         model = Cbtusu
-        fields = ['idusu1', 'descusu','tipousu']
+        fields = ['idusu1', 'descusu','tipousu','actpas']
         # fields = '__all__'
         widgets = {
             'idusu1': TextInput(
@@ -279,7 +279,12 @@ class CbtusuForm( ModelForm ):
             'tipousu': CheckboxInput(
                 attrs = { 'placeholder': 'Cuenta',
                           'class': 'form-control'}
-            )            
+            ),
+            'actpas': CheckboxInput(
+                attrs = { 'placeholder': 'Cuenta',
+                          'class': 'form-control'}
+            )        
+                 
         }
 
 class CbtempForm( ModelForm ):

@@ -29,9 +29,16 @@
                         <div class="row">
                             <div class="form-group col-6">
                                 {{columna}}
+                                
+                                
                             </div>
+
                             <div class="form-group col-6">
+                                {% if columna in columnasActivadas %}
+                                <input checked type="checkbox" style="height: 30px" class="col-8" name="{{columna}}" id = "{{columna}}">
+                                {% else %}
                                 <input type="checkbox" style="height: 30px" class="col-8" name="{{columna}}" id = "{{columna}}">
+                                {% endif %}
                             </div>
                         </div>
                         {%endfor%}
@@ -57,7 +64,7 @@
             var parameters = new FormData(this);
             
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-               location.href = "{% url 'CBR:cbtcta-list' %}";
+               location.href = "{% url 'CBR:cbrenc-list' %}";
             });
         });
         $('.form-control').on("change", function(e){

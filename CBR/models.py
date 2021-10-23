@@ -5,6 +5,7 @@
 #from typing_extensions import TypeGuard
 from django.contrib.auth.models import User
 from django.db import models, connection
+from django.db.models import CheckConstraint, Q, F
 from django.db.models.fields import NullBooleanField
 from django.forms import model_to_dict
 import datetime as dt
@@ -742,6 +743,13 @@ class Cbtcli(models.Model):
     class Meta:
         managed = True
         db_table = 'cbtcli'
+    
+    def save(self, *args, **kwargs):
+        print(self.cliente[0:2])
+        if Cbtpai.objects.filter(codpai=self.cliente[0:2]).exists():
+            super( Cbtcli, self ).save( *args, **kwargs )
+        else:
+            return False
 
 class Cbtlic(models.Model):
     idtlic = models.AutoField( verbose_name='ID', db_column='idtlic', primary_key=True )
@@ -818,7 +826,7 @@ class Cbtusuc(models.Model):
 
 class Cbtcol(models.Model):
     idtcol = models.AutoField( verbose_name='ID', db_column='idtcol', primary_key=True )
-    codcol = models.SmallIntegerField(verbose_name='Codigo de Columna',db_column='codcol')
+    codcol = models.SmallIntegerField(verbose_name='Codigo de Columna',db_column='codcol', unique=True)
     descol = models.CharField( verbose_name='Descripción de la columna', db_column='descol', max_length=30, null=True )
     inddef = models.SmallIntegerField(verbose_name='Indicador de visibilidad de columna',db_column='inddef')
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)

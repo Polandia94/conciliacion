@@ -15,7 +15,7 @@
                 <!-- form start -->
                 {% csrf_token %}
                 <input type="hidden" name="action" value="{{ action }}">
-                <input type="hidden" name="sobreescribir" value={{ sobreescribir }}>
+                <input type="hidden" name="modificable" value={{ modificable }}>
                 <input type="hidden" name="idtusu" value={{ idtusu }}>
                 <div class="card-body pt-0">
                     {% if form.errors %}
@@ -30,11 +30,14 @@
                         <div class="form-group col-6">
                             <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
                                 {{ form.idusu1}}
+                        </div>
                         {% else %}
                         <div class="form-group col-6">
                             <label for="idusu1" class="col-form-label">{{ form.idusu1.label }}</label>
-                            <input type="text" readonly name="idusu1" value="{{form.idusu1.value}}" placeholder="Usuario" class="form-control" maxlength="16" autocomplete="off" required="" id="id_idusu1">                        {% endif %}
-
+                            <input type="text" readonly name="idusu1" value="{{form.idusu1.value}}" placeholder="Usuario" class="form-control" maxlength="16" autocomplete="off" required="" id="id_idusu1">                        
+                            
+                        </div>
+                        {% endif %}
                         </div>
                             <div class="form-group col-6">
                             <label for="descusu" class="col-form-label">{{ form.descusu.label }}</label>
@@ -48,13 +51,26 @@
                                 {{ form.tipousu}}
 
                         </div>
+                        {% if modificable %}
+                        <div class="form-group col-6">
+                            <label for="actpas" class="col-form-label">¿Es Usuario Activo?</label>
+                                {{ form.actpas}}
+
+                        </div>
+                        {% else %}
+                        <div class="form-group col-6">
+                            <label for="actpas" class="col-form-label">¿Es Usuario Activo?</label>
+                            <input type="checkbox" name="actpas" placeholder="Cuenta" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked disabled>
+
+                        </div>
+                        {% endif %}
                     </div>
                     
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
                         <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Crear</button>
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
-                                onclick="location.href='{{ list_url }}'">Cancelar</button>
+                                onclick="location.href='{{ list_cbtusu_url }}'">Cancelar</button>
                     </div>
             </form>
             <div class="progress">
