@@ -73,7 +73,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     try:
                         debe = dataBco.loc[i, dataBco.columns[3]].replace(".","").replace(",","")
                     except:
-                        debe = 0
+                        debe = '0'
                         if pd.isnull(dataBco.loc[i, dataBco.columns[3]]) == False:
                             errores.append(3)
                         # Si el debe no está vacio ni es un numero devuelve errores 3
@@ -93,7 +93,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                             haber = dataBco.loc[i, dataBco.columns[4]]
                             # Si el haber no está vacio ni es un numero devuelve errores 4
                         else:
-                            haber = 0
+                            haber = '0'
                     if es_decimal(haber) == False:
                         if 4 not in errores:
                             errores.append(4)
@@ -133,22 +133,24 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     aCbrbod.haber = haber
                     aCbrbod.saldo = saldo
                     time.sleep(0.01)
-                    aCbrbod.save(aCbrbod)                
+                    aCbrbod.save()                
                     for error in errores:
                         fallo = True
                         aCbrbod.idrenc = None
-                        aCbrbod.save(aCbrbod)
+                        aCbrbod.save()
                         aCbrbode = Cbrbode(idrbod=aCbrbod , coderr=error)
                         aCbrbode.save()
                 except Exception as e:
                     print(e)
                     fallo = True
                     try:
-                        aCbrbod.save(aCbrbod) 
-                        aCbrbode = Cbrbode(idrbod=aCbrbod ,coderr = Cbterr(99))
+                        aCbrbod.idrenc = None
+                        aCbrbod.save() 
+                        aCbrbode = Cbrbode(idrbod=aCbrbod ,coderr= 99)
                         aCbrbode.save()
                     except Exception as e:
-                        aCbrbode = Cbrbode(coderr = Cbterr(99))
+                        aCbrbod.idrenc = None
+                        aCbrbode = Cbrbode(coderr = 99)
                         aCbrbode.save()
                         print(e)
 
@@ -350,7 +352,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
             tableErpEnc = Cbrerpe(
                 idrerpe=aCbrenc.idrenc,
-                idrenc=aCbrenc,
+                idrenc=aCbrenc.idrenc,
                 fechact = dt.datetime.now(tz=timezone.utc),
                 idusu = request.user.username
                 )

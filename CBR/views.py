@@ -29,11 +29,11 @@ from CBR.forms import (CbrbcodForm, CbrencaForm, CbrencDeleteForm, CbrerpdForm,
                        CbtbcoForm, CbtctaForm, CbtempForm, CbtusucForm,
                        CbtusuForm)
 from CBR.homologacion import *
-from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc, Cbrenci,
+from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc,
                         Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgale, Cbsres,
                         Cbsresc, Cbsusu, Cbtbco, Cbtcli, Cbtcol, Cbtcta,
                         Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
-                        Cbtusuc, Cbtusue, Cbwres)
+                        Cbtusuc, Cbtusue, Cbwres, Cbrencibco, Cbrencierp)
 from .utils import *
 #endregion
 
@@ -46,10 +46,13 @@ class CbrencListView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
+        
         # si no existe la base de datos de CBTTCO la crea, esto solo para pruebas, no mantener en produccion
         populateDatabase()
         data = {}
@@ -65,6 +68,10 @@ class CbrencListView(ListView):
                         item['position'] = position
                         item['archivobco'] = i.archivobco.name
                         item['archivoerp'] = i.archivoerp.name
+                        if Cbwres.objects.filter(idrenc=item["idrenc"]).exists():
+                            item["usuario"] = Cbwres.objects.filter(idrenc=item["idrenc"]).first().idusu
+                        else:
+                            item["usuario"] = ""
                         data.append(item)
                         position += 1
                 cerrarCbrenct(request)
@@ -75,10 +82,6 @@ class CbrencListView(ListView):
             print(e)
             data['error'] = str(e)
         return JsonResponse(data, safe=False)
-
-    
-
-    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -93,45 +96,43 @@ class CbsresListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        try:
-            print(request.GET)
-            print(request.POST)
-            idrenca = request.GET.get('idrenc')
-            if idrenca is None:
-                idrenca = request.POST.get('idrenc')
-            print(idrenca)
-            print("estacosa2")
-            diccionario = clienteYEmpresas(request)
-            print("estacosa")
-            if Cbtusuc.objects.filter(idtusu = Cbtusu.objects.filter(
-                    idusu1=request.user.username).first().idtusu).exists() == False:
-                return redirect ("/definircolumnas")
-            print("estocosa3")
-            if Cbwres.objects.filter(idrenc=idrenca).exists():
-                aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
-                if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
-                    return redirect('/verificar/?idrenc='+idrenca, idrenc=idrenca)
+        if chequearNoDobleConexion(request):
+            try:
+
+                idrenca = request.GET.get('idrenc')
+                if idrenca is None:
+                    idrenca = request.POST.get('idrenc')
+
+                diccionario = clienteYEmpresas(request)
+                if Cbtusuc.objects.filter(idtusu = Cbtusu.objects.filter(
+                        idusu1=request.user.username).first().idtusu).exists() == False:
+                    return redirect ("/definircolumnas")
+                if Cbwres.objects.filter(idrenc=idrenca).exists():
+                    aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
+                    if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
+                        return redirect('/verificar/?idrenc='+idrenca, idrenc=idrenca)
+                    else:
+                        return JsonResponse({"error": "Usuario No Autorizado", "cliente Esperado": aCbsres.cliente, "cliente Existente": diccionario["cliente"]})
                 else:
-                    return JsonResponse({"error": "Usuario No Autorizado", "cliente Esperado": aCbsres.cliente, "cliente Existente": diccionario["cliente"]})
-            else:
-                if Cbsres.objects.filter(idrenc=idrenca).exists() == False:
-                    try:
-                        conciliarSaldos(request)
-                    except Exception as e:
-                        print(e)
-                aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
-                if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
-                    return super().dispatch(request, *args, **kwargs)
-                else:
-                    return JsonResponse({"error": "Usuario No Autorizado"})
+                    if Cbsres.objects.filter(idrenc=idrenca).exists() == False:
+                        try:
+                            conciliarSaldos(request)
+                        except Exception as e:
+                            print(e)
+                    aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
+                    if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
+                        return super().dispatch(request, *args, **kwargs)
+                    else:
+                        return JsonResponse({"error": "Usuario No Autorizado"})
+            
+            except Exception as e:
+                print(e)
+                return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
         
-        except Exception as e:
-            print("error")
-            print(e)
-            return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             action = request.POST['action']
@@ -181,14 +182,19 @@ class CbsresviewListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        idrenca = request.GET['idrenc']
-        diccionario = clienteYEmpresas(request)
-        aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
-        if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
-            return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            idrenca = request.GET['idrenc']
+            diccionario = clienteYEmpresas(request)
+            aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
+            if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
+                return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+        
+        
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             action = request.POST['action']
@@ -234,10 +240,12 @@ class CbrencCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             diccionario = clienteYEmpresas(request)
@@ -323,6 +331,12 @@ class CbrencCreateView(CreateView):
                                                                               # cliente=cliente,
                                                                               empresa=empresa,
                                                                               ).saldoerp
+                if Cbtbco.objects.filter(codbco=codbco).first().actpas != "A":
+                    data['error'] = "El Banco no se encuentra activo"
+                    return JsonResponse(data)
+                if Cbtemp.objects.filter(empresa=empresa).first().actpas != "A":
+                    data['error'] = "La Empresa no se encuentra activa"
+                    return JsonResponse(data)
 
                 # Crea el CBRENC
                 form = self.get_form()
@@ -341,15 +355,26 @@ class CbrencCreateView(CreateView):
                 self.CbrencNew.save()
                 try:
                     imgbco = base64.b64encode(open(str(Path(__file__).resolve(
-                    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimg), 'rb').read())
-                    aCbrenci = Cbrenci(
+                    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
+                    aCbrencibco = Cbrencibco(
                         idrenc=self.CbrencNew.idrenc, imgbco=imgbco)
-                    aCbrenci.save()
+                    aCbrencibco.save()
                     time.sleep(2)
                     os.remove(str(Path(__file__).resolve().parent.parent) +
-                              "/media/" + str(self.CbrencNew.archivoimg))
+                              "/media/" + str(self.CbrencNew.archivoimgbco))
                 except:
                     print("No hay imagen de banco")
+                try:
+                    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
+                    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
+                    aCbrencierp = Cbrencierp(
+                        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
+                    aCbrencierp.save()
+                    time.sleep(2)
+                    os.remove(str(Path(__file__).resolve().parent.parent) +
+                              "/media/" + str(self.CbrencNew.archivoimgerp))
+                except:
+                    print("No hay imagen de ERP")
                 try:
                     print(data['error'])
                     error = True
@@ -418,7 +443,10 @@ class DetalleLogListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -457,10 +485,12 @@ class DetalleTiempoListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             action = request.POST['action']
@@ -513,10 +543,13 @@ class DetalleBcoListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             action = request.POST['action']
@@ -531,7 +564,7 @@ class DetalleBcoListView(ListView):
                     item['ID'] = position
                     data.append(item)
                     position += 1
-                createCbrenct(request, idrbcoe.first(), 7, "CBF06" )
+                createCbrenct(request, idrbcoe, 7, "CBF06" )
                 
             else:
                 data['error'] = 'Ha ocurrido un error'
@@ -547,7 +580,7 @@ class DetalleBcoListView(ListView):
         context['idrbcoe'] = idrenc
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
         context['imagen'] = False
-        if aCbrenc.archivoimg != "":
+        if aCbrenc.archivoimgbco != "":
             context['imagen'] = True
         return context
 
@@ -558,7 +591,10 @@ class DetalleErpListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -588,6 +624,11 @@ class DetalleErpListView(ListView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Detalle de carga del archivo del ERP', 'CBF07')
         context['idrerpe'] = self.request.GET.get('idrerpe')
+        idrenc = context['idrerpe']
+        aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
+        context['imagen'] = False
+        if aCbrenc.archivoimgbco != "":
+            context['imagen'] = True
         return context
 
 #************************* CBF08 - FORMULARIO DE CUENTAS *************************#
@@ -599,10 +640,12 @@ class CbtctaListView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             action = request.POST['action']
@@ -659,7 +702,10 @@ class CbtctaCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -730,7 +776,10 @@ class CbtctaEditView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -779,8 +828,7 @@ class CbtctaEditView(CreateView):
             # CREATE
             aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
             form = self.get_form()
-            print(form.fields)
-            print(request.POST)
+
             aCbtcta.empresa = request.POST["empresa"]
             aCbtcta.nrocta = request.POST["nrocta"]
             aCbtcta.codbco = request.POST["codbco"]
@@ -817,7 +865,10 @@ class DetalleErroresBodListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -858,7 +909,10 @@ class DetalleErroresGalListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -919,8 +973,10 @@ class ConciliacionDeleteForm(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
         data = {}
@@ -989,10 +1045,12 @@ class CbtusuCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             # Lee las respuetas al formulario
@@ -1078,7 +1136,10 @@ class CbtusuEditView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
@@ -1086,17 +1147,13 @@ class CbtusuEditView(CreateView):
         try:
             if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
                 # Lee las respuetas al formulario
-                print(request.POST)
                 idusu1 = request.POST['idusu1']
                 descusu = request.POST['descusu']
                 tipusu = request.POST.get('tipousu')
                 actpas = request.POST.get('actpas')
                 modificable = request.POST.get('modificable')
 
-                print("aqui")
-                print(actpas)
                 idtusu = request.POST.get('idtusu')
-                print(idtusu)
                 cliente = clienteYEmpresas(request)["cliente"]
                 if actpas == "on":
                     licencias = Cbtlic.objects.filter(
@@ -1107,9 +1164,7 @@ class CbtusuEditView(CreateView):
                         data['error'] = "Máximo número de usuarios activos alcanzados. Usuarios activos máximos: " + str(licencias)
                         return JsonResponse(data, safe=False)
                 # CREATE
-                print("aca")
                 CbtusuNew = Cbtusu.objects.get(idtusu=idtusu)
-                print("alla")
                 aUser = User.objects.filter(username=CbtusuNew.idusu1).first()
                 if idusu1 != CbtusuNew.idusu1:
                     usuario = User.objects.filter(username=CbtusuNew.idusu1).first()
@@ -1118,7 +1173,6 @@ class CbtusuEditView(CreateView):
                     CbtusuNew.idusu1 = idusu1
                 CbtusuNew.descusu = descusu
                 if modificable == "True":
-                    print("modificable")
                     if actpas == "on":
                         CbtusuNew.actpas = "A"
                     else:
@@ -1138,7 +1192,6 @@ class CbtusuEditView(CreateView):
                 CbtusuNew.save()
                 aUser.username = idusu1
                 aUser.save()
-                print("fue")
         except Exception as e:
 
             data['error'] = str(e)
@@ -1168,10 +1221,12 @@ class ListaEmpresaView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         diccionario = clienteYEmpresas(request)
         position = 1
         data = []
@@ -1199,10 +1254,12 @@ class ListaUsuarioView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
             position = 1
             data = []
@@ -1233,14 +1290,13 @@ class ListaCbtusueView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-    # def get(self, request, *args, **kwargs):
-    #    print("que hace un get")
-    #    print(request.GET)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
 
     def post(self, request, *args, **kwargs):
-        print(request.POST)
-        chequearNoDobleConexion(request)
         diccionario = clienteYEmpresas(request)
 
         if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
@@ -1275,10 +1331,12 @@ class ListaBancoView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         diccionario = clienteYEmpresas(request)
         position = 1
         data = []
@@ -1312,10 +1370,12 @@ class DetalleTiposDeConciliacion(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             idrenc = request.POST['idrenc']
@@ -1480,88 +1540,43 @@ class DetalleTiposDeConciliacion(ListView):
 
 #************************* CBF19 - DEFINIR VISIBILIDAD COLUMNAS *************************#
 
-class definirColumnas(CreateView):
-    model = Cbtusuc
-    form_class = CbtusucForm
-    template_name = 'cbtusuc/add-edit.html'
+class definirColumnas(ListView):
+    
+    model = Cbtcol
+    template_name = 'cbtusuc/list.html'
 
-    success_url = reverse_lazy('CBR:cbrenc-list')
-    url_redirect = success_url
-
-    def get_initial(self):
-
-        diccionario = {}
-        columnas = Cbtcol.objects.order_by('codcol').all()
-        for columna in columnas:
-            if columna.inddef == 1:
-                diccionario[columna.descol] = True
-            else:
-                diccionario[columna.descol] = False
-        return diccionario
-
+    # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
-        data = {}
-        try:
-            # Lee las respuetas al formulario
-            diccionario = clienteYEmpresas(request)
-            columnas = Cbtcol.objects.all()
-            resultado = {}
-            print("sa")
-            Cbtusuc.objects.filter(idtusu=Cbtusu.objects.filter(
-                idusu1=request.user.username).first().idtusu).delete()
-            print("pe")
-            for columna in columnas:
-                print("di")
-                print(request.POST)
-                print(columna.descol)
-                print(request.POST.get(columna.descol))
-                if request.POST.get(columna.descol) == "on":
-                    aCbtusuc = Cbtusuc(codcol=columna.codcol)
-                    aCbtusuc.fechact = dt.datetime.now(tz=timezone.utc)
-                    aCbtusuc.idusu = request.user.username
-                    aCbtusuc.idtusu = Cbtusu.objects.filter(
-                        idusu1=request.user.username).first().idtusu
-                    aCbtusuc.save()
-            print("aca")
-            print(resultado)
-            # CREATE
-            form = self.get_form()
+        #crea las cbtusuc por defecto
+        idtusu = Cbtusu.objects.filter(idusu1=request.user.username).first().idtusu
+        
+        Cbtusuc.objects.filter(idtusu=idtusu).delete()
+        for aCbtcol in Cbtcol.objects.filter(inddef=1):
+            aCbtusuc = Cbtusuc(idtusu=idtusu, codcol=aCbtcol.codcol)
+            aCbtusuc.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbtusuc.idusu = request.user.username
+            aCbtusuc.save()
 
-            form.fechalt = dt.datetime.now(tz=timezone.utc)
-            form.idusu = request.user.username
-
-            self.CbrencNew = form.save()
-        except Exception as e:
-
-            data['error'] = str(e)
-            print(e)
-            return JsonResponse(data)
-
-        return JsonResponse(data)
+        #carga el formulario
+        
+        position = 1
+        data = []
+        for i in Cbtcol.objects.all():
+            item = i.toJSON()
+            data.append(item)
+            position += 1
+        return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
-        lista = []
-        listaActivadas = []
-        columnas = Cbtcol.objects.order_by("codcol").all()
-        n = 0
-        while n < len(columnas):
-            lista.append(columnas[n].descol)
-            if columnas[n].inddef == 1:
-                listaActivadas.append(columnas[n].descol)
-            n = n+1
-        #context=super().get_context_data( **kwargs )
-        context = {}
-        context["columnas"] = lista
-        context["columnasActivadas"] = listaActivadas
+        context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Formulario de Visibilidad de Columnas', 'CBF19')
-        context['action'] = 'edit'
-        # context['create_url'] = reverse_lazy('CBR:cbrenc_nueva')
-        context['account_url'] = reverse_lazy('CBR:cbtcta-list')
         return context
 
 #************************* CBF20 - NUEVA EDITAR EMPRESA *************************#
@@ -1575,10 +1590,12 @@ class CbtempCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
@@ -1652,7 +1669,6 @@ class CbtempEditView(CreateView):
             actpas = aCbtemp.actpas == "A"
             return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas}
         except Exception as e:
-            print("error de get initial en cbtemp")
             print(e)
 
     template_name = 'cbtemp/add-edit.html'
@@ -1666,10 +1682,12 @@ class CbtempEditView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
@@ -1752,7 +1770,6 @@ class CbtbcoEditView(CreateView):
             actpas = aCbtbco.actpas == "A"
             return {'codbco': aCbtbco.codbco, 'actpas': actpas}
         except Exception as e:
-            print("error de get initial en cbtbco")
             print(e)
 
     template_name = 'cbtbco/add-edit.html'
@@ -1766,10 +1783,12 @@ class CbtbcoEditView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
@@ -1847,10 +1866,13 @@ class CbtbcoCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
+        
         data = {}
         try:
             if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
@@ -1905,6 +1927,49 @@ class CbtbcoCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Nuevo Banco', 'CBF20')
         context['editable'] = True
+        return context
+
+#************************* CBF22 - VISUALIZACION POR USUARIO *************************#
+
+class visualizacionUsuarios (ListView):
+    model = Cbtusu
+    template_name = 'cbsusu/list.html'
+
+    # @method_decorator( csrf_exempt )
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+
+    def post(self, request, *args, **kwargs):
+        diccionario = clienteYEmpresas(request)
+
+        if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
+            position = 1
+            data = []
+            for i in Cbtusu.objects.filter(cliente=diccionario["cliente"]).all():
+                item = i.toJSON()
+                aCbsusu = Cbsusu.objects.filter(idusu1=item["idusu1"]).order_by('corrusu').last()
+                if aCbsusu is not None:
+                    item["iniciologin"] = aCbsusu.iniciologin
+                    item["finlogin"] = aCbsusu.finlogin
+                    item["corrusu"] = aCbsusu.corrusu
+                    item["conectado"] = aCbsusu.finlogin==None
+                else:
+                    item["iniciologin"] = ""
+                    item["finlogin"] = ""
+                    item["corrusu"] = 0
+                    item["conectado"] = False
+                data.append(item)
+                position += 1
+            return JsonResponse(data, safe=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        getContext(self.request, context, 'Log de Usuarios Conectados', 'CBF22')
         return context
 
 
@@ -1962,23 +2027,42 @@ class CbrbcodDetailView(UpdateView):
 class DescargarArchivoView(View):
     def get(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
-        idrenc = request.GET['idrenc']
-        imgbco = Cbrenci.objects.filter(idrenc=idrenc).first().imgbco
-        try:
-            os.remove(str(Path(__file__).resolve().parent.parent) +
-                      "/media/" + 'temp/imagen.pdf')
-        except:
-            pass
-        file = open(str(Path(__file__).resolve().parent.parent) +
-                    "/media/" + 'temp/imagen.pdf', 'wb')
-        file.write(base64.b64decode(imgbco))
-        file.close()
-        wrapper = FileWrapper(open(str(Path(__file__).resolve(
-        ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
-        response = HttpResponse(wrapper, content_type='application/pdf')
-        response['Content-Disposition'] = 'inline; filename=' + \
-            'imagenbanco.pdf'
-        return response
+        idrbcoe = request.GET.get('idrbcoe')
+        idrerpe = request.GET.get('idrerpe')
+        if idrbcoe is not None:
+            imgbco = Cbrencibco.objects.filter(idrenc=idrbcoe).first().imgbco
+            try:
+                os.remove(str(Path(__file__).resolve().parent.parent) +
+                        "/media/" + 'temp/imagen.pdf')
+            except:
+                pass
+            file = open(str(Path(__file__).resolve().parent.parent) +
+                        "/media/" + 'temp/imagen.pdf', 'wb')
+            file.write(base64.b64decode(imgbco))
+            file.close()
+            wrapper = FileWrapper(open(str(Path(__file__).resolve(
+            ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
+            response = HttpResponse(wrapper, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename=' + \
+                'imagenbanco.pdf'
+            return response
+        else:
+            imgerp = Cbrencierp.objects.filter(idrenc=idrerpe).first().imgerp
+            try:
+                os.remove(str(Path(__file__).resolve().parent.parent) +
+                        "/media/" + 'temp/imagen.pdf')
+            except:
+                pass
+            file = open(str(Path(__file__).resolve().parent.parent) +
+                        "/media/" + 'temp/imagen.pdf', 'wb')
+            file.write(base64.b64decode(imgerp))
+            file.close()
+            wrapper = FileWrapper(open(str(Path(__file__).resolve(
+            ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
+            response = HttpResponse(wrapper, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename=' + \
+                'imagenerp.pdf'
+            return response
 
 #************************* CERRAR PESTAÑA *************************#
 

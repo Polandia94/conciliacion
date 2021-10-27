@@ -4,7 +4,7 @@ $(function () {
     $('#data thead tr').clone(true).appendTo( '#data thead' );
     $('#data thead tr:eq(1) th').each( function (i) {
 
-      if(i !== 12) {
+      if(i !== 13) {
 
         var title = $(this).text();
 
@@ -93,11 +93,12 @@ $(function () {
             {"data": "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
             {"data": "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
             {"data": "difbcoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "usuario"},
             {"data": null}
         ],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5, 6,9,10,11],
+                targets: [0, 1, 2, 3, 4, 5, 6,9,10,11,12],
                 class: 'text-center pt-4',
             },
             {
@@ -241,7 +242,7 @@ $(function () {
                     $elDiv.children().addClass('callout m-0 bg-transparent ' + classIndicador);
                     // ##### CONCILIAR #####
                     $elDiv.children().append($(
-                        `<a class="${classMain}"data-estado="${row.estado}" href="cbsres/?idrenc=${row.idrenc}" ><i class="fas fa-clone"></i>Conciliar</a>`)
+                        `<a id="btnConciliar${row.idrenc}" class="${classMain}"data-estado="${row.estado}" data-idrenc="${row.idrenc}" ><i class="fas fa-clone"></i>Conciliar</a>`)
                         .addClass(classConciliar));
                     // ##### ELIMINAR #####
                     $elDiv.children().append($(
@@ -254,7 +255,7 @@ $(function () {
 
                     // ##### VER CONCILIAR #####
                     $elDiv.children().append($(
-                        `<a class="${classMain}"data-estado="${row.estado}" href="cbsresview/?idrenc=${row.idrenc}" ><i class="fas fa-eye"></i>Ver</a>`)
+                        `<a class="${classMain}"data-estado="${row.estado}" data-idrenc="${row.idrenc}" href="cbsresview/?idrenc=${row.idrenc}" ><i class="fas fa-eye"></i>Ver</a>`)
                         .addClass(classVerConciliacion));
                     // ##### tiempos #####
                     $elDiv.children().append($(
@@ -289,6 +290,24 @@ $(function () {
             $(row).children().addClass(classBackground);
         },
         initComplete: function (settings, json) {
+            $(document).on("click", "a[id^=btnConciliar]", function (event) {
+                var idrenc = $(this).data('idrenc');
+                $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    },
+                    url: '/posibilidaddeconciliar/',
+                    data: {'idrenc': idrenc},
+                    success: function (respons) { 
+                        if(respons["posible"]== "si"){               
+                            location.href = '/cbsres/?idrenc='+idrenc;
+                        }else{
+                            message_info("El folio se encuentra en uso", null, null)
+                        }
+                }
+                })
+            })
             $(document).on("click", "a[id^=btnEliminar]", function (event) {
                 var idrenc = $(this).data('idrenc');
                 var estado= $(this).data('estado');

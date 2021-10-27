@@ -22,9 +22,8 @@ $(function () {
             dataSrc: ""
         },
         columns: [
-            {"data": "superusuario"},
-            {"data": "usuario"},
-            {"data": "empresa"},
+            {"data": "codcol"},
+            {"data": "descol"},
             {"data": null},
         ],
         columnDefs: [
@@ -33,22 +32,20 @@ $(function () {
                 visible:false,
             },
             {
-                targets: [1, 2],
+                targets: [1],
                 class: 'text-center pt-4',
             },
             {
-                targets: [3],
+                targets: [2],
                 render: function (data, type, row) {
-                    if(data.superusuario){
-                        return '<input type="checkbox" class="form-control" checked disabled>'
-                    }else{
-                        if(data.permiso){
-                            return '<input id="'+ data.usuario+'--'+data.empresa+'"type="checkbox" class="form-control" checked >'
+
+                        if(data.inddef == 1){
+                            return '<input id="'+ data.codcol+'"type="checkbox" class="form-control" checked >'
                         }else{
-                            return '<input id="'+ data.usuario+'--'+data.empresa+'"type="checkbox" class="form-control"  >'
+                            return '<input id="'+ data.codcol+'"type="checkbox" class="form-control"  >'
                         }
                     }
-                }
+                
 
 
             }
@@ -60,11 +57,11 @@ $(function () {
             const csrftoken = getCookie('csrftoken');
             $(document).on("click", inputs, function (event) {
                 let data={}
-                data["fila"] = event.target["id"]
-                data["checked"] = document.getElementById(data["fila"]).checked
+                data["codcol"] = event.target["id"]
+                data["checked"] = document.getElementById(data["codcol"]).checked
                 $.ajax({
                     type: "POST",
-                    url: '/updateCbtusue/',
+                    url: '/updatecbtusuc/',
                     data: data,
                     headers: {
                         'X-CSRFToken': csrftoken

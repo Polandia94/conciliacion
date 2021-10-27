@@ -4,6 +4,8 @@
 #region imports
 import datetime as dt
 import json
+from json.decoder import JSONDecodeError
+import time
 
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -12,7 +14,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.db.models.aggregates import Max
 from django.dispatch import receiver
-from django.http.response import HttpResponse, JsonResponse
+from django.http.response import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls.base import reverse_lazy
 from django.utils import timezone
@@ -61,7 +63,9 @@ def chequearNoDobleConexion(request):
         idusu1=request.user.username).order_by("corrusu").last()
     if request.session["iddesesion"] < aCbsusu.corrusu:
         logout(request)
-        return redirect("/")
+        return False
+    else:
+        return True
 
 # ******************************************************************************************************************** #
 
@@ -232,20 +236,24 @@ def cbtusuDelete(request):
         try:
             data = {}
             idusu1 = request.POST['idusu1']
+            
             aCbtusu = Cbtusu.objects.get(idusu1=idusu1)
+            diccionario = clienteYEmpresas(request)
+            if aCbtusu.tipousu == "S":
+                if Cbtusu.objects.filter(tipousu="S", cliente=diccionario["cliente"]).count() < 2:
+                    data = {}
+                    data["error"] = "No es posible eliminar el único superusuario"
+                    return JsonResponse(data)
             aUser = User.objects.filter(username=idusu1)
             aUser.delete()
-            diccionario = clienteYEmpresas(request)
+            
             aCbtusurequest = Cbtusu.objects.filter(
                 idusu1=request.user.username).first()
             if aCbtusu.cliente == diccionario["cliente"] and aCbtusurequest.tipousu == "S":
 
                 # verifica que no haya registros posteriores
                 if Cbrenc.objects.filter(idusucons=idusu1).exists() == False:
-                    print("alfa")
-                    print(aCbtusu.idtusu)
                     Cbtusue.objects.filter(idtusu=aCbtusu.idtusu).delete()
-                    print("beta")
                     aCbtusu.delete()
 
         except Exception as e:
@@ -655,9 +663,10 @@ def editCbwres(request):
             saldoerp = aCbsres.saldoerp
             fechaconerp = aCbsres.fechaconerp
             idrerpd = aCbsres.idrerpd
+            idusu = request.user.username
             Cbwres.objects.filter(idsres=idsres).delete()
             aCbwres = Cbwres(idrbcodl=idrbcodl, idrerpdl=idrerpdl, idsres=idsres, idrenc=idrenc, cliente=cliente, empresa=empresa, codbco=codbco, nrocta=nrocta, ano=ano, mes=mes, fechatrabco=fechatrabco, horatrabco=horatrabco, debebco=debebco, haberbco=haberbco, saldobco=saldobco, saldoacumesbco=saldoacumesbco, saldoacumdiabco=saldoacumdiabco, oficina=oficina, desctra=desctra, reftra=reftra, codtra=codtra, idrbcod=idrbcod,
-                             nrotraerp=nrotraerp, fechatraerp=fechatraerp, nrocomperp=nrocomperp, auxerp=auxerp, referp=referp, glosaerp=glosaerp, debeerp=debeerp, habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp, fechaconerp=fechaconerp, idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco, estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp)
+                             nrotraerp=nrotraerp, fechatraerp=fechatraerp, nrocomperp=nrocomperp, auxerp=auxerp, referp=referp, glosaerp=glosaerp, debeerp=debeerp, habererp=habererp, saldoerp=saldoerp, saldoacumeserp=saldoacumeserp, saldoacumdiaerp=saldoacumdiaerp, fechaconerp=fechaconerp, idrerpd=idrerpd, saldodiferencia=saldodiferencia, estadobco=estadobco, estadoerp=estadoerp, historial=historial, codtcobco=codtcobco, codtcoerp=codtcoerp, idusu=idusu)
             aCbwres.save()
             if comienzo == -1:
                 break
@@ -751,10 +760,11 @@ def getguardado(request):
             "guardado": "Debe y Haber no pueden ser 0 en IDSRES = " + alertaGuardado}
     else:
         for registro in Cbwres.objects.filter(idrenc=idrenc).all():
-            aCbsres = Cbsres.objects.filter(idsres=registro.idsres).first()
-            if (aCbsres.debeerp != registro.debeerp or aCbsres.habererp != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
-                data = {
-                    "guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
+            if registro.idrerpd != 0:
+                aCbrerpd = Cbrerpd.objects.filter(idrerpd=registro.idrerpd).first()
+                if (aCbrerpd.debe != registro.debeerp or aCbrerpd.haber != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
+                    data = {
+                        "guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
     return JsonResponse(data)
 
 
@@ -897,9 +907,7 @@ def getTiposDeConciliacion(request):
     data["saldobcototal"] = data["saldobcototal"] + saldoextrabco
     data["saldoerptotal"] = data["saldoerptotal"] + saldoextraerp
     data["saldodiferenciatotal"] = data["saldobcototal"] - data["saldoerptotal"]
-    print("Saldobcototal = " + str(data["saldobcototal"]))
-    print("saldoerptotal = " + str(data["saldoerptotal"]))
-    print("saldodiferenciatotal = "+ str(data["saldodiferenciatotal"]))
+
 
     return JsonResponse(data)
 
@@ -922,10 +930,7 @@ def getColumnas(request):
         else:
             columnas[n] = False
         n = n+1
-    print(request)
-    print(request.POST)
-    print(request.user.username)
-    print(columnas)
+
     return JsonResponse(columnas)
 
 
@@ -941,9 +946,7 @@ def updateCbtusue(request):
         aCbtusue = Cbtusue(idtusu=Cbtusu.objects.filter(
             idusu1=usuario).first(), empresa=empresa, actpas="A")
         aCbtusue.save()
-    print(usuario)
-    print(empresa)
-    print(checked)
+
     return JsonResponse({})
 
 @login_required
@@ -956,7 +959,6 @@ def resetPassword(request):
     return redirect("../")
 
 def CbtusucGuardar(request):
-    print(request)
     try:
         Cbtusuc.objects.filter(idtusu=Cbtusu.objects.filter(
             idusu1=request.user.username).first().idtusu).delete()
@@ -1084,7 +1086,6 @@ def conservarGuardado(request):
             return redirect("../../")
     except Exception as e:
         print(e)
-        print("esa fue la excepcion")
         pass
     return redirect("../../cbsres/?idrenc="+idrenca)
 
@@ -1197,6 +1198,7 @@ def getContext(request, context, titulo, formulario):
     context['create_account_url'] = reverse_lazy('CBR:cbtcta_nueva_cuenta')
     context['new_user_url'] = reverse_lazy('CBR:usuario-nuevo')
     context['new_banco_url'] = reverse_lazy('CBR:banco-nuevo')
+    context['sesiones_url'] = reverse_lazy('CBR:visualizacion_usuarios')
     context['idrenc'] = request.GET.get('idrenc')
 
     if aCbtusu.tipousu == "S":
@@ -1389,10 +1391,7 @@ def populateDatabase():
             aCbtcol.save()
             aCbtcol = Cbtcol(codcol=33, descol="HISTORIAL", inddef=1)
             aCbtcol.save()
-            aCbtcol = Cbtcol(codcol=34, descol="deberporiginal", inddef=1)
-            aCbtcol.save()
-            aCbtcol = Cbtcol(codcol=35, descol="habererporiginal", inddef=1)
-            aCbtcol.save()
+
         if Cbttco.objects.filter(codtco="DPTR").exists() == False:
             aCbttco = Cbttco(
                 1, 1, "DPTR", "Depositos en Transito (+)", 0, 1, "H", 1)
@@ -1435,3 +1434,27 @@ def populateDatabase():
         if Cbterr.objects.filter(coderr=6).exists() == False:
             aCbterr = Cbterr(coderr=6, descerr="Incumple Logica de aplicación")
             aCbterr.save()
+
+def posibilidadDeConciliar(request):
+    data = {}
+    idrenc = request.POST.get("idrenc")
+    usuario = request.user.username
+    data["posible"] = "si"
+    if Cbwres.objects.filter(idrenc=idrenc).exists():
+        if Cbwres.objects.filter(idrenc=idrenc).first().idusu != usuario:
+            data["posible"] = "no"
+    
+
+    return JsonResponse(data)
+
+def updateCbtusuc(request):
+    codcol = request.POST["codcol"]
+    checked = request.POST["checked"]
+    if checked == "false":
+        Cbtusuc.objects.filter(idusu=request.user.username, codcol=codcol).delete()
+    else:
+        aCbtusuc = Cbtusuc(idusu=request.user.username, codcol=codcol)
+        aCbtusuc.fechact = dt.datetime.now(tz=timezone.utc)
+        aCbtusuc.idusu = request.user.username
+        aCbtusuc.save()
+    return JsonResponse({})

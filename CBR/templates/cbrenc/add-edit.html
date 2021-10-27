@@ -77,11 +77,19 @@
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
-                            <label for="archivoimg-text" class="col-form-label">{{ form.archivoimg.label }}</label>
+                            <label for="archivoimgerp-text" class="col-form-label">{{ form.archivoimgerp.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.archivoimg|attr:"readonly:readonly" }}
+                                {{ form.archivoimgerp|attr:"readonly:readonly" }}
                             {% else %}
-                                {{ form.archivoimg|attr:"accept:pdf/*,.pdf" }}
+                                {{ form.archivoimgerp|attr:"accept:pdf/*,.pdf" }}
+                            {% endif %}
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="archivoimgbco-text" class="col-form-label">{{ form.archivoimgbco.label }}</label>
+                            {% if action == 'edit' %}
+                                {{ form.archivoimgbco|attr:"readonly:readonly" }}
+                            {% else %}
+                                {{ form.archivoimgbco|attr:"accept:pdf/*,.pdf" }}
                             {% endif %}
                         </div>
                     </div>

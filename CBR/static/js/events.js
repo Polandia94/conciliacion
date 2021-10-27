@@ -6,10 +6,8 @@
         confirmar_accion('Confirmación', '¿Reiniciar el orden de las columnas?',
             function () {
                 const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
-                console.log(visibilidad)
                 let enviar = {}
                 for(let i=0; i<visibilidad.length;i++){
-                    console.log(visibilidad[i]["visible"])
                     enviar[i]=true
                 }
                 $.ajax({
@@ -33,13 +31,10 @@
     
     $("#btnSalir").on('click', function (e) {
         const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
-        console.log(visibilidad)
         let enviar = {}
         for(let i=0; i<visibilidad.length;i++){
-            console.log(visibilidad[i]["visible"])
             enviar[i]=visibilidad[i]["visible"]
         }
-        console.log(enviar)
 
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
@@ -63,7 +58,6 @@
                     return false;
                 });
             }else{
-                    console.log("enviar")
                     $.ajax({
                     method: 'POST',
                     beforeSend: function (request) {
@@ -93,10 +87,8 @@
  
     $("#btnGuardar").click(function () {      
         const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
-        console.log(visibilidad)
         let enviar = {}
         for(let i=0; i<visibilidad.length;i++){
-            console.log(visibilidad[i]["visible"])
             enviar[i]=visibilidad[i]["visible"]
         }  
         const idrenc = urlParams.get('idrenc');
@@ -144,10 +136,8 @@
     /******************************************************************************************************************/
     $("#btnRecargar").on('click', function (e) {
         const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
-        console.log(visibilidad)
         let enviar = {}
         for(let i=0; i<visibilidad.length;i++){
-            console.log(visibilidad[i]["visible"])
             enviar[i]=visibilidad[i]["visible"]
         }
         const idrenc = urlParams.get('idrenc');
@@ -189,10 +179,8 @@
 
     $("#btnCerrarConciliacion").on('click', function (e) {
         const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
-        console.log(visibilidad)
         let enviar = {}
         for(let i=0; i<visibilidad.length;i++){
-            console.log(visibilidad[i]["visible"])
             enviar[i]=visibilidad[i]["visible"]
         }
         const idrenc = urlParams.get('idrenc');
@@ -224,46 +212,54 @@
     /******************************************************************************************************************/
     $("#btnConciliar").on('click', function () {
         const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
-        console.log(visibilidad)
         let enviar = {}
         for(let i=0; i<visibilidad.length;i++){
-            console.log(visibilidad[i]["visible"])
             enviar[i]=visibilidad[i]["visible"]
         }  
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
-        
         $.ajax({
-            url: "../conciliarSaldos/", //window.location.pathname
-            type: 'POST',
-            beforeSend: function(request) {
-                request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            method: 'POST',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
             },
-            data: parameters,
-            // dataType: 'json',
-            // processData: false,
-            // contentType: false,
-        }).done(function (response) {
-            if (response.hasOwnProperty('idrenc')) {
-                location.href = `../cbsres/?idrenc=${response['idrenc']}`;
-                return false;
-            }
-            if (response.hasOwnProperty('existe_info')) {
-                const mensaje = `<label> ${response['existe_info']}</label><p class="m-0">Generado por:</p>  <label class="m-0">Usuairo: <strong> ${response['idusucons']}</strong></label><label>Fecha: <strong> ${response['fechacons']}</strong></label> `
-                ajax_confirm("../conciliarSaldos/", 'Confirmación',
-                    mensaje, {'idrenc': idrenc, "sobreescribir": 'true'},
+            url: '/cbtusuc/guardado/',
+            data: {'cbtusuc': enviar},
+            success: function (respons) {
+            $.ajax({
+                url: "../conciliarSaldos/", //window.location.pathname
+                type: 'POST',
+                beforeSend: function(request) {
+                    request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                },
+                data: parameters,
+                // dataType: 'json',
+                // processData: false,
+                // contentType: false,
+            }).done(function (response) {
+                if (response.hasOwnProperty('idrenc')) {
+                    location.href = `../cbsres/?idrenc=${response['idrenc']}`;
+                    return false;
+                }
+                if (response.hasOwnProperty('existe_info')) {
+                    const mensaje = `<label> ${response['existe_info']}</label><p class="m-0">Generado por:</p>  <label class="m-0">Usuairo: <strong> ${response['idusucons']}</strong></label><label>Fecha: <strong> ${response['fechacons']}</strong></label> `
+                    ajax_confirm("../conciliarSaldos/", 'Confirmación',
+                        mensaje, {'idrenc': idrenc, "sobreescribir": 'true'},
+                        
+                        function (response) {  
+                            location.href = `../cbsres/?idrenc=${response['idrenc']}`;
+                        },
+                        true
+                        )
                     
-                    function (response) {  
-                        location.href = `../cbsres/?idrenc=${response['idrenc']}`;
-                    },
-                    true
-                    )
-                
-                return false;
-            }
-            if (response.hasOwnProperty('info')) {
-                message_info(response['info'], null, null)
-                return false;
+                    return false;
+                }
+                if (response.hasOwnProperty('info')) {
+                    message_info(response['info'], null, null)
+                    return false;
+                }
+            })
+        
             }
 
         });

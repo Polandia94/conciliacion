@@ -40,6 +40,7 @@ urlpatterns = [
     path('cbttco/', views.DetalleTiposDeConciliacion.as_view(), name='DetalleTiposDeConciliacion'),
     path('cbrbcod/', views.DetalleBcoListView.as_view(), name='cbrbcod-list'),
     path('cbrerpd/', views.DetalleErpListView.as_view(), name='cbrerpd-list'),
+    path('cbsusu/', views.visualizacionUsuarios.as_view(), name='visualizacion_usuarios'),
 
     #*********** Crear Nuevo ***********
 
@@ -81,7 +82,7 @@ urlpatterns = [
     path('verificar/eliminar/', views.eliminarGuardado, name='cbrenc-eli'),
     path('updateScript/', views.editCbwres, name='edit_cbwres'),
     path('updateCbtusue/', views.updateCbtusue, name='update-cbtusue'),
-    path('descargarArchivos/', views.DescargarArchivoView.as_view(), name='descargar_archivo')
-
-
+    path('descargarArchivos/', views.DescargarArchivoView.as_view(), name='descargar_archivo'),
+    path('posibilidaddeconciliar/', utils.posibilidadDeConciliar, name='posibilidad_de_conciliar'),
+    path('updatecbtusuc/', utils.updateCbtusuc, name='posibilidad_de_conciliar')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

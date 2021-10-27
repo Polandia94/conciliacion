@@ -11,7 +11,6 @@ var globalVariableSaldo = {
 };
 let columnasVisibles = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))
 if(columnasVisibles == null){
-    console.log("columnas null")
     columnasVisibles = {
         "time": 1634598466441,
         "start": 0,
@@ -374,9 +373,7 @@ if(columnasVisibles == null){
         ]
     }
 }
-console.log(columnasVisibles)
 
-console.log("anteinicio")
 $.ajax({
     type: "POST",
     url: '/getColumnas/',
@@ -385,20 +382,11 @@ $.ajax({
         'X-CSRFToken': getCookie('csrftoken')
     },
     success: function (response) {
-        console.log("aca")
-        console.log(response.length)
         for(const i in response){
-            console.log("aquie")
             
-            console.log(i)
             columnasVisibles["columns"][i]["visible"] = response[i]
-            console.log("aqui")
         }
-        console.log(response)
-        console.log(columnasVisibles)
         localStorage.setItem("DataTables_data_/cbsres/",JSON.stringify(columnasVisibles))
-        console.log("va")
-        console.log(localStorage.getItem("DataTables_data_/cbsres/"))
         $(function () {
             "use strict"
             $(document).ready(function () {
@@ -527,7 +515,6 @@ $.ajax({
         
                         })
                     } else {
-                        console.log(row.data()["idrbcodl"])
                         if(row.data()["debeerp"] == row.data()["debeerporiginal"] && row.data()["habererp"]==row.data()["habererporiginal"] && row.data()["idrbcodl"]== 0){
                             row.data()["historial"] = "0"
                         }
@@ -740,19 +727,19 @@ $.ajax({
                         { "data": "horatrabco", className: "dt-bancoColor" },
                         { "data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         {
                             "data": "saldoacumesbco",
                             name: "saldoacumesbco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         {
@@ -760,7 +747,7 @@ $.ajax({
                             name: "saldoacumdiabco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         { "data": 'oficina', className: "dt-bancoColor" },
@@ -804,30 +791,30 @@ $.ajax({
                         },
                         { "data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         {
                             "data": "saldoacumeserp",
                             name: "saldoacumeserp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         {
                             "data": "saldoacumdiaerp",
                             name: "saldoacumdiaerp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         { "data": "saldodiferencia", name: "saldodiferencia", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + data.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
         
                         { "data": 'nrotraerp' },
                         {
@@ -1246,7 +1233,6 @@ $.ajax({
                                 let estadooriginal
                                 let saldo = parseFloat(0);
                                 var row = table.row(cell)
-                                console.log(row.data())
                                 try{
                                     if (row.data()["debeerp"] != row.data()["debeerporiginal"]){
                                     var tr = $(cell);

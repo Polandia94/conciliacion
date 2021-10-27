@@ -59,7 +59,7 @@ class CbrencaForm( ModelForm ):
 
     class Meta:
         model = Cbrenc
-        fields = ['idrenc', 'empresa', 'codbco', 'nrocta', 'ano', 'mes', 'archivoerp', 'archivobco','archivoimg' ]
+        fields = ['idrenc', 'empresa', 'codbco', 'nrocta', 'ano', 'mes', 'archivoerp', 'archivobco','archivoimgerp', 'archivoimgbco' ]
         # fields = '__all__'
         widgets = {
             'idrenc': TextInput(
@@ -93,7 +93,11 @@ class CbrencaForm( ModelForm ):
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             ),
-            'archivoimg': FileInput(
+            'archivoimgerp': FileInput(
+                attrs = { 'placeholder': '',
+                          'class': 'form-control'}
+            ),
+            'archivoimgbco': FileInput(
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             )
@@ -255,10 +259,8 @@ class CbtusuForm( ModelForm ):
             if form.is_valid():
                 data = form.save(commit=True)
             else:
-                print("aca hubo una falla2")
                 data['error']=form.errors
         except Exception as e:
-            print("aca hubo una falla")
             print(e)
             data['error']=str( e )
         return data
@@ -304,11 +306,9 @@ class CbtempForm( ModelForm ):
             if form.is_valid():
                 data = form.save(commit=True)
             else:
-                print("aca hubo una falla2")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
-            print("aca hubo una falla")
             print(e)
             data['error']=str( e )
         return data
@@ -349,11 +349,9 @@ class CbtbcoForm( ModelForm ):
             if form.is_valid():
                 data = form.save(commit=True)
             else:
-                print("aca hubo una falla2")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
-            print("aca hubo una falla")
             print(e)
             data['error']=str( e )
         return data
