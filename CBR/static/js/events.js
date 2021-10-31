@@ -2,6 +2,15 @@
     "use strict"
     const csrftoken = getCookie('csrftoken');
     const urlParams = new URLSearchParams(window.location.search);
+
+ 
+    
+
+    
+
+    /******************************************************************************************************************/
+    /******************************************************************************************************************/
+
     $("#btnResetColumns").on('click', function (e) {
         confirmar_accion('Confirmación', '¿Reiniciar el orden de las columnas?',
             function () {
@@ -38,6 +47,9 @@
 
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
+        if(globalVariable.bloqueado){
+            window.alert("Espere a que termine de guardar")
+        }else{
         if (globalVariable.editado == 1){
             ajax_confirm("../verificar/eliminar/?idrenc="+idrenc, 'Notificación',
                 'Se han modificado datos en la grilla, ¿desea salir sin guardar?', parameters,
@@ -71,6 +83,7 @@
                         }
                     });
                 };
+            }
             
     });
 
@@ -92,6 +105,9 @@
             enviar[i]=visibilidad[i]["visible"]
         }  
         const idrenc = urlParams.get('idrenc');
+        if(globalVariable.bloqueado){
+            window.alert("Espere a que termine de guardar")
+        }else{
         if(cargando.innerHTML == ""){
                 $.ajax({
                     method: 'POST',
@@ -122,7 +138,7 @@
             
         }else{
             alert("Espere a que termine de cargar")
-        }
+        }}
 });
 
             /******************************************************************************************************************/
@@ -142,6 +158,9 @@
         }
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
+        if(globalVariable.bloqueado){
+            window.alert("Espere a que termine de guardar")
+        }else{
         if (globalVariable.editado == 1){
             ajax_confirm("../verificar/eliminar/?idrenc="+idrenc, 'Notificación',
                 'Ud. Perderá las modificaciones de conciliación realizadas, desea continuar ?', parameters,
@@ -173,6 +192,7 @@
                 }
             });
                 };
+            }
     });
         /******************************************************************************************************************/
     /******************************************************************************************************************/
@@ -185,6 +205,9 @@
         }
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc};
+        if(globalVariable.bloqueado){
+            window.alert("Espere a que termine de guardar")
+        }else{
         if (globalVariable.SaldoDiferenciaTotal == 0){
         ajax_confirm("../cerrarConciliacion/", 'Notificación',
             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
@@ -203,6 +226,7 @@
                 
             });
         }
+    }
 
     });
         /******************************************************************************************************************/
@@ -218,6 +242,9 @@
         }  
         const idrenc = urlParams.get('idrenc');
         var parameters = {'idrenc': idrenc, "sobreescribir": 'false'};
+        if(globalVariable.bloqueado){
+            window.alert("Espere a que termine de guardar")
+        }else{
         $.ajax({
             method: 'POST',
             beforeSend: function (request) {
@@ -263,6 +290,7 @@
             }
 
         });
+    }
             
     });
     /******************************************************************************************************************/

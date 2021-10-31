@@ -44,10 +44,10 @@ $(function () {
         orderCellsTop: true,
         fixedHeader: true,
         responsive: true,
-        order:[],
+        //order:[],
         targets: 'no-sort',
         bSort: false,
-        orderFixed: [ 3, 'desc' ],
+        orderFixed: [ 2, 'desc' ],
         autoWidth: true,
         destroy: true,
         hover: true,
@@ -71,10 +71,10 @@ $(function () {
             {"data": "corrusu"},
             {"data": "iniciologin","render":function(data){
                 if(moment(data).format('DD/MM/YYYY')=='Invalid date'){return ""}else{
-                return moment(data).format('DD/MM/YYYY')}}},
+                return moment(data).format('DD/MM/YYYY HH:mm:ss')}}},
             {"data": "finlogin","render":function(data){
-                if(moment(data).format('DD/MM/YYYY')=='Invalid date'){return ""}else{
-                return moment(data).format('DD/MM/YYYY')}}},
+                if(moment(data).format('DD/MM/YYYY HH:mm:ss')=='Invalid date'){return ""}else{
+                return moment(data).format('DD/MM/YYYY HH:mm:ss')}}},
             {"data": "conectado", "render":function(data){
                 if(data){return "Si"}else{return "No"}}}
         ],
@@ -83,7 +83,7 @@ $(function () {
             {
                 targets: [0, 1, 2, 3, 4,5],
                 class: 'text-center pt-4',
-                orderable: false
+                //orderable: false
             },
             
         ],

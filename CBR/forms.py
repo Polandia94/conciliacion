@@ -44,6 +44,8 @@ class CbrencaForm( ModelForm ):
             form.field.widget.attrs['autocomplete'] = 'off'
         self.fields['empresa'].widget.attrs['autofocus'] = True
 
+
+
     def save(self, commit=True):
         data={}
         form=super()
@@ -59,7 +61,7 @@ class CbrencaForm( ModelForm ):
 
     class Meta:
         model = Cbrenc
-        fields = ['idrenc', 'empresa', 'codbco', 'nrocta', 'ano', 'mes', 'archivoerp', 'archivobco','archivoimgerp', 'archivoimgbco' ]
+        fields = ['idrenc', 'empresa', 'codbco', 'nrocta', 'ano', 'mes', 'archivoerp', 'archivobco', 'archivoimgbco' ]
         # fields = '__all__'
         widgets = {
             'idrenc': TextInput(
@@ -93,10 +95,7 @@ class CbrencaForm( ModelForm ):
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}
             ),
-            'archivoimgerp': FileInput(
-                attrs = { 'placeholder': '',
-                          'class': 'form-control'}
-            ),
+
             'archivoimgbco': FileInput(
                 attrs = { 'placeholder': '',
                           'class': 'form-control'}

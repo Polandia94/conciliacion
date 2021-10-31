@@ -16,6 +16,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="{{ action }}">
                 <input type="hidden" name="sobreescribir" value={{ sobreescribir }}>
+                <input type="hidden" name="idrenc" value={{ idrenc}}>
                 <div class="card-body pt-0">
                     {% if form.errors %}
                         <div class="alert alert-danger alert-dismissible">
@@ -25,11 +26,6 @@
                         </div>
                     {% endif %}
                     <div class="row">
-                        {% if action == 'edit' %}
-                        <div class="form-group col-12 mb-0">
-                            <label for="idrenc-text" class="col-form-label mr-2">Folio:</label><strong>{{ idrenc }}</strong>
-                        </div>
-                        {% endif %}
                         <div class="form-group col-6">
                             <label for="empresa" class="col-form-label">{{ form.empresa.label }}</label>
                             {% if action == 'edit' %}
@@ -76,60 +72,33 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="form-group col-6">
-                            <label for="archivoimgerp-text" class="col-form-label">{{ form.archivoimgerp.label }}</label>
-                            {% if action == 'edit' %}
-                                {{ form.archivoimgerp|attr:"readonly:readonly" }}
-                            {% else %}
-                                {{ form.archivoimgerp|attr:"accept:pdf/*,.pdf" }}
-                            {% endif %}
-                        </div>
+                        
                         <div class="form-group col-6">
                             <label for="archivoimgbco-text" class="col-form-label">{{ form.archivoimgbco.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.archivoimgbco|attr:"readonly:readonly" }}
+                                {{ form.archivoimgbco|attr:"accept:pdf/*,.pdf"  }}
                             {% else %}
                                 {{ form.archivoimgbco|attr:"accept:pdf/*,.pdf" }}
                             {% endif %}
                         </div>
                     </div>
+                    {% if action != 'edit' %}
                     <div class="row">
                         <div class="form-group col-6">
                             <label for="fbco-text" class="col-form-label">{{ form.archivobco.label }}</label>
                             {{ form.archivobco|attr:"accept:csv/*,.csv" }}
-                            {% if action == 'edit' %}
-                                <div class="pt-4">
-                                    <label class="col-3 p-0">Nombre:</label>
-                                    <input style="height: 30px" class="col-8" value="{{ nom_file_bco }}" readonly>
-                                    <label class="col-3 p-0">Registros:</label>
-                                    <input style="height: 30px" class="col-8" value="{{ object.recordbco }}" readonly>
-                                    <label class="col-3 p-0">Fecha de Carga:</label>
-                                    <input style="height: 30px" class="col-8" value="{{ object.fechactbco }}" readonly>
-                                    <label class="col-3 p-0">Usuario Cargó:</label>
-                                    <input style="height: 30px" class="col-8" value="{{ object.idusubco }}" readonly>
-                                </div>
-                            {% endif %}
+                            
                         </div>
                         <div class="form-group col-6">
                             <label for="ferp-text" class="col-form-label">{{ form.archivoerp.label }}</label>
                             {{ form.archivoerp|attr:"accept:.csv"  }}
-                            {% if action == 'edit' %}
-                                <div class="pt-4">
-                                    <label class="col-3 p-0">Nombre:</label>
-                                    <input style="height: 30px" class="col-7" value="{{ nom_file_erp }}" readonly>
-                                    <label class="col-3 p-0">Registros:</label>
-                                    <input style="height: 30px" class="col-7" value="{{ object.recorderp }}" readonly>
-                                    <label class="col-3 p-0">Fecha de Carga:</label>
-                                    <input style="height: 30px" class="col-7" value="{{ object.fechacterp }}" readonly>
-                                    <label class="col-3 p-0">Usuario Cargó:</label>
-                                    <input style="height: 30px" class="col-7" value="{{ object.idusuerp }}" readonly>
-                                </div>
-                            {% endif %}
+                            
                         </div>
                     </div>
+                    {% endif %}
                     <!-- /.card-body -->
-                    <div class="card-footer text-right">
-                        <button id="btnCargar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Cargar</button>
+                    <div class="card-footer text-right"><button id="btnCargar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Cargar</button>
+                        
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_url }}'">Cancelar</button>
                     <div id="cargando"></div>
@@ -143,6 +112,20 @@
             </div>
         </div>
     </div>
+    {% if action == 'edit' %}
+    <script>
+          $('form').on('submit', function (e) {
+            e.preventDefault();
+            var parameters = new FormData(this);
+            submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
+                location.href = "/cbrbcod/?idrbcoe={{idrenc}}";
+            },true);
+        });
+        $('.form-control').on("change", function(e){
+             $('#btnCargar').attr('disabled', false);
+        });
+    </script>
+    {% else %}
     <script>
           $('form').on('submit', function (e) {
             e.preventDefault();
@@ -155,6 +138,7 @@
              $('#btnCargar').attr('disabled', false);
         });
     </script>
+    {% endif %}
 {% endblock %}
 {% block scripts %}
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>

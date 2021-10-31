@@ -188,6 +188,7 @@ $(function () {
                     }
                     if (row['estado'] == '3') CodeStatus = 4;
                     if (row['estado'] == '2') CodeStatus = 5; //nuevo codestatus 5 para conciliados
+                    if (row["usuario"] != "") CodeStatus = 3;
                     var classMain = 'btn btn-app';
                     var classDetalles = '';
                     var classLog = '';

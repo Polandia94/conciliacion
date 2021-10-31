@@ -63,6 +63,7 @@ urlpatterns = [
     path('cbtusu/edit/', views.CbtusuEditView.as_view(), name='cbtusu_edit_usuario'),
     path('cbtemp/edit/', views.CbtempEditView.as_view(), name='cbtemp_edit_empresa'),
     path('cbtbco/edit/', views.CbtbcoEditView.as_view(), name='cbtbco_edit_banco'),
+    path('uploadimage', views.Uploadimage.as_view(), name='uploadimage'),
 
     #********** Detalles ***************
 

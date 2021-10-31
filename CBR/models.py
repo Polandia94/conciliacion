@@ -437,7 +437,7 @@ class Cbrenc(models.Model):
     #fechacterp = models.DateTimeField(verbose_name='Fecha de carga ERP', db_column='FECHACTERP', blank=True, null=True)
     #idusuerp = models.CharField(verbose_name='Usuario carga ERP', db_column='IDUSUERP', max_length=16, blank=True, null=True)
     recorderp = models.IntegerField(verbose_name='Registros de ERP', db_column='recorderp', default=0, blank=True, null=True)
-    archivoimgerp = models.FileField(verbose_name='Imagen del ERP', upload_to=get_path_temp,db_column="archivoimgerp", blank=True, null=True)
+    #archivoimgerp = models.FileField(verbose_name='Imagen del ERP', upload_to=get_path_temp,db_column="archivoimgerp", blank=True, null=True)
     archivoimgbco = models.FileField(verbose_name='Imagen del Banco', upload_to=get_path_temp,db_column="archivoimgbco", blank=True, null=True)
     
     saldobco = models.DecimalField( db_column='saldobco', max_digits=16, decimal_places=2, blank=True, null=True )
@@ -471,14 +471,14 @@ class Cbrenc(models.Model):
 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
-class Cbrencierp(models.Model):
-    idrenci = models.AutoField(verbose_name='id', db_column='idrenci', primary_key=True)
-    idrenc = models.IntegerField(verbose_name='idrenc', db_column='idrenc')
-    imgerp = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
-    archivotipo = models.CharField(verbose_name='Tipo de Archivo', db_column = "archivotipo", default="PDF", max_length=4)
-    class Meta:
-        managed = True
-        db_table = 'cbrencierp'
+#class Cbrencierp(models.Model):
+#    idrenci = models.AutoField(verbose_name='id', db_column='idrenci', primary_key=True)
+#    idrenc = models.IntegerField(verbose_name='idrenc', db_column='idrenc')
+#    imgerp = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
+#    archivotipo = models.CharField(verbose_name='Tipo de Archivo', db_column = "archivotipo", default="PDF", max_length=4)
+#    class Meta:
+#        managed = True
+#        db_table = 'cbrencierp'
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
 class Cbrencibco(models.Model):
@@ -851,7 +851,7 @@ class Cbtcol(models.Model):
         db_table = 'cbtcol'
 
 class Cbsusu(models.Model):
-    idsusu = models.AutoField( db_column='id', primary_key=True )
+    idsusu = models.AutoField( db_column='idsusu', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     idusu1 = models.CharField(verbose_name='Login del usuario', db_column='idusu1', max_length=16)
     corrusu = models.SmallIntegerField(verbose_name='Correlativo de Usuario',db_column='corrusu')
@@ -859,12 +859,16 @@ class Cbsusu(models.Model):
     finlogin = models.DateTimeField( verbose_name='Fecha de Cierre de Sesión', db_column='finlogin', null=True)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
-
+    
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+        
     class Meta:
         managed = True
         db_table = 'cbsusu'
     
     def guardar(self, *args, **kwargs):
-        self.corrusu = Cbsusu.objects.filter(idusu1 = self.idusu1).count()
+        self.corrusu = Cbsusu.objects.filter(idusu1 = self.idusu1).count()+1
         super( Cbsusu, self ).save( *args, **kwargs )
     

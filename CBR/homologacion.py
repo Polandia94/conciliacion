@@ -31,8 +31,10 @@ def FueradeCalendario(dia,mes,ano):
 
 def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
     #Lee el archivo del banco y cre al Cbrbod respectivo
+    print("a")
     try:
         Cbrbode.objects.all().delete()
+        print("b")
         try:
             dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,11)) )
         except:
@@ -40,7 +42,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                 dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,11)), encoding= "cp1252")
             except:
                 dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,11)), encoding= "ISO-8859-1" )
-
+        print("c")
         fallo = False
         n = 0
         for i in range(1, len( dataBco ) ):
@@ -141,6 +143,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         aCbrbode = Cbrbode(idrbod=aCbrbod , coderr=error)
                         aCbrbode.save()
                 except Exception as e:
+                    print("d")
                     print(e)
                     fallo = True
                     try:
@@ -152,6 +155,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         aCbrbod.idrenc = None
                         aCbrbode = Cbrbode(coderr = 99)
                         aCbrbode.save()
+                        print("e")
                         print(e)
 
                 #En caso de errores deja solo los errores en la tabla
@@ -159,20 +163,24 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
             data["error"] = '<p>Verifique errores de banco en <a href=" ../../cbrbode" target="_blank"> Formulario CBF10</a></p>'
     #Caso contrario carga el cbrbcoe
         else:
+            print("f")
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
             try:
                 Cbrbcod.objects.filter(idrbcoe=Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).first().idrbcoe).delete()
             except Exception as e:
                 print(e)
+            print("g")
             tableBcoEnc = Cbrbcoe(
                 idrbcoe=aCbrenc.idrenc,
                 idrenc=aCbrenc,
                 fechact1 = dt.datetime.now(tz=timezone.utc),
                 idusu1 = request.user.username
                 )
+            print("h")
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
             tableBcoEnc.save()
             n = 0
+            print("i")
             for registro in Cbrbod.objects.order_by("idrbod").filter(idrenc=aCbrbod.idrenc).all():
                 if n < 8:
                     time.sleep(1)
@@ -196,8 +204,10 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
             aCbrenc.recordbco = len( dataBco )
             aCbrenc.saldobco = saldo
             aCbrenc.idusubco=request.user.username
+            print("j")
             return True
     except Exception as e:
+        print("k")
         print(e)
         data["error"] = "errores desconocido en el archivo del Banco"
         try:
@@ -216,25 +226,31 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             pass
         Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
         try:
-            dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,11)))
+            dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)))
         except:
             try:
-                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,11)), encoding= "cp1252")
+                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)), encoding= "cp1252")
             except:
-                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,11)), encoding= "ISO-8859-1")
+                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)), encoding= "ISO-8859-1")
+    # quirox, 2021-10-26: 
+    #         adicionar un try y si este try cae en except, entonces envie un mensaje de no lectura exitosa y se detiene
         iniciado = False
         pausa = False
         fallo = False
         haberTotal = 0
         debeTotal = 0
         n = 0
+        print(1)
         for i in range(1, len( dataErp ) ):
             try:
+                print("uno")
                 if dataErp.loc[i, dataErp.columns[0]].find("/")>-1:
                     if n < 8:
                         time.sleep(1)
                     else:
                         time.sleep(0.01)
+                    if n < 40:
+                        print(dataErp.loc[i, dataErp.columns[0]])
                     n= n+1
                     errores = []
                     pausa = False
@@ -268,14 +284,14 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.ref = ref
                     aCbrgal.glosa = dataErp.loc[i, dataErp.columns[4]]
                     try:
-                        float(dataErp.loc[i, dataErp.columns[5]].replace(",",""))
-                        debe = dataErp.loc[i, dataErp.columns[5]].replace(",","")
+                        float(dataErp.loc[i, dataErp.columns[7]].replace(",",""))
+                        debe = dataErp.loc[i, dataErp.columns[7]].replace(",","")
                     except:
                         errores.append(3)
                     
                     try:
-                        float(dataErp.loc[i, dataErp.columns[6]].replace(",",""))
-                        haber = dataErp.loc[i, dataErp.columns[6]].replace(",","")
+                        float(dataErp.loc[i, dataErp.columns[9]].replace(",",""))
+                        haber = dataErp.loc[i, dataErp.columns[9]].replace(",","")
                     except:
                         errores.append(4)
                     try:
@@ -286,15 +302,15 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     except:
                         pass
                     try:
-                        float(dataErp.loc[i, dataErp.columns[7]].replace(",",""))
-                        saldo = dataErp.loc[i, dataErp.columns[7]].replace(",","")
+                        float(dataErp.loc[i, dataErp.columns[11]].replace(",",""))
+                        saldo = dataErp.loc[i, dataErp.columns[11]].replace(",","")
 
                     except:
                         try:
                             saldo = "-" + dataErp.loc[i, dataErp.columns[7]][1:-1].replace(",","")
                         except:
                             errores.append(5)
-                    s_date=dataErp.loc[i, dataErp.columns[8]]
+                    s_date=dataErp.loc[i, dataErp.columns[12]]
                     try:
                         fechacon = dt.datetime.strptime( s_date, '%d/%m/%Y' )
                     except:
@@ -306,10 +322,11 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.idusu=request.user.username
                     aCbrgal.fechact=dt.datetime.now(tz=timezone.utc)
                     if len(errores) > 0:
-                        debe = dataErp.loc[i, dataErp.columns[5]]
-                        haber = dataErp.loc[i, dataErp.columns[6]]
-                        saldo = dataErp.loc[i, dataErp.columns[7]]
-                        fechacon = dataErp.loc[i, dataErp.columns[8]]
+                        print("1")
+                        debe = dataErp.loc[i, dataErp.columns[7]]
+                        haber = dataErp.loc[i, dataErp.columns[9]]
+                        saldo = dataErp.loc[i, dataErp.columns[11]]
+                        fechacon = dataErp.loc[i, dataErp.columns[12]]
                         fechatra = dataErp.loc[i, dataErp.columns[0]]
                     else:
                         haberTotal = float(haber) + haberTotal
@@ -321,42 +338,49 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.fechatra = fechatra
                     aCbrgal.save(aCbrgal)
                     for error in errores:
+                        print("2")
+                        print(error)
                         fallo = True
                         aCbrgal.idrenc = None
                         aCbrgal.save(aCbrgal)
                         aCbrgale = Cbrgale(idrgal=aCbrgal ,coderr = error)
                         aCbrgale.save()
             except Exception as e:
+                print("3")
                 if dataErp.loc[i, dataErp.columns[4]] != " Van:" and dataErp.loc[i, dataErp.columns[4]] != "TOTALES . . . . . . . " and pausa == False and iniciado:
                     aCbrgal.glosa = str(aCbrgal.glosa) + " " +str(dataErp.loc[i, dataErp.columns[4]])
                     aCbrgal.actualizar(aCbrgal)
                     pausa = True
-                if dataErp.loc[i, dataErp.columns[4]] != "Vienen:":
+                if dataErp.loc[i, dataErp.columns[5]] != "Vienen:":
                     pausa = False
-                if dataErp.loc[i, dataErp.columns[4]] == "TOTALES . . . . . . . ":
-                    if(math.isclose(float(dataErp.loc[i, dataErp.columns[5]].replace(",","")),debeTotal) and math.isclose(float(dataErp.loc[i, dataErp.columns[6]].replace(",","")) , haberTotal)) == False:
+                if dataErp.loc[i, dataErp.columns[5]] == "TOTALES . . . . . . . ":
+                    if(math.isclose(float(dataErp.loc[i, dataErp.columns[7]].replace(",","")),debeTotal) and math.isclose(float(dataErp.loc[i, dataErp.columns[9]].replace(",","")) , haberTotal)) == False:
                         try:
-                            data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[5]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[6]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>" + data["error"]
+                            data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>" + data["error"]
                         except:
-                            data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[5]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[6]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>"
+                            data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>"
         if fallo:
+            print("4")
             try:
                 data["error"] = '<p>Verifique errores de ERP en <a href=" ../../cbrgale" target="_blank"> Formulario CBF11</a></p>'+ data["error"] 
             except:
                 data["error"] = '<p>Verifique errores de ERP en  <a href=" ../../cbrgale" target="_blank"> Formulario CBF11</a></p>'
         else:
+            print("5")
             try:
                 Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
             except:
                 pass
             Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
+            print("6")
             tableErpEnc = Cbrerpe(
                 idrerpe=aCbrenc.idrenc,
-                idrenc=aCbrenc.idrenc,
+                idrenc=aCbrenc,
                 fechact = dt.datetime.now(tz=timezone.utc),
                 idusu = request.user.username
                 )
             aCbrenc.saldobcoori = aCbrenc.saldobco
+            print("7")
             try:
                 aCbrenc.corr = Cbrenc.objects.filter(codbco=aCbrenc.codbco,nrocta=aCbrenc.nrocta,ano=aCbrenc.ano, mes=aCbrenc.mes,empresa=aCbrenc.empresa).order_by('-corr')[0].corr + 1
             except:
@@ -366,11 +390,15 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             except:
                 aCbrenc.corr = 1
                 aCbrenc.save()
+            print("8")
             tableErpEnc.save()
             n = 0
+            print("9")
             for registro in Cbrgal.objects.order_by("idrgal").filter(idrenc=aCbrenc.idrenc).all():
                 if n < 8:
                     time.sleep(1)
+                    print("a")
+                    print(registro.fechatra)
                 else:
                     time.sleep(0.01)
                 n = n+1
@@ -394,6 +422,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 tableErp.fechact = dt.datetime.now(tz=timezone.utc)
                 tableErp.idusu = request.user.username
                 tableErp.save( aCbrenc )
+            print("10")
             aCbrenc.recorderp = len( dataErp )
             aCbrenc.saldoerp = saldo
             aCbrenc.estado = "0"
@@ -404,10 +433,11 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             aCbrenc.saldoerpori = aCbrenc.saldoerp
             aCbrenc.fechacons=dt.datetime.now(tz=timezone.utc)
             aCbrenc.idusu=request.user.username
+            print("11")
             aCbrenc.save()
+            print("12")
             return True
+           
     except Exception as e:
         print(e)
         data["error"] = "Problema desconocido en el archivo del ERP"
-
-

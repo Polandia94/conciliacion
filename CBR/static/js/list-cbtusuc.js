@@ -37,10 +37,11 @@ $(function () {
             },
             {
                 targets: [2],
+                class: 'text-center pt-1',
                 render: function (data, type, row) {
 
                         if(data.inddef == 1){
-                            return '<input id="'+ data.codcol+'"type="checkbox" class="form-control" checked >'
+                            return '<input id="'+ data.codcol+'"type="checkbox"class="form-control" checked >'
                         }else{
                             return '<input id="'+ data.codcol+'"type="checkbox" class="form-control"  >'
                         }

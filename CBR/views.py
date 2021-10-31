@@ -33,7 +33,7 @@ from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc,
                         Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgale, Cbsres,
                         Cbsresc, Cbsusu, Cbtbco, Cbtcli, Cbtcol, Cbtcta,
                         Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
-                        Cbtusuc, Cbtusue, Cbwres, Cbrencibco, Cbrencierp)
+                        Cbtusuc, Cbtusue, Cbwres, Cbrencibco)
 from .utils import *
 #endregion
 
@@ -68,8 +68,8 @@ class CbrencListView(ListView):
                         item['position'] = position
                         item['archivobco'] = i.archivobco.name
                         item['archivoerp'] = i.archivoerp.name
-                        if Cbwres.objects.filter(idrenc=item["idrenc"]).exists():
-                            item["usuario"] = Cbwres.objects.filter(idrenc=item["idrenc"]).first().idusu
+                        if Cbrenct.objects.filter(idrenc = item['idrenc'], formulario= "CBF02", fechorafin=None).exists():
+                            item["usuario"] = Cbrenct.objects.filter(idrenc = item['idrenc'], formulario= "CBF02", fechorafin=None).first().idusu
                         else:
                             item["usuario"] = ""
                         data.append(item)
@@ -364,17 +364,18 @@ class CbrencCreateView(CreateView):
                               "/media/" + str(self.CbrencNew.archivoimgbco))
                 except:
                     print("No hay imagen de banco")
-                try:
-                    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
-                    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
-                    aCbrencierp = Cbrencierp(
-                        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
-                    aCbrencierp.save()
-                    time.sleep(2)
-                    os.remove(str(Path(__file__).resolve().parent.parent) +
-                              "/media/" + str(self.CbrencNew.archivoimgerp))
-                except:
-                    print("No hay imagen de ERP")
+                # Guarda la imagen del ERP. Se encuentra funcionando pero no es necesario.
+                #try:
+                #    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
+                #    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
+                #    aCbrencierp = Cbrencierp(
+                #        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
+                #    aCbrencierp.save()
+                #    time.sleep(2)
+                #    os.remove(str(Path(__file__).resolve().parent.parent) +
+                #              "/media/" + str(self.CbrencNew.archivoimgerp))
+                #except:
+                #    print("No hay imagen de ERP")
                 try:
                     print(data['error'])
                     error = True
@@ -409,7 +410,9 @@ class CbrencCreateView(CreateView):
                 aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbrencl.save(aCbrencl)
                 # Crea el archivo de tiempo correspondiente
-                createCbrenct(request, aCbrencl.idrenc,1, "CBF03")
+                print("algo")
+                createCbrenct(request, self.CbrencNew.idrenc,1, "CBF03")
+                print("algo2")
                 # Crea la imagen de banco correspondiente
 
             else:
@@ -435,6 +438,68 @@ class CbrencCreateView(CreateView):
         getContext(self.request,context, 'Carga de Datos', 'CBF03')
         return context
 
+
+class Uploadimage(CreateView):
+    model = Cbrenc
+    form_class = CbrencaForm
+    template_name = 'cbrenc/add-edit.html'
+
+    success_url = reverse_lazy('CBR:cbrenc-list')
+    url_redirect = success_url
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+    def get_initial(self):
+        print(self.request.GET)
+        aCbrenc = Cbrenc.objects.filter(idrenc=self.request.GET.get("idrbcoe")).first()
+        try:
+            empresa = aCbrenc.empresa
+            codbco = aCbrenc.codbco
+            nrocta = aCbrenc.nrocta
+            ano = aCbrenc.ano
+            mes = aCbrenc.mes
+            return {"empresa":empresa, "codbco":codbco, "nrocta":nrocta, "ano":ano, "mes":mes}
+        except:
+            return {}
+
+    def post(self, request, *args, **kwargs):
+        data = {}
+        print(request.POST)
+        form = self.get_form()
+        try:
+            form = self.get_form()
+            self.CbrencNew = form.save()
+            aCbrenc = Cbrenc.objects.filter(idrenc=request.POST["idrenc"]).first()
+            aCbrenc.archivoimgbco = "temp"
+            aCbrenc.save()
+            imgbco = base64.b64encode(open(str(Path(__file__).resolve(
+            ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
+            Cbrencibco.objects.filter(idrenc=request.POST["idrenc"]).delete()
+            aCbrencibco = Cbrencibco(
+                idrenc=request.POST["idrenc"], imgbco=imgbco)
+            aCbrencibco.save()
+            time.sleep(2)
+            print(str(Path(__file__).resolve().parent.parent) +
+                        "/media/" + str(self.CbrencNew.archivoimgbco))
+            os.remove(str(Path(__file__).resolve().parent.parent) +
+                        "/media/" + str(self.CbrencNew.archivoimgbco))
+            return JsonResponse(data)
+        except Exception as e:
+            print("No hay imagen de banco")
+            print(e)
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        getContext(self.request,context, 'Carga de Datos', 'CBF03')
+        context["action"]= "edit"
+        context["idrenc"]= self.request.GET.get("idrbcoe")
+        return context
 #************************* CBF04 - FORMULARIO DE LOGS *************************#
 
 class DetalleLogListView(ListView):
@@ -552,22 +617,23 @@ class DetalleBcoListView(ListView):
     def post(self, request, *args, **kwargs):
         data = {}
         try:
-            action = request.POST['action']
+            print(request.POST)
             idrbcoe = request.POST['idrbcoe']
-
-            if action == 'searchdata':
-                data = []
-                position = 1
-                for i in Cbrbcod.objects.filter(idrbcoe=idrbcoe):
-                    item = i.toJSON()
-                    item['position'] = position
-                    item['ID'] = position
-                    data.append(item)
-                    position += 1
-                createCbrenct(request, idrbcoe, 7, "CBF06" )
+            print("aca")
+            print(idrbcoe)
+            print(request.POST.get('cargarImagen', None))
+            action = request.POST['action']
+            data = []
+            position = 1
+            for i in Cbrbcod.objects.filter(idrbcoe=idrbcoe):
+                item = i.toJSON()
+                item['position'] = position
+                item['ID'] = position
+                data.append(item)
+                position += 1
+            createCbrenct(request, idrbcoe, 7, "CBF06" )
                 
-            else:
-                data['error'] = 'Ha ocurrido un error'
+
         except Exception as e:
             data['error'] = str(e)
             print(e)
@@ -582,6 +648,10 @@ class DetalleBcoListView(ListView):
         context['imagen'] = False
         if aCbrenc.archivoimgbco != "":
             context['imagen'] = True
+        if aCbrenc.estado == "0" or aCbrenc.estado == "1":
+            context["modificable"] = True
+        else:
+            context["modificable"] = False
         return context
 
 #************************* CBF07 - FORMULARIO DE DETALLE DE ERP *************************#
@@ -626,9 +696,9 @@ class DetalleErpListView(ListView):
         context['idrerpe'] = self.request.GET.get('idrerpe')
         idrenc = context['idrerpe']
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
-        context['imagen'] = False
-        if aCbrenc.archivoimgbco != "":
-            context['imagen'] = True
+        #context['imagen'] = False
+        #if aCbrenc.archivoimgbco != "":
+        #    context['imagen'] = True
         return context
 
 #************************* CBF08 - FORMULARIO DE CUENTAS *************************#
@@ -1160,7 +1230,7 @@ class CbtusuEditView(CreateView):
                         cliente=cliente).first().nrousuario
                     usuariosActivos = Cbtusu.objects.filter(
                         actpas="A", cliente=cliente).count()
-                    if licencias <= usuariosActivos:
+                    if licencias < usuariosActivos:
                         data['error'] = "Máximo número de usuarios activos alcanzados. Usuarios activos máximos: " + str(licencias)
                         return JsonResponse(data, safe=False)
                 # CREATE
@@ -1183,7 +1253,7 @@ class CbtusuEditView(CreateView):
                     if CbtusuNew.tipousu == "S" and Cbtusu.objects.filter(cliente = cliente, tipousu= "S").count() == 1:
                         data['error'] = "Debe haber al menos un superusuario"
                         return JsonResponse(data, safe=False)
-                CbtusuNew.tipousu = ""
+                    CbtusuNew.tipousu = ""
                 
                 CbtusuNew.fechact = dt.datetime.now(tz=timezone.utc)
                 CbtusuNew.idusu = request.user.username
@@ -1192,8 +1262,9 @@ class CbtusuEditView(CreateView):
                 CbtusuNew.save()
                 aUser.username = idusu1
                 aUser.save()
-        except Exception as e:
 
+        except Exception as e:
+            print("alla")
             data['error'] = str(e)
             print(e)
             return JsonResponse(data)
@@ -1254,6 +1325,8 @@ class ListaUsuarioView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu != "S":
+            return redirect("/")
         if chequearNoDobleConexion(request):
             return super().dispatch(request, *args, **kwargs)
         else:
@@ -1950,19 +2023,11 @@ class visualizacionUsuarios (ListView):
         if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
             position = 1
             data = []
-            for i in Cbtusu.objects.filter(cliente=diccionario["cliente"]).all():
+            for i in Cbsusu.objects.filter(cliente=diccionario["cliente"]).order_by('-iniciologin').all():
                 item = i.toJSON()
-                aCbsusu = Cbsusu.objects.filter(idusu1=item["idusu1"]).order_by('corrusu').last()
-                if aCbsusu is not None:
-                    item["iniciologin"] = aCbsusu.iniciologin
-                    item["finlogin"] = aCbsusu.finlogin
-                    item["corrusu"] = aCbsusu.corrusu
-                    item["conectado"] = aCbsusu.finlogin==None
-                else:
-                    item["iniciologin"] = ""
-                    item["finlogin"] = ""
-                    item["corrusu"] = 0
-                    item["conectado"] = False
+                aCbtusu = Cbtusu.objects.filter(idusu1=item["idusu1"]).first()
+                item["descusu"]=aCbtusu.descusu
+                item["conectado"] = i.finlogin==None
                 data.append(item)
                 position += 1
             return JsonResponse(data, safe=False)
@@ -2047,22 +2112,26 @@ class DescargarArchivoView(View):
                 'imagenbanco.pdf'
             return response
         else:
-            imgerp = Cbrencierp.objects.filter(idrenc=idrerpe).first().imgerp
-            try:
-                os.remove(str(Path(__file__).resolve().parent.parent) +
-                        "/media/" + 'temp/imagen.pdf')
-            except:
-                pass
-            file = open(str(Path(__file__).resolve().parent.parent) +
-                        "/media/" + 'temp/imagen.pdf', 'wb')
-            file.write(base64.b64decode(imgerp))
-            file.close()
-            wrapper = FileWrapper(open(str(Path(__file__).resolve(
-            ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
-            response = HttpResponse(wrapper, content_type='application/pdf')
-            response['Content-Disposition'] = 'inline; filename=' + \
-                'imagenerp.pdf'
-            return response
+            data = {}
+            data['error'] = "No existe imagen del banco"
+            return JsonResponse(data)
+        #   Para descargar imagen ERP
+        #    imgerp = Cbrencierp.objects.filter(idrenc=idrerpe).first().imgerp
+        #    try:
+        #        os.remove(str(Path(__file__).resolve().parent.parent) +
+        #                "/media/" + 'temp/imagen.pdf')
+        #    except:
+        #        pass
+        #    file = open(str(Path(__file__).resolve().parent.parent) +
+        #                "/media/" + 'temp/imagen.pdf', 'wb')
+        #    file.write(base64.b64decode(imgerp))
+        #    file.close()
+        #    wrapper = FileWrapper(open(str(Path(__file__).resolve(
+        #    ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
+        #    response = HttpResponse(wrapper, content_type='application/pdf')
+        #    response['Content-Disposition'] = 'inline; filename=' + \
+        #        'imagenerp.pdf'
+        #    return response
 
 #************************* CERRAR PESTAÑA *************************#
 

@@ -1076,7 +1076,7 @@ def conservarGuardado(request):
         anteriorCbrencl = Cbrencl.objects.filter(idrenc=aCbrencl.idrenc).last()
         if aCbrencl.status != anteriorCbrencl.status or aCbrencl.difbcoerp != anteriorCbrencl.difbcoerp or aCbrencl.saldobco != anteriorCbrencl.saldobco:
             aCbrencl.save(aCbrencl)
-        if Cbsres.objects.filter(idrenc=idrenca, idrbcodl=0).exists() or Cbsres.objects.filter(idrenc=idrenca, idrerpdl=0).exists():
+        if Cbsres.objects.filter(idrenc=idrenca, idrbcodl=0).exists() or Cbsres.objects.filter(idrenc=idrenca, idrerpdl=0).exists() or Cbsres.objects.filter(idrenc=idrenca, idrbcodl=None).exists() or Cbsres.objects.filter(idrenc=idrenca, idrerpdl=None).exists() or Cbsres.objects.filter(idrenc=idrenca).exists() == False:
             aCbrenc.estado = 1
             aCbrenc.save()
             return redirect("../../cbsres/?idrenc="+idrenca)
@@ -1458,3 +1458,4 @@ def updateCbtusuc(request):
         aCbtusuc.idusu = request.user.username
         aCbtusuc.save()
     return JsonResponse({})
+

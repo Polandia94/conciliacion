@@ -97,7 +97,8 @@
     // toggle the eye / eye slash icon
     this.classList.toggle('bi-eye');
     });
-    $("#reset").on("click", function (event) {
+    const reset = document.querySelector('#reset');
+    reset.addEventListener("click", function (event) {
         if (checkPassword(loginForm)){
             loginForm.submit()
         }
