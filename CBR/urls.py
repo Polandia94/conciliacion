@@ -17,6 +17,7 @@ urlpatterns = [
     #************* Útiles ********************
 
     path('getAnoMes/', utils.getanomes, name='getAnoMes'),
+    path('getdesbco/', utils.getdesbco, name='getdesbco'),
     path('getGuardado/', utils.getguardado, name='getGuardado'),
     path('getTiposDeConciliacion/', utils.getTiposDeConciliacion, name='getTiposDeConciliacion'),  path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
     path('getColumnas/', utils.getColumnas, name='getColumnas'),
@@ -52,7 +53,7 @@ urlpatterns = [
 
     #*********** Eliminar ************
     path('cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del'),
-    path('cbtcta/del/', views.cbtctaDelete, name='cbtcta_delete_cuenta'),
+    path('cbtcta/del/', utils.cbtctaDelete, name='cbtcta_delete_cuenta'),
     path('cbtemp/del/', views.cbtempDelete, name='cbtemp_delete_empresa'),
     path('cbtbco/del/', views.cbtbcoDelete, name='cbtbco_delete_banco'),
     path('cbtusu/del/', views.cbtusuDelete, name='cbtusu-del'),

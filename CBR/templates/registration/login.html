@@ -161,7 +161,11 @@
     
                                     
                             }else{
-                            loginForm.submit()
+                                if(respons.limite){
+                                    window.alert("Limite de Usuarios Activos Conectados Alcanzado")
+                                }else{
+                                    loginForm.submit()
+                                }
                             }
                         }
                     }}}

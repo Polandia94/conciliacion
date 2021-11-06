@@ -1,4 +1,5 @@
 
+from logging import exception
 from CBR.models import Cbrbod, Cbrbcoe, Cbrbcod, Cbrbode, Cbrerpe, Cbrerpd, Cbrgal, Cbterr, Cbrenc,Cbrgale
 import pandas as pd
 from django.utils import timezone
@@ -43,8 +44,8 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
             except:
                 dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,11)), encoding= "ISO-8859-1" )
         print("c")
-        fallo = False
         n = 0
+        fallo = False
         for i in range(1, len( dataBco ) ):
             if pd.isnull(dataBco.loc[i, dataBco.columns[0]]) == False:
                 mes = int(aCbrenc.mes)
@@ -127,19 +128,25 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                         saldo = float(saldo)/100
                     aCbrbod.fechact = dt.datetime.now(tz=timezone.utc)
                     aCbrbod.idusu=request.user.username
+                    aCbrbod.debe = debe
+                    aCbrbod.haber = haber
+                    aCbrbod.saldo = saldo
                     if len(errores) > 0:
                         debe = dataBco.loc[i, dataBco.columns[3]]
                         haber = dataBco.loc[i, dataBco.columns[4]]
                         saldo = dataBco.loc[i, dataBco.columns[5]]
-                    aCbrbod.debe = debe
-                    aCbrbod.haber = haber
-                    aCbrbod.saldo = saldo
+                    else:
+                        aCbrbod.save() 
+
                     time.sleep(0.01)
-                    aCbrbod.save()                
+                                   
                     for error in errores:
                         fallo = True
                         aCbrbod.idrenc = None
-                        aCbrbod.save()
+                        try:
+                            aCbrbod.save()
+                        except:
+                            pass
                         aCbrbode = Cbrbode(idrbod=aCbrbod , coderr=error)
                         aCbrbode.save()
                 except Exception as e:
@@ -321,6 +328,11 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             errores.append(1)
                     aCbrgal.idusu=request.user.username
                     aCbrgal.fechact=dt.datetime.now(tz=timezone.utc)
+                    aCbrgal.debe = debe
+                    aCbrgal.haber = haber
+                    aCbrgal.saldo = saldo
+                    aCbrgal.fechacon = fechacon
+                    aCbrgal.fechatra = fechatra
                     if len(errores) > 0:
                         print("1")
                         debe = dataErp.loc[i, dataErp.columns[7]]
@@ -331,22 +343,23 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     else:
                         haberTotal = float(haber) + haberTotal
                         debeTotal = float(debe) + debeTotal
-                    aCbrgal.debe = debe
-                    aCbrgal.haber = haber
-                    aCbrgal.saldo = saldo
-                    aCbrgal.fechacon = fechacon
-                    aCbrgal.fechatra = fechatra
-                    aCbrgal.save(aCbrgal)
+                        aCbrgal.save(aCbrgal)
+
+                    
                     for error in errores:
                         print("2")
                         print(error)
                         fallo = True
-                        aCbrgal.idrenc = None
-                        aCbrgal.save(aCbrgal)
+                        try:
+                            aCbrgal.idrenc = None
+                            aCbrgal.save(aCbrgal)
+                        except Exception as e:
+                            print(e)
                         aCbrgale = Cbrgale(idrgal=aCbrgal ,coderr = error)
                         aCbrgale.save()
             except Exception as e:
                 print("3")
+                print(e)
                 if dataErp.loc[i, dataErp.columns[4]] != " Van:" and dataErp.loc[i, dataErp.columns[4]] != "TOTALES . . . . . . . " and pausa == False and iniciado:
                     aCbrgal.glosa = str(aCbrgal.glosa) + " " +str(dataErp.loc[i, dataErp.columns[4]])
                     aCbrgal.actualizar(aCbrgal)

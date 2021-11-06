@@ -20,8 +20,8 @@ from django.urls.base import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from CBR.models import (Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
-                        Cbtbco, Cbtcli, Cbtcol, Cbtcta, Cbtemp, Cbterr, Cbtpai, Cbttco, Cbtusu,
+from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
+                        Cbtbco, Cbtcli, Cbtcol, Cbtcta, Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
                         Cbtusuc, Cbtusue, Cbwres)
 
 #endregion
@@ -110,9 +110,18 @@ def cerrarsesionusuario(request):
 
 
 def login(request):
+    
     usuario = request.GET.get("usuario")
+   
     aCbtusu = Cbtusu.objects.filter(idusu1=usuario).first()
+    aCbtlic = Cbtlic.objects.filter(cliente=aCbtusu.cliente).first()
+    usuariosConectados = Cbsusu.objects.filter(finlogin=None, cliente = aCbtusu.cliente).count()
     data = {}
+    
+    if usuariosConectados >= aCbtlic.nrousuario:
+        data["limite"] = True
+    else:
+        data["limite"] = False
     if aCbtusu is None:
         data["noexiste"] = True
     else:
@@ -129,14 +138,9 @@ def login(request):
         data["yaconectado"] = False
         print(e)
     try:
-        
         data["activo"] = aCbtusu.actpas == "A"
-        #data["activo"] = True
-
     except:
-        
         data["activo"] = "P"
-
     try:
         data["reinicia"] = aCbtusu.pasusu
     except:
@@ -193,38 +197,6 @@ def post_login(sender, user, request, **kwargs):
         #aCbsusu = Cbsusu(cliente=cliente,idusu1=idusu1,iniciologin=iniciologin,fechact=iniciologin, idusu=idusu1)
         # aCbsusu.guardar(aCbsusu)
 
-# ******************************************************************************************************************** #
-# ******************************************************************************************************************** #
-
-
-@login_required
-def cbtctaDelete(request):
-    if request.method == 'POST':
-        chequearNoDobleConexion(request)
-        try:
-            data = {}
-            idtcta = request.POST['idtcta']
-            aCbtcta = Cbtcta.objects.get(idtcta=idtcta)
-            diccionario = clienteYEmpresas(request)
-            if aCbtcta.empresa in diccionario["empresas"] and aCbtcta.cliente == diccionario["cliente"]:
-
-                # verifica que no haya registros posteriores
-                if Cbrenc.objects.exclude(estado="3").filter(codbco=aCbtcta.codbco,
-                                                             nrocta=aCbtcta.nrocta,
-                                                             empresa=aCbtcta.empresa,
-                                                             ).exists():
-                    data['error'] = "Existen meses posteriores cargados"
-                    return JsonResponse(data, safe=False)
-                else:
-                    aCbtcta.delete()
-
-        except Exception as e:
-            print(e)
-            data = {}
-            data['error'] = str(e)
-        return JsonResponse(data)
-    else:
-        return request
 
 
 # ******************************************************************************************************************** #
@@ -244,8 +216,13 @@ def cbtusuDelete(request):
                     data = {}
                     data["error"] = "No es posible eliminar el único superusuario"
                     return JsonResponse(data)
-            aUser = User.objects.filter(username=idusu1)
-            aUser.delete()
+            aUser = User.objects.filter(username=idusu1).first()
+            print(aUser)
+            try:
+                if aUser.is_staff == False:
+                    aUser.delete()
+            except:
+                aUser.delete()
             
             aCbtusurequest = Cbtusu.objects.filter(
                 idusu1=request.user.username).first()
@@ -743,6 +720,24 @@ def getanomes(request):
                 data = {'ano': maxAno + 1, 'mes': 1}
     finally:
         return JsonResponse(data)
+
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+@login_required
+def getdesbco(request):
+    chequearNoDobleConexion(request)
+    codbco = request.GET.get('codbco')
+    data = {}
+    try:
+        print(codbco)
+        algo = Cbmbco.objects.filter(codbco=codbco).first()
+        print(algo)
+        data["desbco"] = Cbmbco.objects.filter(codbco=codbco).first().desbco
+    except Exception as e:
+        print(e)
+        data["desbco"] = ""
+    return JsonResponse(data)
 
 
 # ******************************************************************************************************************** #

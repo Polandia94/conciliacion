@@ -51,19 +51,12 @@
                                 {{ form.tipousu}}
 
                         </div>
-                        {% if modificable %}
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label">¿Es Usuario Activo?</label>
                                 {{ form.actpas}}
 
                         </div>
-                        {% else %}
-                        <div class="form-group col-6">
-                            <label for="actpas" class="col-form-label">¿Es Usuario Activo?</label>
-                            <input type="checkbox" name="actpas" placeholder="Cuenta" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked disabled>
 
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <!-- /.card-body -->

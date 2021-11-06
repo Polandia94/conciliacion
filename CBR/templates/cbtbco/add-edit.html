@@ -33,11 +33,22 @@
                             <label for="codbco" class="col-form-label">{{ form.codbco.label }}</label>
                                 {{ form.codbco}}
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-12">
+                        <label for="id_desbco" class="col-form-label">Descripción</label>
+                        <input id="id_desbco" name="desbco" class= "form-control" type="text"  disabled>
+                    </div>
                         {% else %}
                         <div class="form-group col-6">
                         <label for="codbco" class="col-form-label">{{ form.codbco.label }}</label>
-                        <input id=codbco name="codbco" class= 'form-control' type="text" readonly value={{form.codbco.value}}>                        
+                         </div>
+                        <div class="form-group col-6">
+                        <label for="id_desbco" class="col-form-label">Descripción</label>
+                        <input id="id_desbco" name="codbco" class= "form-control" type="text" readonly value={{form.codbco.value}}>                        
+                        
                         </div>
+                        
                         {% endif %}
                     </div>
 

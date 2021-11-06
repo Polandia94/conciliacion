@@ -323,7 +323,37 @@
         }
     });
 
+    $(".getdesbco").change(function () {
+        var codbco = '';
+        codbco = $("#id_codbco").val();
+        console.log(codbco)
+        if ((codbco != '')) {
+            $.ajax({
+                method: 'GET',
+                beforeSend: function (request) {
+                    request.setRequestHeader("X-CSRFToken", csrftoken);
+                },
+                url: '/getdesbco',
+                data: {'codbco': codbco},
+                success: function (respons) {
+                    console.log(respons)
+                    if (respons) {
+                        $("#id_desbco").val(respons.desbco);
+                        console.log(respons.desbco)
+                        console.log( $("#id_desbco"))
+                    } else {
+                        $("#id_desbco").val('2021');
+                    }
+                },
+                error: function (data) {
+                }
+            });
+        }
+    });
+
 })(jQuery);
+
+
 
 async function primeraCargaCbsres(){
         let cargadoIncompleto = true

@@ -767,8 +767,8 @@ class Cbtlic(models.Model):
     licencia = models.CharField(verbose_name='Licencia', db_column='licencia', max_length=30)
     nrousuario = models.SmallIntegerField(verbose_name='Numero de Usuarios',db_column='nrousuario')
     nroempresa = models.SmallIntegerField(verbose_name='Numero de Empresa',db_column='nroempresa')
-    nrocuenta = models.SmallIntegerField(verbose_name='Numero de Cuenta',db_column='nrocuenta')
     nrocodbco = models.SmallIntegerField(verbose_name='Numero de Bancos',db_column='nrocodbco')
+    nrocuenta = models.SmallIntegerField(verbose_name='Numero de Cuenta',db_column='nrocuenta')
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 

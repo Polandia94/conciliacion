@@ -85,7 +85,14 @@ class CbrencListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         getContext(self.request, context, 'Lista de Conciliaciones', 'CBF01')
+        try:
+            if self.request.GET.get("accesoinvalido") == "true":
+                context['accesoinvalido'] = True
+        except Exception as e:
+            print(e)
+            pass
         return context
 
 #************************* CBF02 - FORMULARIO DE RESULTADOS *************************#
@@ -112,7 +119,7 @@ class CbsresListView(ListView):
                     if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
                         return redirect('/verificar/?idrenc='+idrenca, idrenc=idrenca)
                     else:
-                        return JsonResponse({"error": "Usuario No Autorizado", "cliente Esperado": aCbsres.cliente, "cliente Existente": diccionario["cliente"]})
+                        return redirect ('/?accesoinvalido=true')
                 else:
                     if Cbsres.objects.filter(idrenc=idrenca).exists() == False:
                         try:
@@ -123,7 +130,7 @@ class CbsresListView(ListView):
                     if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
                         return super().dispatch(request, *args, **kwargs)
                     else:
-                        return JsonResponse({"error": "Usuario No Autorizado"})
+                        return redirect ('/?accesoinvalido=true')
             
             except Exception as e:
                 print(e)
@@ -410,9 +417,7 @@ class CbrencCreateView(CreateView):
                 aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbrencl.save(aCbrencl)
                 # Crea el archivo de tiempo correspondiente
-                print("algo")
                 createCbrenct(request, self.CbrencNew.idrenc,1, "CBF03")
-                print("algo2")
                 # Crea la imagen de banco correspondiente
 
             else:
@@ -455,7 +460,6 @@ class Uploadimage(CreateView):
             return redirect("/")
 
     def get_initial(self):
-        print(self.request.GET)
         aCbrenc = Cbrenc.objects.filter(idrenc=self.request.GET.get("idrbcoe")).first()
         try:
             empresa = aCbrenc.empresa
@@ -469,7 +473,6 @@ class Uploadimage(CreateView):
 
     def post(self, request, *args, **kwargs):
         data = {}
-        print(request.POST)
         form = self.get_form()
         try:
             form = self.get_form()
@@ -484,13 +487,11 @@ class Uploadimage(CreateView):
                 idrenc=request.POST["idrenc"], imgbco=imgbco)
             aCbrencibco.save()
             time.sleep(2)
-            print(str(Path(__file__).resolve().parent.parent) +
-                        "/media/" + str(self.CbrencNew.archivoimgbco))
+
             os.remove(str(Path(__file__).resolve().parent.parent) +
                         "/media/" + str(self.CbrencNew.archivoimgbco))
             return JsonResponse(data)
         except Exception as e:
-            print("No hay imagen de banco")
             print(e)
 
 
@@ -617,11 +618,8 @@ class DetalleBcoListView(ListView):
     def post(self, request, *args, **kwargs):
         data = {}
         try:
-            print(request.POST)
             idrbcoe = request.POST['idrbcoe']
-            print("aca")
-            print(idrbcoe)
-            print(request.POST.get('cargarImagen', None))
+
             action = request.POST['action']
             data = []
             position = 1
@@ -796,19 +794,28 @@ class CbtctaCreateView(CreateView):
             if aCbtbco.actpas != "A":
                 data['error'] = "El código de banco se encuentra inactivo"
                 return JsonResponse(data, safe=False)
+            aCbtemp = Cbtemp.objects.filter(cliente=diccionario["cliente"], empresa=empresa).first()
+            if aCbtemp == None:
+                data['error'] = "La Empresa no existe"
+                return JsonResponse(data, safe=False)
+            if aCbtemp.actpas != "A":
+                data['error'] = "La empresa se encuentra inactiva"
+                return JsonResponse(data, safe=False)
             nrocta = request.POST['nrocta']
-            if Cbtcta.objects.filter(empresa=empresa, codbco=codbco, nrocta=nrocta).exists():
+            if Cbtcta.objects.filter(cliente= diccionario["cliente"], empresa=empresa, codbco=codbco, nrocta=nrocta).exists():
                 data['error'] = "Cuenta Existente"
                 return JsonResponse(data, safe=False)
 
             # CREATE
             form = self.get_form()
-            form.cliente = diccionario["cliente"]
-            form.idtcta = 25
-            form.fechalt = dt.datetime.now(tz=timezone.utc)
-            form.idusualt = request.user.username
 
-            self.CbrencNew = form.save()
+            form = form.save()
+            
+            form.cliente = diccionario["cliente"]
+            form.fechact = dt.datetime.now(tz=timezone.utc)
+            form.idusu = request.user.username
+
+            form.save()
         except Exception as e:
 
             data['error'] = str(e)
@@ -893,6 +900,13 @@ class CbtctaEditView(CreateView):
                 return JsonResponse(data, safe=False)
             if aCbtbco.actpas != "A":
                 data['error'] = "El código de banco se encuentra inactivo"
+                return JsonResponse(data, safe=False)
+            aCbtemp = Cbtemp.objects.filter(cliente=diccionario["cliente"], empresa=empresa).first()
+            if aCbtemp == None:
+                data['error'] = "La Empresa no existe"
+                return JsonResponse(data, safe=False)
+            if aCbtemp.actpas != "A":
+                data['error'] = "La empresa se encuentra inactiva"
                 return JsonResponse(data, safe=False)
 
             # CREATE
@@ -1191,6 +1205,7 @@ class CbtusuEditView(CreateView):
                 actpas = True
             else:
                 actpas = False
+
             return {'idusu1': aCbtusu.idusu1, 'descusu': aCbtusu.descusu, 'tipousu': tipousu, 'actpas': actpas}
         except:
             pass
@@ -1242,11 +1257,11 @@ class CbtusuEditView(CreateView):
                     usuario.save()
                     CbtusuNew.idusu1 = idusu1
                 CbtusuNew.descusu = descusu
-                if modificable == "True":
-                    if actpas == "on":
-                        CbtusuNew.actpas = "A"
-                    else:
-                        CbtusuNew.actpas = "P"
+                
+                if actpas == "on":
+                    CbtusuNew.actpas = "A"
+                else:
+                    CbtusuNew.actpas = "P"
                 if tipusu == "on":
                     CbtusuNew.tipousu = "S"
                 else:
@@ -1264,7 +1279,6 @@ class CbtusuEditView(CreateView):
                 aUser.save()
 
         except Exception as e:
-            print("alla")
             data['error'] = str(e)
             print(e)
             return JsonResponse(data)
@@ -1419,6 +1433,10 @@ class ListaBancoView(ListView):
                 if item["cliente"] == diccionario["cliente"]:
                     item['position'] = position
                     item['pais'] = getPais(item['codbco'])
+                    try:
+                        item['desbco'] = Cbmbco.objects.filter(codbco=item["codbco"]).first().desbco
+                    except:
+                        item['desbco'] = ""
                     data.append(item)
                     position += 1
             return JsonResponse(data, safe=False)
@@ -1705,6 +1723,10 @@ class CbtempCreateView(CreateView):
                     data = {}
                     data["error"] = "Se alcanzó el limite máximo de empresas activas: " + str(empresasMaximas)
                     return JsonResponse(data)
+                if Cbtemp.objects.filter(empresa = empresa, cliente=cliente).exists():
+                    data = {}
+                    data["error"] = "No puede repetirse nombre de la Empresa"
+                    return JsonResponse(data)
                 aCbtusue = Cbtusue(idtusu=Cbtusu.objects.filter(
                     idusu1=request.user.username).first(), actpas="A", empresa=empresa)
                 aCbtusue.idusu = request.user.username
@@ -1768,6 +1790,7 @@ class CbtempEditView(CreateView):
                 cliente = diccionario["cliente"]
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
+
                 try:
                     actpas = request.POST["actpas"]
                     if actpas == "on":
@@ -1775,7 +1798,7 @@ class CbtempEditView(CreateView):
                     else:
                         actpas = "P"
                 except:
-                    actpas = "A"
+                    actpas = "P"
                 try:
                     getPais(empresa)
                 except:
@@ -1792,9 +1815,15 @@ class CbtempEditView(CreateView):
                     cliente=diccionario["cliente"]).first().nroempresa
                 empresasActivas = Cbtemp.objects.filter(
                     cliente=diccionario["cliente"], actpas="A").count()
-                if empresasActivas >= empresasMaximas and actpas == "A":
+                idtemp = self.request.POST.get('idtemp')
+                aCbtemp = Cbtemp.objects.filter(idtemp=idtemp).first()
+                if (empresasActivas >= empresasMaximas and actpas == "A" and aCbtemp.actpas != "A") or (empresasActivas > empresasMaximas and actpas == "A" and aCbtemp.actpas == "A"):
                     data = {}
                     data["error"] = "Se alcanzó el limite máximo de empresas activas: " + str(empresasMaximas)
+                    return JsonResponse(data)
+                if Cbtemp.objects.filter(empresa = empresa, cliente=cliente).exists() and empresa != Cbtemp.objects.filter(idtemp=idtemp).first().empresa:
+                    data = {}
+                    data["error"] = "No puede repetirse nombre de la Empresa"
                     return JsonResponse(data)
                 aCbtusue = Cbtusue(idtusu=Cbtusu.objects.filter(
                     idusu1=request.user.username).first(), actpas="A", empresa=empresa)
@@ -1802,9 +1831,11 @@ class CbtempEditView(CreateView):
                 aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtusue.save()
                 # CREATE
-                idtemp = self.request.POST.get('idtemp')
-                Cbtemp.objects.filter(idtemp=idtemp).delete()
-                aCbtemp = Cbtemp(empresa=empresa, desemp=desemp, actpas=actpas)
+                
+                
+                aCbtemp.empresa = empresa
+                aCbtemp.desemp = desemp
+                aCbtemp.actpas = actpas
                 aCbtemp.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtemp.idusu = request.user.username
                 aCbtemp.cliente = diccionario["cliente"]
@@ -1886,22 +1917,27 @@ class CbtbcoEditView(CreateView):
                         return JsonResponse(data)
                     except:
                         data = {}
-                        data["error"] = "La Empresa debe tener más de dos digitos."
+                        data["error"] = "El Banco debe tener más de dos digitos."
                         return JsonResponse(data)
                 ### Para colocar limite máximo de bancos:
-                #bancosMaximas = Cbtlic.objects.filter(
-                #    cliente=diccionario["cliente"]).first().nrocodbco
-                #bancosActivas = Cbtbco.objects.filter(
-                #    cliente=diccionario["cliente"], actpas="A").count()
-                #
-                #if bancosActivas >= bancosMaximas and actpas == "A":
-                #    data = {}
-                #    data["error"] = "Se alcanzó el limite máximo de bancos activos"
-                #    return JsonResponse(data)
+                bancosMaximas = Cbtlic.objects.filter(
+                    cliente=diccionario["cliente"]).first().nrocodbco
+                bancosActivas = Cbtbco.objects.filter(
+                    cliente=diccionario["cliente"], actpas="A").count()
+                
+                if bancosActivas >= bancosMaximas and actpas == "A":
+                    data = {}
+                    data["error"] = "Se alcanzó el limite máximo de bancos activos"
+                    return JsonResponse(data)
 
                 # CREATE
                 idtbco = self.request.POST.get('idtbco')
                 aCbtbco = Cbtbco.objects.filter(idtbco=idtbco).first()
+                if Cbtbco.objects.filter(codbco = banco, cliente=cliente).exists() and aCbtbco.codbco != banco:
+                    data = {}
+                    data["error"] = "No puede repetirse el Código de Banco"
+                    return JsonResponse(data)
+
 
                 aCbtbco.codbco = banco
                 aCbtbco.actpas = actpas
@@ -1919,7 +1955,7 @@ class CbtbcoEditView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        getContext(self.request, context,'Editar banco','CBF20')
+        getContext(self.request, context,'Editar banco','CBF21')
 
         context['action'] = 'edit'
         context['idtbco'] = self.request.GET.get('idtbco')
@@ -1981,6 +2017,10 @@ class CbtbcoCreateView(CreateView):
                     data = {}
                     data["error"] = "Se alcanzó el limite máximo de bancos activos"
                     return JsonResponse(data)
+                if Cbtbco.objects.filter(codbco = codbco, cliente=cliente).exists():
+                    data = {}
+                    data["error"] = "No puede repetirse el Código de Banco"
+                    return JsonResponse(data)
 
                 # CREATE
                 aCbtbco = Cbtbco(codbco=codbco, actpas=actpas)
@@ -1998,7 +2038,7 @@ class CbtbcoCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        getContext(self.request, context, 'Nuevo Banco', 'CBF20')
+        getContext(self.request, context, 'Nuevo Banco', 'CBF21')
         context['editable'] = True
         return context
 

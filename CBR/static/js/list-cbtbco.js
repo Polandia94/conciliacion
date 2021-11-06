@@ -25,6 +25,7 @@ $(function () {
             {"data": "idtbco"},
             {"data": "pais"},
             {"data": "codbco"},
+            {"data": "desbco"},
             {"data": "actpas"},
             {"data": null},
         ],
@@ -34,11 +35,11 @@ $(function () {
                 visible: false
             },
             {
-                targets: [1, 2,3],
+                targets: [1, 2,3,4],
                 class: 'text-center pt-4',
             },
             {
-                targets : [4],
+                targets : [5],
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');

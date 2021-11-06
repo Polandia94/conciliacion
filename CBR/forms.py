@@ -118,9 +118,13 @@ class CbtctaForm( ModelForm ):
         try:
             if form.is_valid():
                 data = form.save(commit=True)
+                print("se guardo")
             else:
+                print("no se guardo")
+                print(form.errors)
                 data['error']=form.errors
         except Exception as e:
+            print("error 1")
             print(e)
             data['error']=str( e )
         return data
@@ -299,15 +303,20 @@ class CbtempForm( ModelForm ):
 
     def save(self, commit=True):
         data={}
+        print("aca")
         form=super()
+        print("alla")
 
         try:            
             if form.is_valid():
                 data = form.save(commit=True)
+                print("se guardo")
             else:
+                print("error 1")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
+            print("error 2")
             print(e)
             data['error']=str( e )
         return data
@@ -362,7 +371,7 @@ class CbtbcoForm( ModelForm ):
         widgets = {
             'codbco': TextInput(
                 attrs = { 'placeholder': 'Banco',
-                          'class': 'form-control'}
+                          'class': 'form-control getdesbco'}
             ),            
             'actpas': CheckboxInput(
                 attrs = { 'placeholder': '¿Está activo?',
