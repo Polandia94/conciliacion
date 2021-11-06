@@ -298,8 +298,10 @@
     $(".getanomes").change(function () {
         var bco = '';
         var cta = '';
+        var emp = '',
         bco = $("#id_codbco").val();
         cta = $("#id_nrocta").val();
+        emp = $("#id_empresa").val();
         if ((bco != '') && ((cta != ''))) {
             $.ajax({
                 method: 'GET',
@@ -307,7 +309,7 @@
                     request.setRequestHeader("X-CSRFToken", csrftoken);
                 },
                 url: '/getAnoMes',
-                data: {'banco': bco, 'cuenta': cta},
+                data: {'banco': bco, 'cuenta': cta, 'empresa': emp},
                 success: function (respons) {
                     if (respons) {
                         $("#id_ano").val(respons.ano);

@@ -261,6 +261,9 @@ def cbtempDelete(request):
                 ).exists():
                     data['error'] = "Existen meses cargados con esta empresa"
                     return JsonResponse(data, safe=False)
+                elif Cbtcta.objects.filter(empresa=aCbtemp.empresa).exists():
+                    data['error'] = "Existen Una cuenta cargada con esta empresa"
+                    return JsonResponse(data, safe=False)                    
                 else:
                     aCbtemp.delete()
 
@@ -693,14 +696,15 @@ def cerrarConciliacion(request):
 @login_required
 def getanomes(request):
     chequearNoDobleConexion(request)
+    empresa = request.GET.get('empresa')
     codbco = request.GET.get('banco')
     nrocta = request.GET.get('cuenta')
     try:
-        maxAno = Cbrenc.objects.exclude(estado="3").filter(
+        maxAno = Cbrenc.objects.exclude(estado="3").filter(empresa=empresa,
             codbco=codbco, nrocta=nrocta).aggregate(Max('ano'))
         maxAno = maxAno['ano__max']
         if maxAno is None:
-            aCbtcta = Cbtcta.objects.filter(
+            aCbtcta = Cbtcta.objects.filter(empresa=empresa,
                 codbco=codbco, nrocta=nrocta).first()
             if aCbtcta is None:
                 data = {'ano': 0, 'mes': 0}
@@ -711,7 +715,7 @@ def getanomes(request):
             else:
                 data = {'ano': maxAno + 1, 'mes': 1}
         else:
-            maxMes = Cbrenc.objects.exclude(estado="3").filter(codbco=codbco, nrocta=nrocta, ano=maxAno).aggregate(
+            maxMes = Cbrenc.objects.exclude(estado="3").filter(empresa=empresa, codbco=codbco, nrocta=nrocta, ano=maxAno).aggregate(
                 Max('mes'))
             maxMes = maxMes['mes__max']
             if maxMes < 12:

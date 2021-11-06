@@ -10,6 +10,7 @@ from django.db.models.fields import NullBooleanField
 from django.forms import model_to_dict
 import datetime as dt
 import os
+from django.contrib.auth.hashers import make_password
 
 def get_path(instance, filename):
     ahora = dt.datetime.now()
@@ -805,6 +806,15 @@ class Cbtusu(models.Model):
     class Meta:
         managed = True
         db_table = 'cbtusu'
+
+
+    def save(self, *args, **kwargs):
+        if User.objects.filter(username=self.idusu1).exists()==False:
+            usuario = User(username=self.idusu1,
+                               password=make_password("ninguno"))
+            usuario.save()
+        super( Cbtusu, self ).save( *args, **kwargs )
+
 
 class Cbtusue(models.Model):
     idtusue = models.AutoField( verbose_name='ID', db_column='idtusue', primary_key=True )

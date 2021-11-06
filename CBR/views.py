@@ -190,11 +190,16 @@ class CbsresviewListView(ListView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if chequearNoDobleConexion(request):
-            idrenca = request.GET['idrenc']
+            idrenca = request.GET.get('idrenc')
+            if idrenca is None:
+                idrenca = request.POST.get('idrenc')
+
             diccionario = clienteYEmpresas(request)
-            aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
-            if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
+            aCbrenc = Cbrenc.objects.filter(idrenc=idrenca).first()
+            if aCbrenc.cliente == diccionario["cliente"] and aCbrenc.empresa in diccionario["empresas"]:
                 return super().dispatch(request, *args, **kwargs)
+            else:
+                return redirect ('/?accesoinvalido=true')
         else:
             return redirect("/")
 
@@ -510,7 +515,16 @@ class DetalleLogListView(ListView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if chequearNoDobleConexion(request):
-            return super().dispatch(request, *args, **kwargs)
+            idrenca = request.GET.get('idrenc')
+            if idrenca is None:
+                idrenca = request.POST.get('idrenc')
+
+            diccionario = clienteYEmpresas(request)
+            aCbrenc = Cbrenc.objects.filter(idrenc=idrenca).first()
+            if aCbrenc.cliente == diccionario["cliente"] and aCbrenc.empresa in diccionario["empresas"]:
+                return super().dispatch(request, *args, **kwargs)
+            else:
+                return redirect ('/?accesoinvalido=true')
         else:
             return redirect("/")
 
@@ -552,7 +566,16 @@ class DetalleTiempoListView(ListView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if chequearNoDobleConexion(request):
-            return super().dispatch(request, *args, **kwargs)
+            idrenca = request.GET.get('idrenc')
+            if idrenca is None:
+                idrenca = request.POST.get('idrenc')
+
+            diccionario = clienteYEmpresas(request)
+            aCbrenc = Cbrenc.objects.filter(idrenc=idrenca).first()
+            if aCbrenc.cliente == diccionario["cliente"] and aCbrenc.empresa in diccionario["empresas"]:
+                return super().dispatch(request, *args, **kwargs)
+            else:
+                return redirect ('/?accesoinvalido=true')
         else:
             return redirect("/")
 
@@ -799,7 +822,7 @@ class CbtctaCreateView(CreateView):
                 data['error'] = "La Empresa no existe"
                 return JsonResponse(data, safe=False)
             if aCbtemp.actpas != "A":
-                data['error'] = "La empresa se encuentra inactiva"
+                data['error'] = "La empresa se encuentra pasiva"
                 return JsonResponse(data, safe=False)
             nrocta = request.POST['nrocta']
             if Cbtcta.objects.filter(cliente= diccionario["cliente"], empresa=empresa, codbco=codbco, nrocta=nrocta).exists():
@@ -906,7 +929,7 @@ class CbtctaEditView(CreateView):
                 data['error'] = "La Empresa no existe"
                 return JsonResponse(data, safe=False)
             if aCbtemp.actpas != "A":
-                data['error'] = "La empresa se encuentra inactiva"
+                data['error'] = "La empresa se encuentra pasiva"
                 return JsonResponse(data, safe=False)
 
             # CREATE
@@ -1146,7 +1169,7 @@ class CbtusuCreateView(CreateView):
                 if actpas is None:
                     actpas = "on"
                 
-                if Cbtusu.objects.filter(idusu1=idusu1).exists():
+                if Cbtusu.objects.filter(idusu1=idusu1).exists() or User.objects.filter(username=idusu1).exists():
                     data['error'] = "Nombre de Usuario Existente"
                     return JsonResponse(data, safe=False)
                 cliente = clienteYEmpresas(request)["cliente"]
@@ -1171,10 +1194,8 @@ class CbtusuCreateView(CreateView):
                 CbtusuNew.idusu = request.user.username
                 CbtusuNew.cliente = Cbtusu.objects.filter(
                     idusu1=request.user.username).first().cliente
-                CbtusuNew.save()
-                usuario = User(username=idusu1,
-                               password=make_password("ninguno"))
-                usuario.save()
+                CbtusuNew.save(CbtusuNew)
+
         except Exception as e:
 
             data['error'] = str(e)
@@ -1248,8 +1269,12 @@ class CbtusuEditView(CreateView):
                     if licencias < usuariosActivos:
                         data['error'] = "Máximo número de usuarios activos alcanzados. Usuarios activos máximos: " + str(licencias)
                         return JsonResponse(data, safe=False)
-                # CREATE
                 CbtusuNew = Cbtusu.objects.get(idtusu=idtusu)
+                if (Cbtusu.objects.filter(idusu1=idusu1).exists() or User.objects.filter(username=idusu1).exists()) and CbtusuNew.idusu1 != idusu1:
+                    data['error'] = "Nombre de Usuario Existente"
+                    return JsonResponse(data, safe=False)
+                # CREATE
+                
                 aUser = User.objects.filter(username=CbtusuNew.idusu1).first()
                 if idusu1 != CbtusuNew.idusu1:
                     usuario = User.objects.filter(username=CbtusuNew.idusu1).first()
@@ -1269,14 +1294,13 @@ class CbtusuEditView(CreateView):
                         data['error'] = "Debe haber al menos un superusuario"
                         return JsonResponse(data, safe=False)
                     CbtusuNew.tipousu = ""
-                
+
                 CbtusuNew.fechact = dt.datetime.now(tz=timezone.utc)
                 CbtusuNew.idusu = request.user.username
                 CbtusuNew.cliente = Cbtusu.objects.filter(
                     idusu1=request.user.username).first().cliente
                 CbtusuNew.save()
-                aUser.username = idusu1
-                aUser.save()
+
 
         except Exception as e:
             data['error'] = str(e)
@@ -1856,7 +1880,7 @@ class CbtempEditView(CreateView):
         context["editable"] = True
         empresa = Cbtemp.objects.filter(
             idtemp=context['idtemp']).first().empresa
-        if Cbrenc.objects.exclude(estado=3).filter(empresa=empresa).exists():
+        if Cbrenc.objects.exclude(estado=3).filter(empresa=empresa).exists() or Cbtcta.objects.filter(empresa=empresa).exists():
             context["editable"] = False
         context['empresas_url'] = reverse_lazy('CBR:cbtemp-list')
         return context
@@ -1927,7 +1951,7 @@ class CbtbcoEditView(CreateView):
                 
                 if bancosActivas >= bancosMaximas and actpas == "A":
                     data = {}
-                    data["error"] = "Se alcanzó el limite máximo de bancos activos"
+                    data["error"] = "Se alcanzó el limite máximo de bancos activos. Bancos Máximos = "+ str(bancosActivas)
                     return JsonResponse(data)
 
                 # CREATE
@@ -2015,7 +2039,7 @@ class CbtbcoCreateView(CreateView):
                     cliente=diccionario["cliente"], actpas="A").count()
                 if bancosActivas >= bancosMaximas and actpas == "A":
                     data = {}
-                    data["error"] = "Se alcanzó el limite máximo de bancos activos"
+                    data["error"] = "Se alcanzó el limite máximo de bancos activos. Bancos Máximos = "+ str(bancosActivas)
                     return JsonResponse(data)
                 if Cbtbco.objects.filter(codbco = codbco, cliente=cliente).exists():
                     data = {}

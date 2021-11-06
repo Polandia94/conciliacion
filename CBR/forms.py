@@ -69,11 +69,11 @@ class CbrencaForm( ModelForm ):
             ),
             'empresa': TextInput(
                 attrs = { 'placeholder': 'Empresa',
-                          'class': 'form-control'}
+                          'class': 'form-control getanomes'}
             ),            
             'codbco': TextInput(
                 attrs = { 'placeholder': 'Clave del banco',
-                          'class': 'form-control'}
+                          'class': 'form-control getanomes'}
             ),
             'nrocta': TextInput(
                 attrs = { 'placeholder': 'Cuenta',
