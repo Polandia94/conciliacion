@@ -61,6 +61,12 @@ def cbtctaDelete(request):
 def chequearNoDobleConexion(request):
     aCbsusu = Cbsusu.objects.filter(
         idusu1=request.user.username).order_by("corrusu").last()
+    if aCbsusu == None:
+        try:
+            logout(request)
+        except:
+            pass
+        return False
     if request.session["iddesesion"] < aCbsusu.corrusu:
         logout(request)
         return False
@@ -140,7 +146,7 @@ def login(request):
     try:
         data["activo"] = aCbtusu.actpas == "A"
     except:
-        data["activo"] = "P"
+        data["activo"] = False
     try:
         data["reinicia"] = aCbtusu.pasusu
     except:

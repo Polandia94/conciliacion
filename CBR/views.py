@@ -1261,15 +1261,16 @@ class CbtusuEditView(CreateView):
 
                 idtusu = request.POST.get('idtusu')
                 cliente = clienteYEmpresas(request)["cliente"]
+                CbtusuNew = Cbtusu.objects.get(idtusu=idtusu)
                 if actpas == "on":
                     licencias = Cbtlic.objects.filter(
                         cliente=cliente).first().nrousuario
                     usuariosActivos = Cbtusu.objects.filter(
                         actpas="A", cliente=cliente).count()
-                    if licencias < usuariosActivos:
+                    if licencias < usuariosActivos or CbtusuNew.actpas != "A" and licencias == usuariosActivos:
                         data['error'] = "Máximo número de usuarios activos alcanzados. Usuarios activos máximos: " + str(licencias)
                         return JsonResponse(data, safe=False)
-                CbtusuNew = Cbtusu.objects.get(idtusu=idtusu)
+                
                 if (Cbtusu.objects.filter(idusu1=idusu1).exists() or User.objects.filter(username=idusu1).exists()) and CbtusuNew.idusu1 != idusu1:
                     data['error'] = "Nombre de Usuario Existente"
                     return JsonResponse(data, safe=False)
@@ -1363,7 +1364,10 @@ class ListaUsuarioView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu != "S":
+        try:
+            if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu != "S":
+                return redirect("/")
+        except:
             return redirect("/")
         if chequearNoDobleConexion(request):
             return super().dispatch(request, *args, **kwargs)
@@ -1417,15 +1421,16 @@ class ListaCbtusueView(ListView):
                 cliente=diccionario["cliente"]).all()
             for usuario in Cbtusu.objects.filter(cliente=diccionario["cliente"]).all():
                 for empresa in empresas:
-                    item = {}
-                    item['superusuario'] = usuario.tipousu == "S"
-                    item['position'] = position
-                    item["usuario"] = usuario.idusu1
-                    item["empresa"] = empresa.empresa
-                    item["permiso"] = Cbtusue.objects.filter(
-                        idtusu=usuario.idtusu, empresa=empresa.empresa).exists()
-                    data.append(item)
-                    position += 1
+                    if usuario.actpas == "A":
+                        item = {}
+                        item['superusuario'] = usuario.tipousu == "S"
+                        item['position'] = position
+                        item["usuario"] = usuario.idusu1
+                        item["empresa"] = empresa.empresa
+                        item["permiso"] = Cbtusue.objects.filter(
+                            idtusu=usuario.idtusu, empresa=empresa.empresa).exists()
+                        data.append(item)
+                        position += 1
             return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
@@ -1774,6 +1779,7 @@ class CbtempCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Nueva Empresa', 'CBF20')
         context['editable'] = True
+        context["inactiva"] = False
         context['empresas_url'] = reverse_lazy('CBR:cbtemp-list')
         return context
 
@@ -1878,10 +1884,16 @@ class CbtempEditView(CreateView):
         context['action'] = 'edit'
         context['idtemp'] = self.request.GET.get('idtemp')
         context["editable"] = True
+        context["inactiva"] = True
         empresa = Cbtemp.objects.filter(
-            idtemp=context['idtemp']).first().empresa
-        if Cbrenc.objects.exclude(estado=3).filter(empresa=empresa).exists() or Cbtcta.objects.filter(empresa=empresa).exists():
+            idtemp=context['idtemp']).first()
+        if empresa.actpas == "A":
+            context["inactiva"] = False
+        else:
+            context["inactiva"] = True
+        if Cbrenc.objects.exclude(estado=3).filter(empresa=empresa.empresa).exists() or Cbtcta.objects.filter(empresa=empresa.empresa).exists():
             context["editable"] = False
+        
         context['empresas_url'] = reverse_lazy('CBR:cbtemp-list')
         return context
 

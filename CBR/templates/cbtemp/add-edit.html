@@ -36,7 +36,7 @@
                         {% else %}
                         <div class="form-group col-6">
                         <label for="empresa" class="col-form-label">{{ form.empresa.label }}</label>
-                        <input id=id_empresa name="empresa" class= 'form-control' type="text" readonly value={{form.empresa.value}}                        
+                        <input id=id_empresa name="empresa" class= 'form-control' type="text" readonly value={{form.empresa.value}}></input>                   
                         </div>
                         {% endif %}
                     </div>
@@ -47,7 +47,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        {% if editable %}
+                        {% if inactiva %}
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label">¿Es Empresa Activa?</label>
                                 {{ form.actpas}}
@@ -57,7 +57,7 @@
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label" >¿Es Empresa Activa?</label>
                                 
-                            <input disabled type="checkbox" name="actpas" placeholder="¿Está activa?" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked>
+                            <input  type="checkbox" name="actpas" placeholder="¿Está activa?" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked>
 
                         </div>
                         {% endif %}
