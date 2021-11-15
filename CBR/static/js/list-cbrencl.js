@@ -51,9 +51,9 @@ $(function () {
                 return zone_html;
                 }
             },
-            {"data": "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "difbcoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, globalVariable.moneda)},
+            {"data": "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, globalVariable.moneda)},
+            {"data": "difbcoerp", render: $.fn.dataTable.render.number(',', '.', 2, globalVariable.moneda)},
             {"data": "glosa"}
         ],
         columnDefs: [

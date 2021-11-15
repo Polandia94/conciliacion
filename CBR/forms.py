@@ -131,7 +131,7 @@ class CbtctaForm( ModelForm ):
 
     class Meta:
         model = Cbtcta
-        fields = ['idtcta', 'empresa', 'codbco', 'nrocta','descta', 'monbasebco', 'monbaseerp', 'ano', 'mes', 'saldoinibco', 'saldoinierp' ]
+        fields = ['idtcta', 'empresa', 'codbco', 'nrocta','descta', 'monbasebco', 'ano', 'mes', 'saldoinibco', 'saldoinierp' ]
         # fields = '__all__'
         widgets = {
             'idtcta': TextInput(
@@ -156,10 +156,6 @@ class CbtctaForm( ModelForm ):
             ),
             'monbasebco': TextInput(
                 attrs = { 'placeholder': 'Mes Base Banco',
-                          'class': 'form-control'}
-            ),
-            'monbaseerp': TextInput(
-                attrs = { 'placeholder': 'Mes Base ERP',
                           'class': 'form-control'}
             ),
             'ano': NumberInput(

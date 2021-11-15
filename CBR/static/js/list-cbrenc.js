@@ -90,16 +90,25 @@ $(function () {
             },
             {"data": "recordbco"},
             {"data": "recorderp"},
-            {"data": "saldobco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "saldoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "difbcoerp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "saldobco"},
+            {"data": "saldoerp"},
+            {"data": "difbcoerp"},
             {"data": "usuario"},
             {"data": null}
         ],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5, 6,9,10,11,12],
+                targets: [0, 1, 2, 3, 4, 5, 6,12],
                 class: 'text-center pt-4',
+            },
+            {
+                targets: [9,10,11],
+                class: 'text-center pt-4',
+                render: function (data, type, row) {
+                    console.log(data)
+                    console.log(data+1)
+                    return row['moneda'] + parseFloat(data).toLocaleString('en-US', {minimumFractionDigits:2})
+                }
             },
             {
                 targets: [7],
@@ -151,9 +160,10 @@ $(function () {
             {targets: [9],
                 createdCell: function (cell) {
                     var row = table.row(cell)
+                    console.log(row)
                     if(row.data()['saldobcoori'] != null){
                         var monto = parseFloat(row.data()['saldobcoori']);
-                        $(cell).attr("title", "Saldo Original: $" + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
+                        $(cell).attr("title", "Saldo Original: "+ row.data()['moneda'] + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
                     }
                 }
             },
@@ -162,7 +172,7 @@ $(function () {
                     var row = table.row(cell)
                     if(row.data()['saldobcoori'] != null){
                         var monto = parseFloat(row.data()['saldoerpori']);
-                        $(cell).attr("title", "Saldo Original: $" + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
+                        $(cell).attr("title", "Saldo Original: "+row.data()['moneda'] + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
                     }
                 }
             },
@@ -197,21 +207,24 @@ $(function () {
                     var classEliminar = '';
                     var classIndicador = '';
                     var classVerConciliacion = '';
-
+                    var classDesconciliar = '';
 
                     switch (CodeStatus) {
                         case 0: {
                             var classBackground = '';
 
                             classDetalles = 'disabled'; //OK
+                            classDesconciliar = 'disabled';
                             break;
                         }
                         case 1: {
                             classIndicador = 'callout-warning'; //OK
+                            classDesconciliar = 'disabled';
                             break;
                         }
                         case 2: {
                             classIndicador = 'callout-info';
+                            classDesconciliar = 'disabled';
                             break;
                         }
                         case 3: {
@@ -220,6 +233,7 @@ $(function () {
                             classEliminar = 'disabled'; //OK
                             classIndicador = 'callout-success';
                             classConciliar = 'disabled';
+                            classDesconciliar = 'disabled';
                             break;
                         }
                         case 4: {
@@ -227,7 +241,8 @@ $(function () {
                             classResultados = ''; //OK
                             classEliminar = 'disabled'; //OK
                             classIndicador = 'callout-success';
-                            classConciliar = 'disabled'
+                            classConciliar = 'disabled';
+                            classDesconciliar = 'disabled';
 
                             break;
                         }
@@ -236,6 +251,9 @@ $(function () {
                             classResultados = ''; //OK
                             classIndicador = 'callout-success';
                             classConciliar = 'disabled'
+                            if(row.noDesconciliable){
+                                classDesconciliar = 'disabled';
+                            }
 
                             break;
                         }
@@ -262,6 +280,12 @@ $(function () {
                     $elDiv.children().append($(
                         `<a class="${classMain}" href="tiempo/?idrenc=${row.idrenc}" ><i class="fas fa-clock"></i>Tiempo</a>`)
                         .addClass(classLog));
+                    // ##### desconciliar ######
+                    if(globalVariable.classDesconciliador){
+                        $elDiv.children().append($(
+                        `<a class="${classMain}" id="btnDesconciliar${row.idrenc}" data-idrenc="${row.idrenc}" ><i class="fas fa-unlock-alt"></i>Desconciliar</a>`)
+                        .addClass(classDesconciliar)); 
+                    }                   
 
                     return $elDiv.clone().html();
 
@@ -352,6 +376,23 @@ $(function () {
                     });
                         });
                         }
+            });
+            $(document).on("click", "a[id^=btnDesconciliar]", function (event) {
+                var idrenc = $(this).data('idrenc');
+                var parameters = {'idrenc': idrenc};
+                ajax_confirm("cbrenc/desc/", 'Confirmación',
+                    `¿Desconciliar la conciliación ${$(this).data('idrenc')}?`, parameters,
+                    function (response) {
+                        if (response.hasOwnProperty('info')) {
+                            message_info(response['info'], null, null)
+                            return false;
+                        }else{
+                            location.reload()
+                        }
+                    }
+                )
+                    
+                    
             });
     $.fn.dataTable.ext.search.push(
         function (settings, searchData, index, rowData, counter) {

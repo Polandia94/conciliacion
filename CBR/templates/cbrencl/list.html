@@ -33,5 +33,11 @@
 {% endblock %}
 
 {% block javascript %}
-
+{% endblock %}
+{% block scripts_cbr %}
+<script>
+    var globalVariable={
+        moneda: "{{moneda}}"
+    };
+</script>
 {% endblock %}

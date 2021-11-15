@@ -18,6 +18,7 @@ urlpatterns = [
 
     path('getAnoMes/', utils.getanomes, name='getAnoMes'),
     path('getdesbco/', utils.getdesbco, name='getdesbco'),
+    path('getcuenta', utils.getcuenta, name='getcuenta'),
     path('getGuardado/', utils.getguardado, name='getGuardado'),
     path('getTiposDeConciliacion/', utils.getTiposDeConciliacion, name='getTiposDeConciliacion'),  path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
     path('getColumnas/', utils.getColumnas, name='getColumnas'),
@@ -57,6 +58,7 @@ urlpatterns = [
     path('cbtemp/del/', views.cbtempDelete, name='cbtemp_delete_empresa'),
     path('cbtbco/del/', views.cbtbcoDelete, name='cbtbco_delete_banco'),
     path('cbtusu/del/', views.cbtusuDelete, name='cbtusu-del'),
+    path('cbrenc/desc/', utils.cbrencDesconciliar, name='cbrenc-desc'),
 
     #********* Editar Elementos *********
 
@@ -65,7 +67,7 @@ urlpatterns = [
     path('cbtemp/edit/', views.CbtempEditView.as_view(), name='cbtemp_edit_empresa'),
     path('cbtbco/edit/', views.CbtbcoEditView.as_view(), name='cbtbco_edit_banco'),
     path('uploadimage', views.Uploadimage.as_view(), name='uploadimage'),
-
+    
     #********** Detalles ***************
 
     path('cbrbcod/<int:idrbcod>/<int:idrbcoe>/', views.CbrbcodDetailView.as_view(), name='cbrbcod-detail'),

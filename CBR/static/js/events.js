@@ -1,3 +1,107 @@
+function getdesbco(){
+    const csrftoken = getCookie('csrftoken');
+    const urlParams = new URLSearchParams(window.location.search);
+    var codbco = '';
+    codbco = $("#id_codbco").val();
+    console.log(codbco)
+    if ((codbco != '')) {
+        $.ajax({
+            method: 'GET',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/getdesbco',
+            data: {'codbco': codbco},
+            success: function (respons) {
+                console.log(respons)
+                if (respons) {
+                    $("#id_desbco").val(respons.desbco);
+                    console.log(respons.desbco)
+                    console.log( $("#id_desbco"))
+                } else {
+                    $("#id_desbco").val('2021');
+                }
+            },
+            error: function (data) {
+            }
+        });
+    }
+}
+function getAnoMes(){
+    const csrftoken = getCookie('csrftoken');
+    const urlParams = new URLSearchParams(window.location.search);
+    var bco = '';
+    var cta = '';
+    var emp = '',
+    bco = $("#id_codbco").val();
+    cta = $("#id_nrocta").val();
+    emp = $("#id_empresa").val();
+    if ((bco != '') && ((cta != ''))) {
+        $.ajax({
+            method: 'GET',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/getAnoMes',
+            data: {'banco': bco, 'cuenta': cta, 'empresa': emp},
+            success: function (respons) {
+                if (respons) {
+                    $("#id_ano").val(respons.ano);
+                    $("#id_mes").val(respons.mes);
+                } else {
+                    $("#id_ano").val('2021');
+                    $("#id_mes").val('4')
+                }
+            },
+            error: function (data) {
+            }
+        });
+    }
+}
+
+function getCuenta(){
+    const csrftoken = getCookie('csrftoken');
+    const urlParams = new URLSearchParams(window.location.search);
+    var bco = '';
+    var emp = '',
+    bco = $("#id_codbco").val();
+    emp = $("#id_empresa").val();
+    var select = document.getElementById('id_nrocta');
+    if (true) {
+        $("#id_nrocta").empty();
+        $.ajax({
+            method: 'GET',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/getcuenta',
+            data: {'banco': bco, 'empresa': emp},
+            
+            success: function (respons) {
+                if (respons) {
+                    
+                    console.log("1");
+                    console.log(respons)
+                    for (var i = 0; i<respons.cuentas.length; i++){
+                        console.log("2")
+                        var opt = document.createElement('option');
+                        opt.value = respons.cuentas[i].nombre;
+                        opt.innerHTML = respons.cuentas[i].nombre + " : " + respons.cuentas[i].descripcion;
+                        select.appendChild(opt);
+                    }
+                    if(respons.cuentas.length != 0 && $("#id_archivoerp").val() != "" && $("#id_archivobco").val() != ""){
+                        $('#btnCargar').attr('disabled', false);
+                    }else{
+                        $('#btnCargar').attr('disabled', true);
+                    }
+                    getAnoMes()
+                } 
+            },
+            error: function (data) {
+            }
+        });
+    }
+}
 (function ($) {
     "use strict"
     const csrftoken = getCookie('csrftoken');
@@ -295,62 +399,16 @@
     });
     /******************************************************************************************************************/
     /******************************************************************************************************************/
-    $(".getanomes").change(function () {
-        var bco = '';
-        var cta = '';
-        var emp = '',
-        bco = $("#id_codbco").val();
-        cta = $("#id_nrocta").val();
-        emp = $("#id_empresa").val();
-        if ((bco != '') && ((cta != ''))) {
-            $.ajax({
-                method: 'GET',
-                beforeSend: function (request) {
-                    request.setRequestHeader("X-CSRFToken", csrftoken);
-                },
-                url: '/getAnoMes',
-                data: {'banco': bco, 'cuenta': cta, 'empresa': emp},
-                success: function (respons) {
-                    if (respons) {
-                        $("#id_ano").val(respons.ano);
-                        $("#id_mes").val(respons.mes);
-                    } else {
-                        $("#id_ano").val('2021');
-                        $("#id_mes").val('4')
-                    }
-                },
-                error: function (data) {
-                }
-            });
-        }
-    });
+    
+
+
+    $(".getanomes").change(getAnoMes);
+
+    
+    $(".getcuenta").change(getCuenta);
 
     $(".getdesbco").change(function () {
-        var codbco = '';
-        codbco = $("#id_codbco").val();
-        console.log(codbco)
-        if ((codbco != '')) {
-            $.ajax({
-                method: 'GET',
-                beforeSend: function (request) {
-                    request.setRequestHeader("X-CSRFToken", csrftoken);
-                },
-                url: '/getdesbco',
-                data: {'codbco': codbco},
-                success: function (respons) {
-                    console.log(respons)
-                    if (respons) {
-                        $("#id_desbco").val(respons.desbco);
-                        console.log(respons.desbco)
-                        console.log( $("#id_desbco"))
-                    } else {
-                        $("#id_desbco").val('2021');
-                    }
-                },
-                error: function (data) {
-                }
-            });
-        }
+        getdesbco()
     });
 
 })(jQuery);

@@ -23,6 +23,7 @@ $(function () {
         },
         columns: [
             {"data": "idtemp"},
+            {"data": "movimiento"},
             {"data": "pais"},
             {"data": "empresa"},
             {"data": "desemp"},
@@ -31,15 +32,15 @@ $(function () {
         ],
         columnDefs: [
             {
-                targets:[0],
+                targets:[0,1],
                 visible: false
             },
             {
-                targets: [1, 2,3,4],
+                targets: [2,3,4,5],
                 class: 'text-center pt-4',
             },
             {
-                targets : [5],
+                targets : [6],
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');
@@ -52,9 +53,13 @@ $(function () {
                         `<a class="${classMain}" href="edit/?idtemp=${row.idtemp}" ><i class="fas fa-edit"></i>Editar</a>`)
                         );
                     // ##### ELIMINAR #####
+                    if(row.movimiento){
                     $elDiv.children().append($(
+                        `<a id="btnEliminarE${row.empresa}" data-empresa="${row.empresa}" data-idtemp="${row.idtemp}" class="${classMain} disabled" "><i  class="fas fa-trash-alt disabled"></i>Eliminar</a>`));
+                    }else{
+                        $elDiv.children().append($(
                         `<a id="btnEliminarE${row.empresa}" data-empresa="${row.empresa}" data-idtemp="${row.idtemp}" class="${classMain}" "><i  class="fas fa-trash-alt"></i>Eliminar</a>`));
-
+                    }
                     return $elDiv.clone().html();
 
                 },

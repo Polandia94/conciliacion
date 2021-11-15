@@ -1,4 +1,3 @@
-
 #region imports
 import base64
 import datetime as dt
@@ -67,17 +66,14 @@ class CbrencListView(ListView):
                     item = i.toJSON()
                     if item['empresa'] in diccionario["empresas"] and item["cliente"] == diccionario["cliente"]:
                         item['position'] = position
-                        item['noDesconciliable'] = Cbrenc.objects.filter(cliente=item["cliente"], codbco=item["codbco"], empresa=item["empresa"], nrocta=item["nrocta"], idrenc__gt = item["idrenc"]).exists()
                         item['archivobco'] = i.archivobco.name
                         item['archivoerp'] = i.archivoerp.name
-                        item['moneda']= Cbtcta.objects.filter(nrocta=item["nrocta"]).first().monbasebco
                         if Cbrenct.objects.filter(idrenc = item['idrenc'], formulario= "CBF02", fechorafin=None).exists():
                             item["usuario"] = Cbrenct.objects.filter(idrenc = item['idrenc'], formulario= "CBF02", fechorafin=None).first().idusu
                         else:
                             item["usuario"] = ""
                         data.append(item)
                         position += 1
-                
             else:
                 data['error'] = 'Ha ocurrido un error'
         except Exception as e:
@@ -96,14 +92,6 @@ class CbrencListView(ListView):
         except Exception as e:
             print(e)
             pass
-        aCbtlic = Cbtlic.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"]).first()
-        if aCbtlic.fechalic < dt.datetime.now(tz=timezone.utc) + dt.timedelta(days=7):
-            context["proximoavencimiento"] = True
-            context["fechalic"] = aCbtlic.fechalic
-        context["desconciliador"] = False
-        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
-        if aCbtusu.tipousu == "S" or aCbtusu.indconc == "S":
-            context["desconciliador"] = True
         return context
 
 #************************* CBF02 - FORMULARIO DE RESULTADOS *************************#
@@ -189,13 +177,6 @@ class CbsresListView(ListView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context,'Resultados', 'CBF02')
         context['editable'] = "Editable"
-        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
-        context['indconc'] = aCbtusu.indconc == "S"
-        idrenca = self.request.GET.get('idrenc')
-        if idrenca is None:
-            idrenca = self.request.POST.get('idrenc')
-        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
-        context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
         # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         calcularTotales(self.request, context)
         return context
@@ -254,12 +235,6 @@ class CbsresviewListView(ListView):
 
         getContext(self.request, context,'Resultados', 'CBF02')
         context['editable'] = "No Editable"
-        idrenca = self.request.GET.get('idrenc')
-        if idrenca is None:
-            idrenca = self.request.POST.get('idrenc')
-        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
-        context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
-        # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         calcularTotales(self.request, context)
         
         return context
@@ -379,72 +354,44 @@ class CbrencCreateView(CreateView):
                 form.fechact = dt.datetime.now(tz=timezone.utc)
                 form.idusualt = request.user.username
                 self.CbrencNew = form.save()
-                codbco = request.POST.get( 'codbco')
-                empresa = request.POST.get( 'empresa')
-                aCbmbco = Cbmbco.objects.filter(codbco=codbco).first()
-                error = False
-                print(aCbmbco)
-                if aCbmbco == None:
-                    data['error'] = "El Banco no tiene un sistema homologador válido"
+                archivobco = request.POST.get('archivobco', None)
+                # Homologa el Banco BOD, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'codbco') para saber que homologacion usar
+                HomologacionBcoBOD(request, self.CbrencNew,
+                                   data, saldobcoanterior)
+                archivoerp = request.POST.get('archivoerp', None)
+                # Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
+                HomologacionErpGAL(request, self.CbrencNew,
+                                   data, saldoerpanterior)
+                self.CbrencNew.cliente = diccionario["cliente"]
+                self.CbrencNew.save()
+                try:
+                    imgbco = base64.b64encode(open(str(Path(__file__).resolve(
+                    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
+                    aCbrencibco = Cbrencibco(
+                        idrenc=self.CbrencNew.idrenc, imgbco=imgbco)
+                    aCbrencibco.save()
+                    time.sleep(2)
+                    os.remove(str(Path(__file__).resolve().parent.parent) +
+                              "/media/" + str(self.CbrencNew.archivoimgbco))
+                except:
+                    print("No hay imagen de banco")
+                # Guarda la imagen del ERP. Se encuentra funcionando pero no es necesario.
+                #try:
+                #    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
+                #    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
+                #    aCbrencierp = Cbrencierp(
+                #        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
+                #    aCbrencierp.save()
+                #    time.sleep(2)
+                #    os.remove(str(Path(__file__).resolve().parent.parent) +
+                #              "/media/" + str(self.CbrencNew.archivoimgerp))
+                #except:
+                #    print("No hay imagen de ERP")
+                try:
+                    print(data['error'])
                     error = True
-                
-                aCbtemp = Cbtemp.objects.filter(empresa=empresa).first()
-                if aCbtemp == None:
-                    data['error'] = "El ERP no tiene un sistema homologador válido"
-                    error = True
-                if error == False:
-                    codhombco = aCbmbco.codhombco
-                    if codhombco == "VEBOD":
-                        HomologacionBcoBOD(request, self.CbrencNew,
-                                        data, saldobcoanterior)
-                    else:
-                        print(codhombco)
-                        data['error'] = "El Banco no tiene un sistema homologador válido"
-                        error = True
-
-                    
-                    # Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
-                    codhomerp = aCbtemp.codhomerp
-                    if codhomerp == "":
-                        codhomerp = Cbtcli.objects.filter(cliente=diccionario["cliente"]).first().codhomerp
-                if error == False:
-                    if codhomerp == "VEGAL":
-                        HomologacionErpGAL(request, self.CbrencNew,
-                                            data, saldoerpanterior)
-                    else:
-                        data['error'] = "El ERP no tiene un sistema homologador válido"
-                        error = True
-                if error == False:
-                    self.CbrencNew.cliente = diccionario["cliente"]
-                    self.CbrencNew.save()
-                    try:
-                        imgbco = base64.b64encode(open(str(Path(__file__).resolve(
-                        ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
-                        aCbrencibco = Cbrencibco(
-                            idrenc=self.CbrencNew.idrenc, imgbco=imgbco)
-                        aCbrencibco.save()
-                        time.sleep(2)
-                        os.remove(str(Path(__file__).resolve().parent.parent) +
-                                "/media/" + str(self.CbrencNew.archivoimgbco))
-                    except:
-                        print("No hay imagen de banco")
-                        # Guarda la imagen del ERP. Se encuentra funcionando pero no es necesario.
-                        #try:
-                        #    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
-                        #    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
-                        #    aCbrencierp = Cbrencierp(
-                        #        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
-                        #    aCbrencierp.save()
-                        #    time.sleep(2)
-                        #    os.remove(str(Path(__file__).resolve().parent.parent) +
-                        #              "/media/" + str(self.CbrencNew.archivoimgerp))
-                        #except:
-                        #    print("No hay imagen de ERP")
-                    try:
-                        print(data['error'])
-                        error = True
-                    except:
-                        error = False
+                except:
+                    error = False
 
                 if error == True:
                     Cbrbod.objects.filter(
@@ -498,26 +445,6 @@ class CbrencCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         getContext(self.request,context, 'Carga de Datos', 'CBF03')
-        empresa = []
-        banco = []
-        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
-        if aCbtusu.tipousu == "S":
-            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("empresa"):
-                empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
-        else:
-            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"],actpas="A"):
-                if Cbtusue.objects.filter(idtusu=aCbtusu, empresa=empresaAAgregar.empresa).exists():
-                    empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
-        for bancoAAgregar in Cbtbco.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("codbco"):
-            try:
-                descripcion = Cbmbco.objects.filter(codbco=bancoAAgregar.codbco).first().desbco
-            except:
-                descripcion = ""
-            banco.append({"nombre":bancoAAgregar.codbco, "descripcion":descripcion})
-        context["empresas"]=empresa
-        context["bancos"]=banco
-        print("empresas")
-        print(context["empresas"])
         return context
 
 
@@ -627,11 +554,6 @@ class DetalleLogListView(ListView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, "Lista de Logs", "CBF04")
         context['idrenc'] = self.request.GET.get('idrenc')
-        idrenca = self.request.GET.get('idrenc')
-        if idrenca is None:
-            idrenca = self.request.POST.get('idrenc')
-        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
-        context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco        
         return context
 
 #************************* CBF05 - FORMULARIO DE TIEMPOS *************************#
@@ -750,11 +672,6 @@ class DetalleBcoListView(ListView):
             context["modificable"] = True
         else:
             context["modificable"] = False
-        idrenca = self.request.GET.get('idrbcoe')
-        if idrenca is None:
-            idrenca = self.request.POST.get('idrbcoe')
-        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
-        context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
         return context
 
 #************************* CBF07 - FORMULARIO DE DETALLE DE ERP *************************#
@@ -802,11 +719,6 @@ class DetalleErpListView(ListView):
         #context['imagen'] = False
         #if aCbrenc.archivoimgbco != "":
         #    context['imagen'] = True
-        idrenca = self.request.GET.get('idrerpe')
-        if idrenca is None:
-            idrenca = self.request.POST.get('idrerpe')
-        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
-        context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
         return context
 
 #************************* CBF08 - FORMULARIO DE CUENTAS *************************#
@@ -1416,21 +1328,15 @@ class ListaEmpresaView(ListView):
     # @method_decorator( csrf_exempt )
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        print(request)
-        print("esto")
         if chequearNoDobleConexion(request):
-            print("fue")
             return super().dispatch(request, *args, **kwargs)
         else:
             return redirect("/")
 
-
     def post(self, request, *args, **kwargs):
-        print("aca")
         diccionario = clienteYEmpresas(request)
         position = 1
         data = []
-        print("aca")
         if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
             for i in Cbtemp.objects.all():
                 item = i.toJSON()
@@ -1438,10 +1344,8 @@ class ListaEmpresaView(ListView):
                     item['position'] = position
                     item['pais'] = getPais(item['empresa'])
                     item["movimiento"] = Cbtcta.objects.filter(empresa = item['empresa'], cliente = diccionario["cliente"]).exists()
-                    print("alla")
                     data.append(item)
                     position += 1
-                    print(position)
             return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
@@ -1474,7 +1378,7 @@ class ListaUsuarioView(ListView):
             data = []
             diccionario = clienteYEmpresas(request)
             for i in Cbtusu.objects.all():
-                if i.superusu != "S" and i.cliente == diccionario["cliente"]:
+                if i.cliente == diccionario["cliente"]:
                     item = i.toJSON()
                     item['position'] = position
                     item["modificable"] = True
@@ -1515,7 +1419,7 @@ class ListaCbtusueView(ListView):
                 cliente=diccionario["cliente"]).all()
             for usuario in Cbtusu.objects.filter(cliente=diccionario["cliente"]).all():
                 for empresa in empresas:
-                    if usuario.superusu != "S" and usuario.actpas == "A":
+                    if usuario.actpas == "A":
                         item = {}
                         item['superusuario'] = usuario.tipousu == "S"
                         item['position'] = position
@@ -1604,8 +1508,6 @@ class DetalleTiposDeConciliacion(ListView):
             listadoSumaHaberBcoNoSaldo = []
             listadoSumaDebeErpNoSaldo = []
             listadoSumaHaberErpNoSaldo = []
-            listadoPendientesErp = []
-            listadoPendientesBco = []
             datos = {}
             for tipo in Cbttco.objects.all():
                 if tipo.indsuma == 1:
@@ -1614,15 +1516,11 @@ class DetalleTiposDeConciliacion(ListView):
                             listadoSumaDebeBco.append(tipo.codtco)
                         elif tipo.inddebhab == "D":
                             listadoSumaHaberBco.append(tipo.codtco)
-                        if tipo.indpend == 1:
-                            listadoPendientesBco.append(tipo.codtco)
                     elif tipo.erpbco == 2:
                         if tipo.inddebhab == "H":
                             listadoSumaDebeErp.append(tipo.codtco)
                         elif tipo.inddebhab == "D":
                             listadoSumaHaberErp.append(tipo.codtco)
-                        if tipo.indpend == 1:
-                            listadoPendientesErp.append(tipo.codtco)
                 else:
                     if tipo.erpbco == 1:
                         if tipo.inddebhab == "H":
@@ -1636,13 +1534,6 @@ class DetalleTiposDeConciliacion(ListView):
                             listadoSumaHaberErpNoSaldo.append(tipo.codtco)
 
             # calcula primero las del cbwres y si no existen las del cbsres
-            debePendientePorConciliarErp = 0
-            haberPendientePorConciliarErp = 0
-            debePendientePorConciliarBco = 0
-            haberPendientePorConciliarBco = 0
-            print(listadoPendientesBco)
-            print(listadoPendientesErp)
-
             for registro in Cbsres.objects.filter(idrenc=idrenc).order_by("idsres").all():
 
                 if Cbwres.objects.filter(idsres=registro.idsres).exists():
@@ -1652,13 +1543,6 @@ class DetalleTiposDeConciliacion(ListView):
                     registroAnalizado = registro
                 saldoBco = registroAnalizado.saldoacumesbco
                 saldoErp = registroAnalizado.saldoacumeserp
-                
-                if registroAnalizado.codtcobco in listadoPendientesErp:
-                    debePendientePorConciliarErp = registroAnalizado.haberbco + debePendientePorConciliarErp
-                    haberPendientePorConciliarErp = registroAnalizado.debebco + haberPendientePorConciliarErp
-                if registroAnalizado.codtcoerp in listadoPendientesBco:
-                    debePendientePorConciliarBco = registroAnalizado.habererp + debePendientePorConciliarBco
-                    haberPendientePorConciliarBco = registroAnalizado.debeerp + haberPendientePorConciliarBco
 
                 if registroAnalizado.codtcobco in listadoSumaDebeErp:
                     try:
@@ -1757,13 +1641,6 @@ class DetalleTiposDeConciliacion(ListView):
                 # item['idrenc']=i.idrenc
                 data.append(item)
                 position += 1
-            
-            item = {'idttco': 20, 'indtco': '2', 'codtco': 'Pendiente', 'destco': 'Pendientes por Conciliar', 'ordtco': 0, 'erpbco': 2, 'inddebhab': 'H', 'indsuma': 0, 'indpend': None, 'fechact': None, 'idusu': None, 'position': 9, 'ID': 9, 'debe': debePendientePorConciliarErp, 'haber': haberPendientePorConciliarErp, 'indsum': True, 'saldoacumulado': debePendientePorConciliarErp-haberPendientePorConciliarErp}
-            print(item)
-            data.append(item)
-            item = {'idttco': 20, 'indtco': '1', 'codtco': 'Pendiente', 'destco': 'Pendientes por Conciliar', 'ordtco': 0, 'erpbco': 1, 'inddebhab': 'H', 'indsuma': 1, 'indpend': None, 'fechact': None, 'idusu': None, 'position': 9, 'ID': 9, 'debe': debePendientePorConciliarBco, 'haber': haberPendientePorConciliarBco, 'indsum': True, 'saldoacumulado': haberPendientePorConciliarBco-debePendientePorConciliarBco}
-            print(item)
-            data.append(item)
             try:
                 createCbrenct(request, idrenc.first(),7,"CBF18" )
                 
@@ -1775,7 +1652,7 @@ class DetalleTiposDeConciliacion(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        getContext(self.request, context, 'Tipos de Conciliacion', 'CBF18')
+        getContext(self.request, context, 'Tipos de Conciliacion', 'CBF11')
         context['idrenc'] = self.request.GET.get('idrenc')
         return context
 

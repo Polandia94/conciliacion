@@ -62,7 +62,10 @@
 
 
                                         </div>
+                                        <div class="form-group">
 
+                                            <i class="fas fa-eye" id="togglePassword">Ver Password</i>
+                                        </div>
                                         <div class="form-group">
                                             <div class="col-sm-12 mt-4">
                                                 <button id="entrada" class="btn btn-primary btn-block btn-login"
@@ -95,6 +98,17 @@
 {##}
 {#    </script>#}
 <script>
+    
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#id_password');
+    
+    togglePassword.addEventListener('click', function (e) {
+    // toggle the type attribute
+    const type1 = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type1);
+    // toggle the eye / eye slash icon
+    this.classList.toggle('bi-eye');
+    });
     (function ($) {
 
     $("#entrada").on("click", function (event) {
@@ -108,6 +122,11 @@
                 url: '/login?usuario='+usuarioValor,
                 //data: {'idrenc': idrenc},
                 success: function (respons) {
+                    console.log(respons)
+                    if(respons.vencida){
+                        console.log("esto")
+                        window.alert("Su licencia de uso ha caducado el " + moment(respons.dia).format('DD/MM/YYYY ') + "Favor comunicarse con su proveedor.")
+                    }else{
                     if(respons.noexiste==true){
                         window.alert("El usuario no existe")
                     }else{
@@ -168,7 +187,7 @@
                                 }
                             }
                         }
-                    }}}
+                    }}}}
             });
         });
     })(jQuery)

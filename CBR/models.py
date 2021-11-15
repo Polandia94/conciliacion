@@ -92,7 +92,6 @@ class Cbtcta(models.Model):
     nrocta = models.CharField(verbose_name='Numero de Cuenta', db_column='nrocta', max_length=30)
     descta = models.CharField(verbose_name='Descripcion de la cuenta', db_column='descta', max_length=50)
     monbasebco = models.CharField(verbose_name='Moneda de base de banco', db_column='monbasebco', max_length=3)
-    monbaseerp = models.CharField(verbose_name='Moneda de base de erp', db_column='monbaseerp', max_length=3)
     ano = models.SmallIntegerField(verbose_name='Año',db_column='ano', blank=True, null=True)
     mes = models.SmallIntegerField(db_column='mes', blank=True, null=True)
     saldoinibco = models.DecimalField(verbose_name='Saldo Inicial Banco', db_column='saldoinibco', max_digits=16, decimal_places=2)
@@ -131,6 +130,7 @@ class Cbttco(models.Model):
     erpbco = models.SmallIntegerField(db_column='erpbco', blank=True, null=True)
     inddebhab = models.CharField(db_column='inddebhab', blank=True, null=True, max_length=1)
     indsuma = models.SmallIntegerField(db_column='indsuma', blank=True, null=True)
+    indpend = models.SmallIntegerField(db_column='indpend', blank=True, null=True)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
     idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
     
@@ -698,6 +698,7 @@ class Cbmbco(models.Model):
     idmbco = models.AutoField( verbose_name='ID', db_column='idmbco', primary_key=True )
     codbco = models.CharField( verbose_name='Codigo del Banco', db_column='codbco', max_length=5)
     desbco = models.CharField(verbose_name='Descripcion del Banco', db_column='desbco', max_length=50)
+    codhombco = models.CharField(verbose_name='Codigo de homologador bco', db_column='codhombco', max_length=5, default="vebod")
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -733,7 +734,8 @@ class Cbtemp(models.Model):
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
     desemp = models.CharField(verbose_name='Descripcion de la empresa', db_column='desemp', max_length=60)
-    actpas = models.CharField(verbose_name='Descripcion de la empresa', db_column='actpas', max_length=1)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, blank=True)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
     
@@ -749,6 +751,7 @@ class Cbtcli(models.Model):
     idtcli = models.AutoField( verbose_name='ID', db_column='idtcli', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     descli = models.CharField(verbose_name='Descripcion del cliente', db_column='descli', max_length=60)
+    codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, default="vegal")
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -770,6 +773,7 @@ class Cbtlic(models.Model):
     nroempresa = models.SmallIntegerField(verbose_name='Numero de Empresa',db_column='nroempresa')
     nrocodbco = models.SmallIntegerField(verbose_name='Numero de Bancos',db_column='nrocodbco')
     nrocuenta = models.SmallIntegerField(verbose_name='Numero de Cuenta',db_column='nrocuenta')
+    fechalic = models.DateTimeField( verbose_name='Fecha de Vencimiento', db_column='fechalic')
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -795,6 +799,8 @@ class Cbtusu(models.Model):
     pasusu = models.BooleanField(verbose_name='Password Reseteable', db_column='pasusu', default=False)
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     tipousu = models.CharField(verbose_name='Tipo de usuario', db_column='tipousu', max_length=1, blank=True)
+    superusu = models.CharField(verbose_name='Superusuario', db_column='superusu', max_length=1, blank=True)
+    indconc = models.CharField(verbose_name='Puede Conciliar', db_column='indconc', max_length=1, blank=True)    
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1, blank=True)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
@@ -882,3 +888,15 @@ class Cbsusu(models.Model):
         self.corrusu = Cbsusu.objects.filter(idusu1 = self.idusu1).count()+1
         super( Cbsusu, self ).save( *args, **kwargs )
     
+
+class Cbthom(models.Model):
+    idthom = models.AutoField( verbose_name='ID', db_column='idthom', primary_key=True )
+    indhom = models.CharField(verbose_name='Indicador de Homologacion', db_column='indhom', max_length=1)
+    codhom = models.CharField(verbose_name='Codigo de homologador', db_column='codhom', max_length=5)
+    deschom = models.CharField(verbose_name='Descripcion del homologador', db_column='desemp', max_length=50)
+    fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
+    idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+    
+    class Meta:
+        managed = True
+        db_table = 'cbthom'

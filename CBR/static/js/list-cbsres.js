@@ -390,6 +390,28 @@ $.ajax({
         $(function () {
             "use strict"
             $(document).ready(function () {
+                var buttonCommon = {
+                    exportOptions: {
+                        format: {
+                            body: function ( data, row, column, node ) {
+                                // Strip $ from salary column to make it numeric
+                                if(column==12){
+                                    let inicio = String(data).search("list") + 8
+                                    let final = String(data).search("</a>")
+                                    return String(data).substring(inicio,final)
+                                    
+                                }
+                                if(column == 1 || column == 9 || column == 10){
+                                return data.replace('<td><nobr>', '' ).replace('</nobr></td>', '' );
+                                }
+                                return data
+                                    
+                                
+ 
+                            }
+                        }
+                    }
+                };
                 const searchRegExp = /,/g;
                 const csrftoken = getCookie('csrftoken');
                 /*funcion que vuelve a calcular los saldos, historial y tipo de conciliacion en cada caso*/
@@ -447,13 +469,13 @@ $.ajax({
                         table.cell(fila, ".saldoacumdiaerp").data(saldodia);
                         var rows = table.row(fila)
                         /*Llena los html de los subtotales */
-                        try { saldodiferenciahtml.innerHTML = Number(saldodiferencia).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                        try { saldodiferenciahtml.innerHTML = globalVariableIndtco.moneda + Number(saldodiferencia).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                         catch { }
-                        try { saldoerphtml.innerHTML = Number(saldoi).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                        try { saldoerphtml.innerHTML = globalVariableIndtco.moneda +Number(saldoi).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                         catch { }
-                        try { debeerphtml.innerHTML = Number(totaldebe).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                        try { debeerphtml.innerHTML = globalVariableIndtco.moneda + Number(totaldebe).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                         catch { }
-                        try { habererphtml.innerHTML = Number(totalhaber).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                        try { habererphtml.innerHTML = globalVariableIndtco.moneda +  Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                         catch { }
                         /*va llenando la informacion a enviar al back */
                         datasend.push(rows.data());
@@ -550,21 +572,21 @@ $.ajax({
                                 url: '/getTiposDeConciliacion',
                                 data: { 'idrenc': idrenc },
                                 success: function (respons) {
-                                    try { debebcototal.innerHTML = Number(respons.debebcototal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldobcototal.innerHTML = Number(respons.saldobcototal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { debeerptotalhtml.innerHTML = Number(respons.debeerptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch {}
-                                    globalVariable.SaldoDiferenciaTotal = Number(respons.saldodiferenciatotal)
+                                    globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
                                     if(globalVariable.SaldoDiferenciaTotal == 0){
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
@@ -688,12 +710,27 @@ $.ajax({
                         url: '../static/lib/datatables-es.json'
                     },
                     buttons: [
-                        'copy', 'csv', 'excel', 'print',
+                        
+                            $.extend( true, {}, buttonCommon, {
+                                extend: 'copyHtml5'
+                            } ),
+
+                            $.extend( true, {}, buttonCommon, {
+                                extend: 'csvHtml5'
+                            } ),
+                            $.extend( true, {}, buttonCommon, {
+                                extend: 'excelHtml5'
+                            } ),
+                            $.extend( true, {}, buttonCommon, {
+                                extend: 'pdfHtml5'
+                            } ),
+                        
                         {
                             extend: ['colvis'],
                             collectionLayout: 'fixed three-column',
                             columns: ':not(.noVis)',
                         }
+                    
                     ],
         
                     stripeClasses: [],
@@ -727,19 +764,19 @@ $.ajax({
                         { "data": "horatrabco", className: "dt-bancoColor" },
                         { "data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         {
                             "data": "saldoacumesbco",
                             name: "saldoacumesbco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         {
@@ -747,7 +784,7 @@ $.ajax({
                             name: "saldoacumdiabco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         { "data": 'oficina', className: "dt-bancoColor" },
@@ -791,30 +828,30 @@ $.ajax({
                         },
                         { "data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         {
                             "data": "saldoacumeserp",
                             name: "saldoacumeserp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         {
                             "data": "saldoacumdiaerp",
                             name: "saldoacumdiaerp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         { "data": "saldodiferencia", name: "saldodiferencia", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
         
                         { "data": 'nrotraerp' },
                         {
@@ -1716,7 +1753,8 @@ $.ajax({
                                 if (((data != "0") && (data != null) && (data != undefined) && (data != ''))) {
                                     return ` <a href="#!" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> ${data}</a>
                             <script>
-                            function ventanaSecundaria (URL){ 
+                            function ventanaSecundaria (URL){
+                                    window.moneda = globalVariableIndtco.moneda
                                     window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
                                  } 
                             </script>`

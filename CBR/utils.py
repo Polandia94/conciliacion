@@ -6,6 +6,7 @@ import datetime as dt
 import json
 from json.decoder import JSONDecodeError
 import time
+from typing import Union
 
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -67,6 +68,15 @@ def chequearNoDobleConexion(request):
         except:
             pass
         return False
+    aCbtusu = Cbtusu.objects.filter(
+        idusu1=request.user.username).first()
+    if aCbtusu.actpas != "A":
+        logout(request)
+        return False
+    aCbtlic = Cbtlic.objects.filter(cliente=clienteYEmpresas(request)["cliente"]).first()
+    if aCbtlic.fechalic < dt.datetime.now(tz=timezone.utc):
+        logout(request)
+        return False
     if request.session["iddesesion"] < aCbsusu.corrusu:
         logout(request)
         return False
@@ -123,7 +133,11 @@ def login(request):
     aCbtlic = Cbtlic.objects.filter(cliente=aCbtusu.cliente).first()
     usuariosConectados = Cbsusu.objects.filter(finlogin=None, cliente = aCbtusu.cliente).count()
     data = {}
-    
+    if dt.datetime.now(tz=timezone.utc) > aCbtlic.fechalic:
+        data["vencida"] = True
+        data["dia"] = aCbtlic.fechalic
+    else:
+        data["vencida"] = False
     if usuariosConectados >= aCbtlic.nrousuario:
         data["limite"] = True
     else:
@@ -318,9 +332,12 @@ def cbtbcoDelete(request):
 @csrf_exempt
 def conciliarSaldos(request):
     if request.method == 'POST':
+        print("empieza")
         chequearNoDobleConexion(request)
+        print("empieza2")
         try:
             idrenc = request.POST.get('idrenc')
+            print(idrenc)
             try:
                 estado = Cbrenc.objects.get(idrenc=idrenc).estado
             except:
@@ -330,13 +347,70 @@ def conciliarSaldos(request):
                 sobreescribir = request.POST['sobreescribir']
                 # Define si es posible conciliar(es primera vez, se acepto la sobreescritura y el estado no es conciliado ni eliminado)
                 if ((sobreescribir == 'true') or (existe == 0)):
-
+                    print("poraca")
+                    aCbrenc=Cbrenc.objects.get(idrenc=idrenc)
+                    ano = aCbrenc.ano
+                    mes = aCbrenc.mes
+                    if mes == 1:
+                        mesanterior = 12
+                        anoanterior = int(ano)-1
+                    else:
+                        mesanterior = int(mes) - 1
+                        anoanterior = int(ano)
                     data = {}
+                    print("poralla")
                     # Define los objetos a cargar y los saldos iniciales
-                    bcoDataSet = Cbrbcod.objects.filter(
-                        idrbcoe=idrenc).order_by('fechatra', 'horatra')
-                    erpDataSet = Cbrerpd.objects.filter(
-                        idrerpe=idrenc).order_by('fechatra')
+                    aCbrencAnterior= Cbrenc.objects.filter(ano=anoanterior, mes=mesanterior, cliente=aCbrenc.cliente, empresa=aCbrenc.empresa, codbco=aCbrenc.codbco).first()
+                    print(aCbrencAnterior)
+                    if aCbrencAnterior is not None:
+                        bcoDataSetAnterior =  Cbsres.objects.filter(estadobco=0, fechatrabco__isnull=False, idrenc=aCbrencAnterior.idrenc).order_by("-fechatrabco")
+                    else:
+                        bcoDataSetAnterior = []
+                        print("alfa")
+                    bcoDataSet = list(Cbrbcod.objects.filter(
+                        idrbcoe=idrenc).order_by('fechatra', 'horatra'))
+                    print("beta")
+                    for element in bcoDataSetAnterior:
+                        print("a")
+                        if Cbttco.objects.filter(codtco=element.codtcobco, indtco=1, indpend=0).exists() == False:
+                            aUnir = Object()
+                            aUnir.idrbcod= element.idrbcod
+                            aUnir.fechatra=element.fechatrabco
+                            aUnir.horatra=element.horatrabco
+                            aUnir.oficina=element.oficina
+                            aUnir.desctra=element.desctra
+                            aUnir.reftra=element.reftra
+                            aUnir.codtra=element.codtra
+                            aUnir.debe=element.debebco
+                            aUnir.haber=element.haberbco
+                            aUnir.saldo=element.saldobco
+                            aUnir.idrbcoe=Cbrbcoe.objects.filter(idrenc=element.idrenc).first()
+                            print("b")
+                            bcoDataSet.insert(0,aUnir)
+                            print("c")
+                    if aCbrencAnterior is not None:
+                        erpDataSetAnterior = Cbsres.objects.filter(estadoerp=0, fechatraerp__isnull=False, idrenc=aCbrencAnterior.idrenc).order_by("-fechatraerp")
+                    else:
+                        erpDataSetAnterior = []
+                    erpDataSet = list(Cbrerpd.objects.filter(
+                        idrerpe=idrenc).order_by('fechatra'))
+                    for element in erpDataSetAnterior:
+                        if Cbttco.objects.filter(codtco=element.codtcoerp, indtco=2, indpend=0).exists()==False:
+                            aUnir = Object()
+                            aUnir.idrerpd = element.idrerpd
+                            aUnir.nrotra = element.nrotraerp
+                            aUnir.fechatra = element.fechatraerp
+                            aUnir.nrocomp = element.nrocomperp
+                            aUnir.aux = element.auxerp
+                            aUnir.ref = element.referp
+                            aUnir.glosa = element.glosaerp
+                            aUnir.debe = element.debeerp
+                            aUnir.haber = element.habererp
+                            aUnir.saldo = element.saldoerp
+                            aUnir.fechacon = element.fechaconerp
+                            aUnir.idrerpe=Cbrerpe.objects.filter(idrenc=element.idrenc).first()
+                            ##Completar con el resto de las cosas
+                            erpDataSet.insert(0,aUnir)
 
                     rowInicialbco = Cbrbcod.objects.filter(
                         idrbcoe=idrenc).order_by('fechatra', 'horatra').first()
@@ -346,19 +420,41 @@ def conciliarSaldos(request):
 
                     currentDay = rowInicialbco.fechatra
                     Cbsres.objects.filter(idrenc=idrenc).delete()
-                    dia = 1
                     color = 0
                     cambio = False
-                    while dia < 32:
+                    
+                    diaMenor = dt.datetime.date(dt.datetime.strptime("01/01/2030", "%d/%m/%Y"))
+                    diaMayor = dt.datetime.date(dt.datetime.strptime("01/01/2010", "%d/%m/%Y"))
+                    print("tiempo inicial")
+                    print(time.time())
+                    for vwRow in bcoDataSet:
+                        if vwRow.fechatra < diaMenor:
+                            diaMenor = vwRow.fechatra
+                        if vwRow.fechatra > diaMayor:
+                            diaMayor = vwRow.fechatra
+                    for vwRow in erpDataSet:
+                        if vwRow.fechatra < diaMenor:
+                            diaMenor = vwRow.fechatra
+                        if vwRow.fechatra > diaMayor:
+                            diaMayor = vwRow.fechatra
+                    print("tiempo final")
+                    print(time.time())
+                    dia = diaMenor
+                    while dia <= diaMayor:
                         # Para cada dia carga los registros del banco en orden, calculando los saldos
                         fechatrabco = None
                         for vwRow in bcoDataSet:
-                            if vwRow.fechatra.day == dia:
+                            print(vwRow)
+                            print(vwRow.fechatra)
+                            if vwRow.fechatra == dia:
                                 fechatrabco = vwRow.fechatra
                                 if (vwRow.fechatra is None):
                                     if (currentDay != vwRow.fechatra):
                                         currentDay = vwRow.fechatra
-
+                                print("esto")
+                                print(idrenc)
+                                print(Cbrenc.objects.get(
+                                        idrenc=idrenc))
                                 insCbsres = Cbsres(
                                     idrenc=Cbrenc.objects.get(idrenc=idrenc),
                                     cliente=Cbrenc.objects.get(
@@ -404,7 +500,7 @@ def conciliarSaldos(request):
                         #                erpDataSet = erpDataSet.exclude(idrerpd=vwRow.idrerpd)
                         for vwRow in erpDataSet:
                             # Para cada dia carga los registros del erp que no concilian en  orden de cercania
-                            if vwRow.fechatra.day == dia:
+                            if vwRow.fechatra == dia:
                                 if fechatrabco != 0 and Cbsres.objects.filter(idrenc=idrenc, idrerpd=0, fechatrabco=fechatrabco).exists():
                                     insCbsres = Cbsres.objects.filter(
                                         idrenc=idrenc, idrerpd=0, fechatrabco=fechatrabco).first()
@@ -417,7 +513,7 @@ def conciliarSaldos(request):
                                         insCbsres = Cbsres(
                                             idrenc=Cbrenc.objects.get(idrenc=idrenc))
                                 Unir(vwRow, insCbsres, idrenc, color)
-                        dia = dia + 1
+                        dia = dia + dt.timedelta(days=1)
                         if cambio == True:
                             if color == 0:
                                 color = 1
@@ -731,7 +827,24 @@ def getanomes(request):
     finally:
         return JsonResponse(data)
 
+@login_required
+def getcuenta(request):
+    chequearNoDobleConexion(request)
+    empresa = request.GET.get('empresa')
+    codbco = request.GET.get('banco')
+    cuentas=[]
+    print(empresa)
+    print(codbco)
+    for cuenta in Cbtcta.objects.filter(empresa=empresa, codbco=codbco, cliente=clienteYEmpresas(request)["cliente"]).order_by("nrocta"):
+        print("se agrego")
+        cuentas.append({"nombre": cuenta.nrocta, "descripcion": cuenta.descta})
+    data = {}
+    data["cuentas"]=cuentas
+    return JsonResponse(data, safe=False)
 
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 @login_required
@@ -1130,9 +1243,10 @@ def verificarCarga(request):
                                              # cliente=cliente,
                                              empresa=empresa,
                                              ).first()
-    if aCberencAnterior == None:
-        aCbtcta = Cbtcta.objects.filter(
+    aCbtcta = Cbtcta.objects.filter(
             codbco=codbco, nrocta=nrocta, empresa=empresa).first()
+    if aCberencAnterior == None:
+
         saldobcoanterior = aCbtcta.saldoinibco
         saldoerpanterior = aCbtcta.saldoinierp
     else:
@@ -1154,10 +1268,11 @@ def verificarCarga(request):
         errorERP = True
     if saldobco != saldobcoanterior:
         errorBco = True
-    saldoerp = "$"+'{:,}'.format(float(saldoerp))
-    saldobco = "$"+'{:,}'.format(float(saldobco))
-    saldoerpanterior = "$"+'{:,}'.format(float(saldoerpanterior))
-    saldobcoanterior = "$"+'{:,}'.format(float(saldobcoanterior))
+    moneda = aCbtcta.monbasebco
+    saldoerp =  moneda+'{:,}'.format(float(saldoerp))
+    saldobco =  moneda+'{:,}'.format(float(saldobco))
+    saldoerpanterior =  moneda+'{:,}'.format(float(saldoerpanterior))
+    saldobcoanterior =  moneda+'{:,}'.format(float(saldobcoanterior))
     return render(request, "cbrenc/confirmarcarga.html", {"saldobcoanterior": saldobcoanterior,  "saldoerpanterior": saldoerpanterior, "saldobco": saldobco, "saldoerp": saldoerp, "errorBco": errorBco, "errorERP": errorERP})
 
 def verificarGuardado(request):
@@ -1210,9 +1325,11 @@ def getContext(request, context, titulo, formulario):
         context['superusuario'] = True
 
 
+
 def calcularTotales(request, context):
         n = 0
         indtco_erp = ""
+        moneda = context["moneda"]
         for i in Cbttco.objects.filter(indtco="1").all():
             if n > 0:
                 indtco_erp = indtco_erp + ","
@@ -1300,27 +1417,27 @@ def calcularTotales(request, context):
 
         tiposDeConciliacion = json.loads(
             getTiposDeConciliacion(request).content)
-        context['debebcototal'] = "$" + \
+        context['debebcototal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["debebcototal"]))
-        context['haberbcototal'] = "$" + \
+        context['haberbcototal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["haberbcototal"]))
-        context['saldobcototal'] = "$" + \
+        context['saldobcototal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["saldobcototal"]))
-        context['debeerptotal'] = "$" + \
+        context['debeerptotal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["debeerptotal"]))
-        context['habererptotal'] = "$" + \
+        context['habererptotal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["habererptotal"]))
-        context['saldoerptotal'] = "$" + \
+        context['saldoerptotal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["saldoerptotal"]))
-        context['saldodiferenciatotal'] = "$" + \
+        context['saldodiferenciatotal'] =  moneda + \
             '{:,}'.format(float(tiposDeConciliacion["saldodiferenciatotal"]))
-        context['habererp'] = "$"+'{:,}'.format(habererp)
-        context['debeerp'] = "$"+'{:,}'.format(debeerp)
-        context['debebco'] = "$"+'{:,}'.format(debebco)
-        context['haberbco'] = "$"+'{:,}'.format(haberbco)
-        context['saldobco'] = "$"+'{:,}'.format(saldobco)
-        context['saldoerp'] = "$"+'{:,}'.format(saldoerp)
-        context['saldodiferencia'] = "$"+'{:,}'.format(saldodiferencia)
+        context['habererp'] =  moneda+'{:,}'.format(habererp)
+        context['debeerp'] =  moneda+'{:,}'.format(debeerp)
+        context['debebco'] =  moneda+'{:,}'.format(debebco)
+        context['haberbco'] =  moneda+'{:,}'.format(haberbco)
+        context['saldobco'] =  moneda+'{:,}'.format(saldobco)
+        context['saldoerp'] =  moneda+'{:,}'.format(saldoerp)
+        context['saldodiferencia'] =  moneda+'{:,}'.format(saldodiferencia)
         
 
 def populateDatabase():
@@ -1464,3 +1581,18 @@ def updateCbtusuc(request):
         aCbtusuc.save()
     return JsonResponse({})
 
+class Object(object):
+    pass
+
+def cbrencDesconciliar(request):
+    print(request)
+    print(request.POST.get("idrenc"))
+    aCbrenc = Cbrenc.objects.get(idrenc= request.POST.get("idrenc"))
+    if Cbrenc.objects.filter(cliente=aCbrenc.cliente, codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta, idrenc__gt = aCbrenc.idrenc).exists():
+        data = {}
+        data["info"] = "No es posible desconciliar"
+        return JsonResponse(data)
+    
+    aCbrenc.estado = 1
+    aCbrenc.save()
+    return HttpResponse("")

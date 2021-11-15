@@ -16,7 +16,7 @@
     <a id="btnResetColumns" class="btn btn-secondary btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Reiniciar posición de las columnas al estado original">
         <i class="fas fa-columns"></i>
     </a>
-    {% if editable == 'Editable' %} 
+    {% if editable == 'Editable' and indconc %} 
     <a id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
         <i class="fas fa-check-double"></i>
     </a>
@@ -118,7 +118,8 @@
     <script>
         var globalVariableIndtco={
             indtco_erp: "{{indtco_erp}}".split(","),
-            indtco_bco: "{{indtco_bco}}".split(",")
+            indtco_bco: "{{indtco_bco}}".split(","),
+            moneda: "{{moneda}}"
         };
     </script>
     <script>
