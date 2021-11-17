@@ -1,0 +1,42 @@
+{% extends 'Classes/list.html' %}
+{% load static %}
+{% block head_list %}
+    <script>
+    var globalVariable = {moneda:"{{moneda}}"}
+    </script>
+    <script src="{% static 'js/list-cbsresnc.js' %}"></script>
+{% endblock %}
+{% block botones %}
+    <div class="row">
+    
+        <a href="/cbsres/?idrenc={{idrenc}}" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
+           title="Atras">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+
+
+
+
+    </div>
+{% endblock %}
+{% block columns %}
+    <tr>
+        <th scope="col" style="width: 2% !important;">Tipo</th>
+        <th scope="col" style="width: 2% !important;">Codigo de Conciliacion</th>
+        <th scope="col" style="width: 2% !important;">Sgte mes</th>
+        <th scope="col" style="width: 2% !important;">Fecha</th>
+        <th scope="col" style="width: 3%;">ID</th>
+        <th scope="col" style="width: 5%;">Nto. Documento</th>
+        <th scope="col" style="width: 5%;">Glosa</th>
+        <th scope="col" style="width: 5%;">Debe</th>
+        <th scope="col" style="width: 5%;">Haber</th>
+    </tr>
+{% endblock %}
+{% block rows %}
+{% endblock %}
+{% block footer %}
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+
+{% endblock %}

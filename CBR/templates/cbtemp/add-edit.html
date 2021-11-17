@@ -45,8 +45,13 @@
                                 {{ form.desemp}}
 
                         </div>
-                    </div>
+                    
                     <div class="row">
+                        <div class="form-group col-6">
+                            <label for="codhomerp" class="col-form-label">Codigo de homologacion</label>
+                                {{ form.codhomerp}}
+
+                        </div>
                         {% if inactiva %}
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label">¿Es Empresa Activa?</label>
@@ -61,6 +66,7 @@
 
                         </div>
                         {% endif %}
+                    </div>
                     </div>
                     
                     <!-- /.card-body -->

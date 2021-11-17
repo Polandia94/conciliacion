@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
                         Cbtbco, Cbtcli, Cbtcol, Cbtcta, Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
-                        Cbtusuc, Cbtusue, Cbwres)
+                        Cbtusuc, Cbtusue, Cbwres, Cbtcfg, Cbtcfgc)
 
 #endregion
 
@@ -574,9 +574,10 @@ def conciliarSaldos(request):
                             aCbsres.idusualt = request.user.username
                             aCbsres.save()
                     n = 0
+                    listado = Cbsres.objects.filter(
+                            idrenc=idrenc).order_by('idsres')
                     while n < Cbsres.objects.filter(idrenc=idrenc).count():
-                        aCbsres = Cbsres.objects.filter(
-                            idrenc=idrenc).order_by('idsres')[n]
+                        aCbsres = listado[n]
                         if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debebco=aCbsres.debebco, haberbco=aCbsres.haberbco).count() == 1:
                             if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).count() == 1:
                                 bCbsres = Cbsres.objects.filter(
@@ -592,6 +593,21 @@ def conciliarSaldos(request):
                                     bCbsres.idrerpdl = bCbsres.idrerpd
                                     bCbsres.save()
                         n = n+1
+                    ### CONCILIACION SEMI AUTOMATICA
+                    
+                    #Si aparece despues en el banco
+                    print(time.time())
+                    #conciliarBancoFechaPosterior(idrenc)
+                    print(time.time())
+                    #Si aparece despues en el ERP
+                    #conciliarErpFechaPosterior(idrenc)
+                    campoBco = 'desctra'
+                    campoErp = 'referp'
+                    #Si las referencias son iguales
+                    print(time.time())
+                    #conciliarCamposIguales(idrenc,campoBco,campoErp)
+                    print(time.time())
+                        
 
                     CbrencUpd = Cbrenc.objects.get(idrenc=idrenc)
                     CbrencUpd.fechacons = dt.datetime.now(tz=timezone.utc)
@@ -628,6 +644,81 @@ def conciliarSaldos(request):
         return JsonResponse(data)
     else:
         return request
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
+
+def conciliarCamposIguales(idrenc,campoBco, CampoErp):
+    n = 0
+    listado = Cbsres.objects.filter(
+                            idrenc=idrenc).order_by('idsres')
+    print("dos")
+    while n < Cbsres.objects.filter(idrenc=idrenc).count():
+        aCbsres = listado[n]
+        if aCbsres.estadobco == 0:
+            
+            
+            bCbsresraw = Cbsres.objects.raw("SELECT * FROM cbsres where idrenc= %s and "+campoBco+"=%s and estadobco = 0 LIMIT 1", [str(idrenc), aCbsres.toJSON()[CampoErp]])
+            if aCbsres.referp is not None:
+                if len(aCbsres.referp) > 2:
+                    print("SELECT * FROM cbsres where idrenc= %s and "+campoBco+"=%s and estadobco = 0 LIMIT 1", [str(idrenc), aCbsres.toJSON()[CampoErp]])
+            bCbsres = None
+            for element in bCbsresraw:
+                print("hola")
+                print(element)
+                bCbsres = element
+            if bCbsres is not None:
+                bCbsres.estadobco = 2
+                bCbsres.idrerpdl = aCbsres.idrerpd
+                aCbsres.idrbcodl = bCbsres.idrbcod
+                aCbsres.estadoerp = 2
+                aCbsres.save()
+                bCbsres.save()
+
+        n = n+1
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
+def conciliarErpFechaPosterior(idrenc):
+    n = 0
+    listado = Cbsres.objects.filter(
+                            idrenc=idrenc).order_by('idsres')
+    while n < Cbsres.objects.filter(idrenc=idrenc).count():
+        aCbsres = listado[n]
+        if aCbsres.estadobco == 0:
+            bCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__gt=aCbsres.fechatrabco, habererp=aCbsres.debebco, debeerp=aCbsres.haberbco).first()
+            if bCbsres is not None:
+                aCbsres.estadobco = 2
+                aCbsres.idrerpdl = bCbsres.idrerpd
+                bCbsres.idrbcodl = aCbsres.idrbcod
+                bCbsres.estadoerp = 2
+                aCbsres.save()
+                bCbsres.save()
+
+        n = n+1
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+def conciliarBancoFechaPosterior(idrenc):
+    n = 0
+    listado = Cbsres.objects.filter(
+                            idrenc=idrenc).order_by('idsres')
+    while n < Cbsres.objects.filter(idrenc=idrenc).count():
+        aCbsres = listado[n]
+        if aCbsres.estadoerp == 0:
+            bCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco = 0, fechatrabco__gt=aCbsres.fechatraerp, haberbco=aCbsres.debeerp, debebco=aCbsres.habererp).first()
+            if bCbsres is not None:
+                aCbsres.estadoerp = 2
+                bCbsres.idrerpdl = aCbsres.idrerpd
+                aCbsres.idrbcodl = bCbsres.idrbcod
+                bCbsres.estadobco = 2
+                aCbsres.save()
+                bCbsres.save()
+
+        n = n+1
 
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
@@ -1320,6 +1411,7 @@ def getContext(request, context, titulo, formulario):
     context['new_banco_url'] = reverse_lazy('CBR:banco-nuevo')
     context['sesiones_url'] = reverse_lazy('CBR:visualizacion_usuarios')
     context['idrenc'] = request.GET.get('idrenc')
+    context['conciliacion_semiautomatica'] = reverse_lazy('CBR:conciliacion_semiautomatica')
 
     if aCbtusu.tipousu == "S":
         context['superusuario'] = True
@@ -1596,3 +1688,27 @@ def cbrencDesconciliar(request):
     aCbrenc.estado = 1
     aCbrenc.save()
     return HttpResponse("")
+
+def CbtcfgCreate(request):
+    cliente = clienteYEmpresas(request)["cliente"]
+    print(cliente)
+    ordencfg= Cbtcfg.objects.filter(cliente=cliente).count()+1
+    aCbtcfg = Cbtcfg(cliente=cliente, codcfg=3, ordencfg=ordencfg,actpas="P", fechact=dt.datetime.now(), idusu=request.user.username)
+    aCbtcfg.save()
+    Cbtcfgc(idtcfg=aCbtcfg, campobco="", campoerp="", fechact=dt.datetime.now(), idusu=request.user.username).save()
+    return HttpResponse("")
+
+def CbtcfgSave(request):
+    print(request)
+    print(request.POST)
+    return HttpResponse("")
+
+def chequearUsuarioConectado(request):
+    print(request.POST)
+    data = {}
+    aCbtusu = Cbtusu.objects.filter(idtusu=request.POST["idtusu"]).first()
+    if Cbsusu.objects.filter(idusu1=aCbtusu.idusu1, finlogin = None).exists():
+        data['enuso']=True
+    else:
+        data['enuso']=False
+    return JsonResponse(data)

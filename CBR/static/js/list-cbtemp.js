@@ -27,6 +27,7 @@ $(function () {
             {"data": "pais"},
             {"data": "empresa"},
             {"data": "desemp"},
+            {"data": "codhomerp"},
             {"data": "actpas"},
             {"data": null},
         ],
@@ -36,11 +37,11 @@ $(function () {
                 visible: false
             },
             {
-                targets: [2,3,4,5],
+                targets: [2,3,4,5,6],
                 class: 'text-center pt-4',
             },
             {
-                targets : [6],
+                targets : [7],
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');

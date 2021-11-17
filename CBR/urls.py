@@ -43,7 +43,7 @@ urlpatterns = [
     path('cbrbcod/', views.DetalleBcoListView.as_view(), name='cbrbcod-list'),
     path('cbrerpd/', views.DetalleErpListView.as_view(), name='cbrerpd-list'),
     path('cbsusu/', views.visualizacionUsuarios.as_view(), name='visualizacion_usuarios'),
-
+    path('cbtcfg/', views.ConciliacionSemiautomatica.as_view(), name='conciliacion_semiautomatica'),
     #*********** Crear Nuevo ***********
 
     path('cbtemp/new', views.CbtempCreateView.as_view(), name='empresa-nueva'),
@@ -51,7 +51,8 @@ urlpatterns = [
     path('cbtusu/new', views.CbtusuCreateView.as_view(), name='usuario-nuevo'),
     path('list/add/', views.CbrencCreateView.as_view(), name='cbrenc_nueva'),
     path('list/addaccount/', views.CbtctaCreateView.as_view(), name='cbtcta_nueva_cuenta'),
-
+    path('cbtcfg/nuevo/', utils.CbtcfgCreate, name='cbtcfg_nueva_cbtcfg'),
+    path('cbtcfg/save/', utils.CbtcfgSave, name='cbtcfg_save_cbtcfg'),
     #*********** Eliminar ************
     path('cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del'),
     path('cbtcta/del/', utils.cbtctaDelete, name='cbtcta_delete_cuenta'),
@@ -72,8 +73,9 @@ urlpatterns = [
 
     path('cbrbcod/<int:idrbcod>/<int:idrbcoe>/', views.CbrbcodDetailView.as_view(), name='cbrbcod-detail'),
     path('cbrerpd/<int:idrerpd>/<int:idrerpe>/', views.CbrerpdDetailView.as_view(), name='cbrerpd-detail'),
-
+    path('noconciliados/<int:idrenc>/', views.CbsresNoConciliados.as_view(), name='noconciliados'),
     #* Otras Acciones
+    path('cbtusu/check/', utils.chequearUsuarioConectado, name='chequearUsuarioConectado'),
     path('reiniciarusuario/', views.reiniciarUsuario, name='reiniciarUsuario'),
     path('cerrarConciliacion/', views.cerrarConciliacion, name='cerrarConciliacion'),
     path('definircolumnas/', views.definirColumnas.as_view(), name='definirColumnas'),

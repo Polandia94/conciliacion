@@ -144,11 +144,15 @@
     <script>
             
           $('form').on('submit', function (e) {
+            console.log("algo")
             e.preventDefault();
+            console.log("alfa")
             var parameters = new FormData(this);
+            console.log("nose")
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
                 location.href = "{% url 'CBR:cbrenc-car' %}";
             },true);
+            console.log("as")
         });
         $('.form-control').on("change", function(e){
             console.log()

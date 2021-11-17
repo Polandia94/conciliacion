@@ -106,8 +106,23 @@ function getCuenta(){
     "use strict"
     const csrftoken = getCookie('csrftoken');
     const urlParams = new URLSearchParams(window.location.search);
+    
 
- 
+    $("#nuevoConfiguracionAuto").on('click', function (e) {
+        console.log("algo")
+
+                $.ajax({
+                    method: 'POST',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                    },
+                    url: '/cbtcfg/nuevo/',
+                    success: function (respons) {                    
+                        location.reload();
+                }
+
+            });
+    });
     
 
     
@@ -335,7 +350,23 @@ function getCuenta(){
     });
         /******************************************************************************************************************/
     /******************************************************************************************************************/
+    $("#btnNoConciliados").on('click', function () {
+       
+        const idrenc = urlParams.get('idrenc');
+        var url = '/noconciliados/';
+        var form = $('<form action="' + url + '"type="hidden" method="post">' +
+        '<input type="text" name="idrenc" value="' + idrenc + '" /><input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'" />' +
+        '</form>');
+        $('body').append(form);
+        form.submit();
+        
+        
 
+            
+    });
+    /******************************************************************************************************************/
+    /******************************************************************************************************************/
+    
     /******************************************************************************************************************/
     /******************************************************************************************************************/
     $("#btnConciliar").on('click', function () {

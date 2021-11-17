@@ -31,7 +31,7 @@ from CBR.forms import (CbrbcodForm, CbrencaForm, CbrencDeleteForm, CbrerpdForm,
 from CBR.homologacion import *
 from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc,
                         Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgale, Cbsres,
-                        Cbsresc, Cbsusu, Cbtbco, Cbtcli, Cbtcol, Cbtcta,
+                        Cbsresc, Cbsusu, Cbtbco, Cbtcfg,Cbtcfgc, Cbtcli, Cbtcol, Cbtcta,
                         Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
                         Cbtusuc, Cbtusue, Cbwres, Cbrencibco)
 from .utils import *
@@ -114,6 +114,7 @@ class CbsresListView(ListView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        print(request)
         if chequearNoDobleConexion(request):
             try:
 
@@ -274,15 +275,25 @@ class CbrencCreateView(CreateView):
     success_url = reverse_lazy('CBR:cbrenc-list')
     url_redirect = success_url
 
-    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        print("coso")
+        print(request.POST)
         if chequearNoDobleConexion(request):
+            print("noredirigio")
             return super().dispatch(request, *args, **kwargs)
         else:
-            return redirect("/")
+            print("redirigio")
+            return super().dispatch(request, *args, **kwargs)
+            
 
     def post(self, request, *args, **kwargs):
         data = {}
+        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+        print(aCbtusu)
+        if aCbtusu == None:
+            print("algos")
+            return redirect("/", permanent=True)
+        print("aca")
         try:
             diccionario = clienteYEmpresas(request)
             # Lee las respuetas al formulario
@@ -549,6 +560,7 @@ class Uploadimage(CreateView):
             return {}
 
     def post(self, request, *args, **kwargs):
+
         data = {}
         form = self.get_form()
         try:
@@ -880,13 +892,14 @@ class CbtctaCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        print("coso")
+        print(request.POST)
         if chequearNoDobleConexion(request):
             return super().dispatch(request, *args, **kwargs)
         else:
             return redirect("/")
 
     def post(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
         data = {}
         try:
             # Lee las respuetas al formulario
@@ -1347,6 +1360,7 @@ class CbtusuEditView(CreateView):
                 idtusu = request.POST.get('idtusu')
                 cliente = clienteYEmpresas(request)["cliente"]
                 CbtusuNew = Cbtusu.objects.get(idtusu=idtusu)
+                
                 if actpas == "on":
                     licencias = Cbtlic.objects.filter(
                         cliente=cliente).first().nrousuario
@@ -1360,8 +1374,18 @@ class CbtusuEditView(CreateView):
                     data['error'] = "Nombre de Usuario Existente"
                     return JsonResponse(data, safe=False)
                 # CREATE
-                
+                if CbtusuNew.actpas == "A" and actpas != "on":
+                    aCbsusu = Cbsusu.objects.filter(idusu1=idusu1, finlogin = None).first()
+                    if aCbsusu != None:
+                        aCbsusu.finlogin = dt.datetime.now(tz=timezone.utc)
+                        aCbsusu.save()
+                    Cbwres.objects.filter(idusu=idusu1).delete()
+                    aCbrenct= Cbrenct.objects.filter(idusu=idusu1, fechorafin=None).first()
+                    if aCbrenct != None:
+                        aCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+                        aCbrenct.save()
                 aUser = User.objects.filter(username=CbtusuNew.idusu1).first()
+                
                 if idusu1 != CbtusuNew.idusu1:
                     usuario = User.objects.filter(username=CbtusuNew.idusu1).first()
                     usuario.username = idusu1
@@ -1446,7 +1470,7 @@ class ListaEmpresaView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        getContext(self.request, context, 'Administracion de Empresas', "CBF14")        
+        getContext(self.request, context, 'Administracion de Empresas', "CBF14")
         return context
 
 #************************* CBF15 - FORMULARIO DE USUARIOS *************************#
@@ -1845,6 +1869,7 @@ class CbtempCreateView(CreateView):
                 cliente = diccionario["cliente"]
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
+                codhomerp = request.POST["codhomerp"]
                 try:
                     actpas = request.POST["actpas"]
                     if actpas == "on":
@@ -1883,7 +1908,7 @@ class CbtempCreateView(CreateView):
                 aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtusue.save()
                 # CREATE
-                aCbtemp = Cbtemp(empresa=empresa, desemp=desemp, actpas=actpas)
+                aCbtemp = Cbtemp(empresa=empresa, desemp=desemp, actpas=actpas, codhomerp=codhomerp)
                 aCbtemp.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtemp.idusu = request.user.username
                 aCbtemp.cliente = diccionario["cliente"]
@@ -1913,7 +1938,7 @@ class CbtempEditView(CreateView):
             idtemp = self.request.GET.get('idtemp')
             aCbtemp = Cbtemp.objects.filter(idtemp=idtemp).first()
             actpas = aCbtemp.actpas == "A"
-            return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas}
+            return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas, 'codhomerp' : aCbtemp.codhomerp}
         except Exception as e:
             print(e)
 
@@ -1941,6 +1966,7 @@ class CbtempEditView(CreateView):
                 cliente = diccionario["cliente"]
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
+                codhomerp = request.POST["codhomerp"]
 
                 try:
                     actpas = request.POST["actpas"]
@@ -1987,6 +2013,7 @@ class CbtempEditView(CreateView):
                 aCbtemp.empresa = empresa
                 aCbtemp.desemp = desemp
                 aCbtemp.actpas = actpas
+                aCbtemp.codhomerp = codhomerp
                 aCbtemp.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtemp.idusu = request.user.username
                 aCbtemp.cliente = diccionario["cliente"]
@@ -2234,7 +2261,143 @@ class visualizacionUsuarios (ListView):
         getContext(self.request, context, 'Log de Usuarios Conectados', 'CBF22')
         return context
 
+#************************* CBF23 - CONFIGURACION PARA SEMIAUTOMATICAS *************************#
 
+class ConciliacionSemiautomatica (ListView):
+    model = Cbtcfg
+    template_name = 'cbtcfg/list.html'
+
+    # @method_decorator( csrf_exempt )
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+
+    def post(self, request, *args, **kwargs):
+        diccionario = clienteYEmpresas(request)
+
+        if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
+            position = 1
+            data = []
+            for i in Cbtcfg.objects.filter(cliente=diccionario["cliente"]).all():
+                item = i.toJSON()
+                if i.codcfg ==3:
+                    aCbtcfgc = Cbtcfgc.objects.filter(idtcfg=i).first()
+                    print(aCbtcfgc)
+                    item["campobco"] = aCbtcfgc.campobco
+                    item["campoerp"] = aCbtcfgc.campoerp
+                else:
+                    item["campobco"] = ""
+                    item["campoerp"] = ""
+                
+                data.append(item)
+                position += 1
+            return JsonResponse(data, safe=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        getContext(self.request, context, 'Configuración de conexiones semi-automaticas', 'CBF23')
+        return context
+
+#************************* CBF24 - Detalle de No conciliados *************************#
+
+class CbsresNoConciliados(ListView):
+    model = Cbsres
+    template_name = 'cbsresnc/list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        print(request)
+        print(request.POST)
+        if chequearNoDobleConexion(request):
+            print("bien")
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            print("redirigio")
+            return redirect("/")
+        
+
+    def post(self, request, *args, **kwargs):
+        data = {}
+        try:
+            idrenc = self.kwargs.get('idrenc')
+            data = []
+            position = 1
+            DataSet = Cbsres.objects.order_by(
+                "idsres").filter(idrenc=idrenc)
+            for i in DataSet:
+                if i.estadobco== 0:
+                    item = {}
+                    item["tipo"]="Banco"
+                    item["codcon"]=i.codtcobco
+                    try:
+                        if len(i.codtcobco)>1:
+                            print(i.codtcobco)
+                            item["indpend"]=Cbttco.objects.filter(codtco=i.codtcobco, indtco=2).first().indpend
+                        else:
+                            item["indpend"]=""
+                    except:
+                        item["indpend"]=""
+                    item["fecha"]=i.fechatrabco
+                    item["id"]=i.idrbcod
+                    item["documento"]=i.codtra
+                    item["glosa"]=i.desctra
+                    item["debe"]=i.debebco
+                    item["haber"]=i.haberbco
+                    item['ID'] = position
+                    item['position'] = position
+                    data.append(item)
+                    position += 1
+                if i.estadoerp== 0:
+                    item = {}
+                    item["tipo"]="ERP"
+                    item["codcon"]=i.codtcoerp
+                    try:
+                        if len(i.codtcoerp)>1:
+                            item["indpend"]=Cbttco.objects.filter(codtco=i.codtcoerp, indtco=1).first().indpend
+                        else:
+                            item["indpend"]=""
+                    except:
+                        item["indpend"]=""
+                    item["fecha"]=i.fechatraerp
+                    item["id"]=i.idrerpd
+                    item["documento"]=i.nrocomperp
+                    item["glosa"]=i.glosaerp
+                    item["debe"]=i.debeerp
+                    item["haber"]=i.habererp
+                    item['ID'] = position
+                    item['position'] = position
+                    data.append(item)
+                    position += 1
+
+            #createCbrenct(request, idrenc, 2, "CBF23")
+            
+        except Exception as e:
+            data['error'] = str(e)
+        return JsonResponse(data, safe=False)
+
+    
+
+    def get_context_data(self, **kwargs):
+        print("get_context_data")
+        context = super().get_context_data(**kwargs)
+        getContext(self.request, context,'Detalle de no conciliados', 'CBF23')
+
+        idrenca = self.request.GET.get('idrenc')
+        
+        if idrenca is None:
+            idrenca = self.kwargs.get('idrenc')
+        context['idrenc']=idrenca
+        print("fue idrenc")
+        print(idrenca)
+        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
+        context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
+        # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
+        print("context")
+        return context
 #************************* DETALLES *************************#
 
 class CbrerpdDetailView(UpdateView):
@@ -2280,8 +2443,8 @@ class CbrbcodDetailView(UpdateView):
         context['id'] = self.kwargs.get('idrbcod')
         context['nombre_id'] = 'IDRBCOD'
         context['idrenc'] = self.kwargs.get('idrbcoe')
-        #context['list_cbsres_url'] = reverse_lazy('CBR:cbsres-list')
-        #context['return_url'] = self.request.GET['return_url']
+        context['list_cbsres_url'] = reverse_lazy('CBR:cbsres-list')
+        context['return_url'] = self.request.GET['return_url']
         return context
 
 #************************* DESCARGAR ARCHIVO *************************#

@@ -16,7 +16,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="{{ action }}">
                 <input type="hidden" name="modificable" value={{ modificable }}>
-                <input type="hidden" name="idtusu" value={{ idtusu }}>
+                <input type="hidden" name="idtusu" id="idtusu" value={{ idtusu }}>
                 <div class="card-body pt-0">
                     {% if form.errors %}
                         <div class="alert alert-danger alert-dismissible">
@@ -78,7 +78,24 @@
             e.preventDefault();
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                location.href = "{% url 'CBR:cbtusu-list' %}";
+                $.ajax({
+
+                    method: 'POST',
+                    data : {idtusu:$("#idtusu").val()},
+                    beforeSend: function (request) {
+                        request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    },
+                    url: '/cbtusu/check/',
+                    success: function (respons) {
+                        if (respons.enuso){
+                            submit_(window.location.pathname, 'Notificación', 'Usuario conectado, por favor comuniquese con el Usuario para que guarde sus modificaciones y cierre su Sesión. \n NOTA: Usuario perderá todas las modificaciones que haya realizado sobre sus conciliaciones al momento de pasivar y cerrarle la Sesión. \n Confirme si desea Cerrar su Sesión y Pasivar al Usuario:', parameters, function (data) {
+                                location.href = "{% url 'CBR:cbtusu-list' %}";
+                            })
+                        }   else{                 
+                        location.href = "{% url 'CBR:cbtusu-list' %}";
+                    }
+                }
+                });
             });
         });
         $('.form-control').on("change", function(e){

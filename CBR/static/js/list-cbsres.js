@@ -390,28 +390,7 @@ $.ajax({
         $(function () {
             "use strict"
             $(document).ready(function () {
-                var buttonCommon = {
-                    exportOptions: {
-                        format: {
-                            body: function ( data, row, column, node ) {
-                                // Strip $ from salary column to make it numeric
-                                if(column==12){
-                                    let inicio = String(data).search("list") + 8
-                                    let final = String(data).search("</a>")
-                                    return String(data).substring(inicio,final)
-                                    
-                                }
-                                if(column == 1 || column == 9 || column == 10){
-                                return data.replace('<td><nobr>', '' ).replace('</nobr></td>', '' );
-                                }
-                                return data
-                                    
-                                
- 
-                            }
-                        }
-                    }
-                };
+            
                 const searchRegExp = /,/g;
                 const csrftoken = getCookie('csrftoken');
                 /*funcion que vuelve a calcular los saldos, historial y tipo de conciliacion en cada caso*/
@@ -622,7 +601,13 @@ $.ajax({
                         table.rows(function (idx, data, node) {
                             var rowe = table.row(idx)
                             if (row.data()["idrerpdl"] == rowe.data()["idrerpd"] && row.data()["idrerpdl"] != 0 && row.data()["idrerpdl"] != "") {
-                                $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#84cf84" });
+                                if(row.data()["estadobco"] == 0){
+                                    $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#CD5C5C" });
+                                }else if(row.data()["estadobco"] == 1){
+                                    $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#aacf84" });
+                                }else{
+                                    $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#FFFF33" });
+                                }
                             }
         
                         })
@@ -655,7 +640,13 @@ $.ajax({
                         table.rows(function (idx, data, node) {
                             var rowe = table.row(idx)
                             if (row.data()["idrerpd"] == rowe.data()["idrerpdl"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != "") {
-                                $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#84cf84" });
+                                if(row.data()["estadoerp"] == 0){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#CD5C5C" });
+                                }else if(row.data()["estadoerp"] == 1){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#aacf84" });
+                                }else{
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#FFFF33" });
+                                }                                
                             }
         
                         })
@@ -663,8 +654,13 @@ $.ajax({
                         table.rows(function (idx, data, node) {
                             var rowe = table.row(idx)
                             if (row.data()["idrbcodl"] == rowe.data()["idrbcod"] && row.data()["idrbcodl"] != 0 && row.data()["idrbcodl"] != "") {
-                                $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#84cf84" });
-                            }
+                                if(row.data()["estadoerp"] == 0){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#CD5C5C" });
+                                }else if(row.data()["estadoerp"] == 1){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#aacf84" });
+                                }else{
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#FFFF33" });
+                                }                              }
                         })
                     }
                 }
@@ -710,27 +706,25 @@ $.ajax({
                         url: '../static/lib/datatables-es.json'
                     },
                     buttons: [
-                        
-                            $.extend( true, {}, buttonCommon, {
-                                extend: 'copyHtml5'
-                            } ),
-
-                            $.extend( true, {}, buttonCommon, {
-                                extend: 'csvHtml5'
-                            } ),
-                            $.extend( true, {}, buttonCommon, {
-                                extend: 'excelHtml5'
-                            } ),
-                            $.extend( true, {}, buttonCommon, {
-                                extend: 'pdfHtml5'
-                            } ),
-                        
+                        {extend: 'copy',
+                        exportOptions: { orthogonal: 'export' }
+                        },
+                        {extend: 'csv',
+                        exportOptions: { orthogonal: 'export' }
+                        },
+                        {extend: 'excel',
+                        exportOptions: { orthogonal: 'export' }
+                        },
+                        {extend: 'print',
+                        exportOptions: { orthogonal: 'export' }
+                        },
                         {
                             extend: ['colvis'],
+                            exportOptions: { orthogonal: 'export' },
                             collectionLayout: 'fixed three-column',
                             columns: ':not(.noVis)',
-                        }
-                    
+                            
+                        },
                     ],
         
                     stripeClasses: [],
@@ -764,19 +758,19 @@ $.ajax({
                         { "data": "horatrabco", className: "dt-bancoColor" },
                         { "data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         {
                             "data": "saldoacumesbco",
                             name: "saldoacumesbco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         {
@@ -784,29 +778,33 @@ $.ajax({
                             name: "saldoacumdiabco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         { "data": 'oficina', className: "dt-bancoColor" },
                         {
                             "data": 'desctra', className: "dt-bancoColor", "render": function (data, type, full, meta) {
+                                console.log(type)
+                                if(type == 'export'){return data}else{
                                 var zone_html = "";
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
+                            }
                             }
                         },
                         {
                             "data": 'reftra', className: "dt-bancoColor", "render": function (data, type, full, meta) {
                                 var zone_html = "";
+                                if(type == 'export'){return data}else{
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
-                            }
+                            }}
                         },
                         { "data": 'codtra', className: "dt-bancoColor" },
                         { "data": 'idrbcod', className: "dt-bancoColor" },
@@ -828,30 +826,30 @@ $.ajax({
                         },
                         { "data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         {
                             "data": "saldoacumeserp",
                             name: "saldoacumeserp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         {
                             "data": "saldoacumdiaerp",
                             name: "saldoacumdiaerp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"|| type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         { "data": "saldodiferencia", name: "saldodiferencia", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
         
                         { "data": 'nrotraerp' },
                         {
@@ -865,22 +863,24 @@ $.ajax({
                         {
                             "data": 'referp', "render": function (data, type, full, meta) {
                                 var zone_html = "";
+                                if(type == 'export'){return data}else{
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
-                            }
+                            }}
                         },
                         {
                             "data": 'glosaerp', "render": function (data, type, full, meta) {
+                                if(type=='export'){return data}else{
                                 var zone_html = "";
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
-                            }
+                            }}
                         },
                         {
                             "data": 'fechaconerp', "render": function (data, type, full, meta) {
@@ -1620,13 +1620,18 @@ $.ajax({
                                 switch (row['estadobco']) {
                                     case 0: {
                                         var $Etiqueta = $('<p>No Conciliado</p>');
-                                        classBackground = 'callout-warning ';
+                                        classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
                                         var $Etiqueta = $('<p>Conciliado</p>');
                                         classBackground = 'callout-success';
+                                        break;
+                                    }
+                                    case 2: {
+                                        var $Etiqueta = $('<p>Conciliado Automático</p>');
+                                        classBackground = 'callout-warning';
                                         break;
                                     }
                                     default: {
@@ -1657,6 +1662,17 @@ $.ajax({
                                 }
                                 else if (data == -1) {
                                     zone_html = '<i style="color: green;" class="fas fa-check"></i>'
+                                }
+                                else if (row['estadobco'] == 2) {
+                                    zone_html =
+        
+                                    ` <div class="linkconciliadoauto"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                        <script>
+                                        //function ventanaSecundaria (URL){ 
+                                        //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                                        //     } 
+                                        </script>`
+        
                                 }
                                 else if (row['estadobco'] == 1) {
                                     zone_html =
@@ -1697,6 +1713,16 @@ $.ajax({
                                 else if (data == -1) {
                                     zone_html = '<i style="color: green;" class="fas fa-check"></i>'
                                 }
+                                else if (row['estadoerp'] == 2) {
+                                    zone_html =
+                                    ` <div class="linkconciliadoauto"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                    <script>
+                                    //function ventanaSecundaria (URL){ 
+                                    //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                                    //     } 
+                                    </script>`
+        
+                                }
                                 else if (row['estadoerp'] == 1) {
                                     zone_html =
         
@@ -1727,6 +1753,7 @@ $.ajax({
                         {
                             targets: ["codtcobco"],
                             render: function (data, type, row, meta) {
+                                if(type=='export'){return data}else{
                                 if (row['debebco'] != null) {
                                     let agregar = ""
                                     for (let opcion = 0; opcion < globalVariableIndtco.indtco_bco.length; opcion++) {
@@ -1745,7 +1772,7 @@ $.ajax({
                               </nobr></td>`
                                     return texto
                                 } else { return "" }
-                            }
+                            }}
                         },
                         {
                             targets: ["idrerpd"],
@@ -1772,13 +1799,18 @@ $.ajax({
                                 switch (parseInt(row['estadoerp'])) {
                                     case 0: {
                                         var $Etiqueta = $('<p>No Conciliado</p>');
-                                        classBackground = 'callout-warning ';
+                                        classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
                                         var $Etiqueta = $('<p>Conciliado</p>');
                                         classBackground = 'callout-success';
+                                        break;
+                                    }
+                                    case 2: {
+                                        var $Etiqueta = $('<p>Conciliado Automático</p>');
+                                        classBackground = 'callout-warning';
                                         break;
                                     }
                                     default: {
@@ -1788,7 +1820,7 @@ $.ajax({
                                 }
         
                                 $Etiqueta.attr('style', "width: 50px; height: 6px");
-                                $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0">  </div>').append($Etiqueta));
+                                $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0"> </div>').append($Etiqueta));
                                 $elDiv.children().removeClass();
                                 $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ' + classBackground);
                                 if (row['debeerp'] != null) {
@@ -1799,6 +1831,7 @@ $.ajax({
                         {
                             targets: ["codtcoerp"],
                             render: function (data, type, row, meta) {
+                                if(type=='export'){return data}else{
                                 if (row['debeerp'] != null) {
                                     let agregar = ""
                                     for (let opcion = 0; opcion < globalVariableIndtco.indtco_erp.length; opcion++) {
@@ -1817,7 +1850,7 @@ $.ajax({
                               </nobr></td>`
                                     return texto
                                 } else { return "" }
-                            }
+                            }}
                         },
         
                     ],
