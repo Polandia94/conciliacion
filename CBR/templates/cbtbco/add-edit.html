@@ -62,9 +62,9 @@
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
                         {% if action == "edit" %}
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Editar</button>
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px"  >Editar</button>
                         {% else %}
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px"  >Crear</button>
                         {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ bancos_url }}'">Cancelar</button>
@@ -80,7 +80,6 @@
     <script>
         $('form').on('submit', function (e) {
             e.preventDefault();
-            console.log($("#id_desbco").val())
             if ($("#id_desbco").val() != ""){
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {

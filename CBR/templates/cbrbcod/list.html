@@ -38,7 +38,6 @@
         <th scope="col" style="width: 10%;">SALDO</th>
 
 
-{#        <th scope="col" style="width: 20%; min-width: 20%" class="acciones-header" >Acción</th>#}
 
     </tr>
 
@@ -61,8 +60,6 @@
 function sendFile(file){
     var formData = new FormData();
     formData.append('formData', file);
-    console.log(file)
-    console.log(formData)
     const csrftoken = getCookie('csrftoken');
     $.ajax({
         beforeSend: function (request) {

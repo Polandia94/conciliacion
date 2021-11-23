@@ -10,22 +10,22 @@
     <a id="btnSalir" class="btn btn-primary btn-flat mb-3" data-toggle="tooltip" data-toggle="tooltip" data-placement="bottom" title="Regresar a la lista principal">
         <i class="fas fa-arrow-circle-left"></i>
     </a>
-    <a id="btnRecargar" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Recargar datos.">
+    <a id="btnRecargar" class="btn btn-info btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Recargar datos.">
         <i class="fas fa-sync"></i>
     </a>
-    <a id="btnResetColumns" class="btn btn-secondary btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Reiniciar posición de las columnas al estado original">
+    <a id="btnResetColumns" class="btn btn-secondary btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Reiniciar posición de las columnas al estado original">
         <i class="fas fa-columns"></i>
     </a>
-    <a href="/noconciliados/{{idrenc}}" data-idrenc="{{idrenc}}" class="btn btn-secondary btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Detalle de Movimientos No conciliados">
+    <a href="/noconciliados/{{idrenc}}" data-idrenc="{{idrenc}}" class="btn btn-secondary btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Detalle de Movimientos No conciliados">
         <i class="fas fa-info-circle"></i>
     </a>
     {% if editable == 'Editable' and indconc %} 
-    <a id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
+    <a id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
         <i class="fas fa-check-double"></i>
     </a>
     {% endif %}
     {% if editable == 'Editable' %} 
-    <a id="btnGuardar" class="btn btn-success btn-flat mb-3" data-toggle="tooltip" data-placement="bottom" title="Guardar conciliación {{ idrenc }}">
+    <a id="btnGuardar" class="btn btn-success btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Guardar conciliación {{ idrenc }}">
         <i class="fas fa-save"></i>
     </a>
 
@@ -144,6 +144,8 @@
     function alertac() {
                     alert("{{alertac}}");
                     }
-
+    window.onload= async function(){
+        primeraCargaCbsres()
+    }
                     </script>
 {% endblock %}

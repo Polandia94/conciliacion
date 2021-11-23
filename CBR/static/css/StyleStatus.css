@@ -187,3 +187,15 @@ table#data.dataTable tbody tr:hover > .sorting_1 {
         background-color: #4CAF50;
         width: 2px;
 }
+
+button.link {
+    background: none!important;
+    border: none;
+    padding: 0!important;
+    /*optional*/
+    font-family: arial, sans-serif;
+    /*input has OS specific font-family*/
+    color: #069;
+    text-decoration: underline;
+    cursor: pointer;
+  }

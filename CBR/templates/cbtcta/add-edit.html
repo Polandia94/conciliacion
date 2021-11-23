@@ -113,7 +113,11 @@
                     </div>
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Crear</button>
+                        {% if action == "edit" %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px" disabled >Grabar</button>
+                        {% else %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px" disabled >Crear</button>
+                        {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_cbtcta_url}}'">Cancelar</button>
                     </div>

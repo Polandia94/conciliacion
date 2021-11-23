@@ -20,7 +20,7 @@ urlpatterns = [
     path('getdesbco/', utils.getdesbco, name='getdesbco'),
     path('getcuenta', utils.getcuenta, name='getcuenta'),
     path('getGuardado/', utils.getguardado, name='getGuardado'),
-    path('getTiposDeConciliacion/', utils.getTiposDeConciliacion, name='getTiposDeConciliacion'),  path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
+    path('getTiposDeConciliacionpost/', utils.getTiposDeConciliacionpost, name='getTiposDeConciliacion'),  path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
     path('getColumnas/', utils.getColumnas, name='getColumnas'),
 
 
@@ -52,7 +52,6 @@ urlpatterns = [
     path('list/add/', views.CbrencCreateView.as_view(), name='cbrenc_nueva'),
     path('list/addaccount/', views.CbtctaCreateView.as_view(), name='cbtcta_nueva_cuenta'),
     path('cbtcfg/nuevo/', utils.CbtcfgCreate, name='cbtcfg_nueva_cbtcfg'),
-    path('cbtcfg/save/', utils.CbtcfgSave, name='cbtcfg_save_cbtcfg'),
     #*********** Eliminar ************
     path('cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del'),
     path('cbtcta/del/', utils.cbtctaDelete, name='cbtcta_delete_cuenta'),
@@ -90,5 +89,9 @@ urlpatterns = [
     path('updateCbtusue/', views.updateCbtusue, name='update-cbtusue'),
     path('descargarArchivos/', views.DescargarArchivoView.as_view(), name='descargar_archivo'),
     path('posibilidaddeconciliar/', utils.posibilidadDeConciliar, name='posibilidad_de_conciliar'),
-    path('updatecbtusuc/', utils.updateCbtusuc, name='posibilidad_de_conciliar')
+    path('updatecbtusuc/', utils.updateCbtusuc, name='posibilidad_de_conciliar'),
+    path('usercheck/', utils.userCheck, name='usercheck'),
+    path('cierredeemergencia/', utils.cierreDeEmergencia, name='cierredeemergencia'),
+    path('updatecbtcfg/', utils.updateCbtcfg, name='update_cbtcfg')
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -164,7 +164,7 @@ $(function () { "use strict"
                                         beforeSend: function (request) {
                                             request.setRequestHeader("X-CSRFToken", csrftoken);
                                         },
-                                        url: '/getTiposDeConciliacion',
+                                        url: '/getTiposDeConciliacionpost',
                                         data: {'idrenc': idrenc},
                                         success: function (respons) {
                                             try{debebcototal.innerHTML = Number(respons.debebcototal).toLocaleString("en-US", {style: "currency", currency: "USD", minimumFractionDigits: 2})}
@@ -1004,7 +1004,7 @@ $(function () { "use strict"
                     targets: ["idrbcod"],
                     render: function (data, type, row) {
                         if(((data != "0") && (data != null) && (data != undefined) && (data != '')) ){
-                        return `</nobr></td> <a class=d-inline href="#" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></nobr></td>`
+                        return `</nobr></td> <a class=d-inline href="#!" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></nobr></td>`
                     }else{return""}
                     }
 
@@ -1060,7 +1060,7 @@ $(function () { "use strict"
                             }
                             else if(row['estadobco']==1){zone_html =
                                 
-                                ` <div class="linkconciliadook"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                ` <div class="linkconciliadook"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
                                 <script>
                                 function ventanaSecundaria (URL){ 
                                         window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1069,7 +1069,7 @@ $(function () { "use strict"
                                     }
                             else{zone_html =
                                 
-                                ` <div class="linkconciliadofallo"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                ` <div class="linkconciliadofallo"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
                                 <script>
                                 function ventanaSecundaria (URL){ 
                                         window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1097,7 +1097,7 @@ $(function () { "use strict"
                             }
                             else if(row['estadoerp']==1){zone_html =
                                 
-                                ` <div class="linkconciliadook"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                ` <div class="linkconciliadook"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
                                 <script>
                                 function ventanaSecundaria (URL){ 
                                         window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1106,7 +1106,7 @@ $(function () { "use strict"
                                     }
                             else{zone_html =
                                 
-                                ` <div class="linkconciliadofallo"><a href="#" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                ` <div class="linkconciliadofallo"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
                                 <script>
                                 function ventanaSecundaria (URL){ 
                                         window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1125,7 +1125,7 @@ $(function () { "use strict"
                     targets: ["idrerpd"],
                     render: function (data, type, row) {
                         if(((data != "0") && (data != null) && (data != undefined) && (data != '')) ){
-                        return ` <a href="#" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> ${data}</a>
+                        return ` <a href="#!" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> ${data}</a>
                     <script>
                     function ventanaSecundaria (URL){ 
                             window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 

@@ -3,7 +3,6 @@ function getdesbco(){
     const urlParams = new URLSearchParams(window.location.search);
     var codbco = '';
     codbco = $("#id_codbco").val();
-    console.log(codbco)
     if ((codbco != '')) {
         $.ajax({
             method: 'GET',
@@ -13,11 +12,8 @@ function getdesbco(){
             url: '/getdesbco',
             data: {'codbco': codbco},
             success: function (respons) {
-                console.log(respons)
                 if (respons) {
                     $("#id_desbco").val(respons.desbco);
-                    console.log(respons.desbco)
-                    console.log( $("#id_desbco"))
                 } else {
                     $("#id_desbco").val('2021');
                 }
@@ -80,10 +76,7 @@ function getCuenta(){
             success: function (respons) {
                 if (respons) {
                     
-                    console.log("1");
-                    console.log(respons)
                     for (var i = 0; i<respons.cuentas.length; i++){
-                        console.log("2")
                         var opt = document.createElement('option');
                         opt.value = respons.cuentas[i].nombre;
                         opt.innerHTML = respons.cuentas[i].nombre + " : " + respons.cuentas[i].descripcion;
@@ -107,9 +100,21 @@ function getCuenta(){
     const csrftoken = getCookie('csrftoken');
     const urlParams = new URLSearchParams(window.location.search);
     
-
+    $(".usercheck").on('click', function(e) {
+        $.ajax({
+            method: 'POST',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/usercheck/',
+            success: function (respons) {                    
+                if (respons.cerrar){
+                    location.href = `/`
+                }
+            }
+        })
+    })
     $("#nuevoConfiguracionAuto").on('click', function (e) {
-        console.log("algo")
 
                 $.ajax({
                     method: 'POST',
@@ -338,8 +343,8 @@ function getCuenta(){
                     },
                     url: '/cbtusuc/guardado/',
                     data: {'cbtusuc': enviar},
-                    success: function (respons) {                    
-                        location.href = `../cbsres/?idrenc=`+idrenc;
+                    success: function (respons) {
+                        location.href = "/"
                 }
             });
                 
@@ -366,7 +371,7 @@ function getCuenta(){
     });
     /******************************************************************************************************************/
     /******************************************************************************************************************/
-    
+
     /******************************************************************************************************************/
     /******************************************************************************************************************/
     $("#btnConciliar").on('click', function () {
@@ -446,39 +451,4 @@ function getCuenta(){
 
 
 
-async function primeraCargaCbsres(){
-        let cargadoIncompleto = true
-        const csrftoken = getCookie('csrftoken');
-        const urlParams = new URLSearchParams(window.location.search);
-        const idrenc = urlParams.get('idrenc');
-        const idrencparam = String(parseInt(idrenc))
-        
-        $.ajax({
-            method: 'POST',
-            beforeSend: function (request) {
-                request.setRequestHeader("X-CSRFToken", csrftoken);
-            },
-            url: "../conciliarSaldos/",
-            data: {'idrenc': idrencparam, "sobreescribir": 'false'},
-            success: function (respons) {
-                    if(!window.location.hash && respons.hasOwnProperty('existe_info') == false) {
-                        window.location = window.location + '#loaded';
-                        window.location.reload();
-                    }
-                    cargadoIncompleto = false
-        
-            }})
-
-        function start(contador){
-            contador = contador +3
-            if(cargadoIncompleto && contador < 100){
-                cargando.innerHTML = "Conciliando " + contador.toString() + " segundos"
-                setTimeout(function(){
-                    start(contador); 
-                 },3000)
-            }else{
-                cargando.innerHTML = ""
-            };
-        }
-    }
 

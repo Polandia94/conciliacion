@@ -25,8 +25,32 @@ $(function () {
             {"data":"idtusu"},
             {"data": "idusu1"},
             {"data": "descusu"},
-            {"data": "tipousu"},
-            {"data": "actpas"},
+            {"data": "tipousu", "render": function (data, type, full, meta) {
+                if (data == "S"){
+                    return "Sí"
+                }else{
+                    return data
+                }
+                }
+            },
+            {"data": "indconc", "render": function (data, type, full, meta) {
+                if (data == "S"){
+                    return "Sí"
+                }else{
+                    return data
+                }
+                }},
+            {"data": "actpas", "render": function (data, type, full, meta) {
+                if (data == "A"){
+                    return "Activo"
+                }else{
+                    if (data=="P"){
+                        return "Pasivo"
+                    }else{
+                        return data
+                    }
+                }
+                }},
             {"data": null}
         ],
         columnDefs: [
@@ -35,16 +59,16 @@ $(function () {
                 visible: false
             },
             {
-                targets: [1, 2, 3, 4],
+                targets: [1, 2, 3, 4,5],
                 class: 'text-center pt-4',
             },
             {
-                targets: [5],
+                targets: [6],
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');
                     var classEliminar = '';
-                    if (row['modificable'] != true){
+                    if (row['modificable'] != true || row['eliminable'] != true){
                     classEliminar = 'disabled'; 
                     }
     

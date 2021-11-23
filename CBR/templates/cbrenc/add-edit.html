@@ -108,7 +108,7 @@
                     </div>
                     {% endif %}
                     <!-- /.card-body -->
-                    <div class="card-footer text-right"><button id="btnCargar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Cargar</button>
+                    <div class="card-footer text-right"><button id="btnCargar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px" disabled >Cargar</button>
                         
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_url }}'">Cancelar</button>
@@ -142,20 +142,14 @@
     </script>
     {% else %}
     <script>
-            
           $('form').on('submit', function (e) {
-            console.log("algo")
             e.preventDefault();
-            console.log("alfa")
             var parameters = new FormData(this);
-            console.log("nose")
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
                 location.href = "{% url 'CBR:cbrenc-car' %}";
             },true);
-            console.log("as")
         });
         $('.form-control').on("change", function(e){
-            console.log()
             if($("#id_archivoerp").val() != "" && $("#id_archivobco").val() != "" && $("#id_nrocta").val() != null){                
              $('#btnCargar').attr('disabled', false);
             }else{
@@ -168,6 +162,7 @@
 {% block scripts %}
     <script src="{% static 'js/events.js' %}" type="text/javascript">
     </script> 
+    
     <script>
 
         getCuenta()

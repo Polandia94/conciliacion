@@ -43,10 +43,6 @@ $(function () {
                 targets: [8, 9],
                 class: 'text-center pt-4',
                 render: function (data, type, row) {
-                    console.log("a")
-                    console.log(row['monbasebco'])
-                    console.log(data.toLocaleString('en-US'))
-                    console.log(row['monbasebco'] + data.toLocaleString('en-US'))
                     return row['monbasebco'] + data.toLocaleString('en-US')
                 }
             },

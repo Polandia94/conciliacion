@@ -32,10 +32,8 @@ def FueradeCalendario(dia,mes,ano):
 
 def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
     #Lee el archivo del banco y cre al Cbrbod respectivo
-    print("a")
     try:
         Cbrbode.objects.all().delete()
-        print("b")
         try:
             dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)) )
         except:
@@ -142,7 +140,8 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
                     try:
                         saldo = dataBco.loc[i, dataBco.columns[wk_colsaldo]].replace(".","").replace(",","")
                     except:
-                        pass
+                        saldo = 1
+                        errores.append(5)
                     try:
                         if saldo[-1]=="-":
                             saldo = float(saldo[0:-1])*-1
@@ -201,7 +200,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
 
                 #En caso de errores deja solo los errores en la tabla
         if fallo:
-            data["error"] = '<p>Verifique errores de banco en <a href=" ../../cbrbode" target="_blank"> Formulario CBF10</a></p>'
+            data["error"] = '''<p>Verifique errores de banco en  <a href="#" onClick="window.open('../../cbrbode', '_blank')">Formulario CBF10</a></p>'''
     #Caso contrario carga el cbrbcoe
         else:
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
@@ -358,11 +357,11 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                     aCbrgal.fechacon = fechacon
                     aCbrgal.fechatra = fechatra
                     if len(errores) > 0:
-                        debe = dataErp.loc[i, dataErp.columns[7]]
-                        haber = dataErp.loc[i, dataErp.columns[9]]
-                        saldo = dataErp.loc[i, dataErp.columns[11]]
-                        fechacon = dataErp.loc[i, dataErp.columns[12]]
-                        fechatra = dataErp.loc[i, dataErp.columns[0]]
+                        aCbrgal.debe = dataErp.loc[i, dataErp.columns[7]]
+                        aCbrgal.haber = dataErp.loc[i, dataErp.columns[9]]
+                        aCbrgal.saldo = dataErp.loc[i, dataErp.columns[11]]
+                        aCbrgal.fechacon = dataErp.loc[i, dataErp.columns[12]]
+                        aCbrgal.fechatra = dataErp.loc[i, dataErp.columns[0]]
                     else:
                         haberTotal = float(haber) + haberTotal
                         debeTotal = float(debe) + debeTotal
@@ -370,7 +369,6 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
 
                     
                     for error in errores:
-                        print(error)
                         fallo = True
                         try:
                             aCbrgal.idrenc = None
@@ -395,9 +393,9 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>"
         if fallo:
             try:
-                data["error"] = '<p>Verifique errores de ERP en <a href=" ../../cbrgale" target="_blank"> Formulario CBF11</a></p>'+ data["error"] 
+                data["error"] = '''<p>Verifique errores de ERP en <a href="#" onClick="window.open('../../cbrbode', '_blank')"> Formulario CBF11</a></p>'''+ data["error"] 
             except:
-                data["error"] = '<p>Verifique errores de ERP en  <a href=" ../../cbrgale" target="_blank"> Formulario CBF11</a></p>'
+                data["error"] = '''<p>Verifique errores de ERP en  <a href="#" onClick="window.open('../../cbrbode', '_blank')"> Formulario CBF11</a></p>'''
         else:
             try:
                 Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()

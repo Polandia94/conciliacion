@@ -24,7 +24,19 @@ $(function () {
         columns: [
             {"data": "tipo"},
             {"data": "codcon"},
-            {"data": "indpend"},
+            {"data": "indpend",  "render": function (data, type, full, meta) {
+
+                if(data==0){
+                    return "No"
+                    }
+                else if(data==1){
+                    return "Si"
+                }else{
+                    return data
+                }
+            
+                }
+            },
             {"data": "fecha"},
             {"data": "id"},
             {"data": "documento"},

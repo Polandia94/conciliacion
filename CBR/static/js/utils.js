@@ -292,3 +292,48 @@ function confirmar_accion(title, content, callback) {
 
 
 
+
+
+
+async function primeraCargaCbsres(){
+        let cargadoIncompleto = true
+        const csrftoken = getCookie('csrftoken');
+        const urlParams = new URLSearchParams(window.location.search);
+        const idrenc = urlParams.get('idrenc');
+        const idrencparam = String(parseInt(idrenc))
+        start(0)
+        
+        $.ajax({
+            method: 'POST',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: "../conciliarSaldos/",
+            data: {'idrenc': idrencparam, "sobreescribir": 'false'},
+            success: function (respons) {
+                    if(respons.hasOwnProperty('existe_info') == false) {
+                        //window.location = window.location + '#loaded';
+                        window.location.reload();
+                    }
+                    cargadoIncompleto = false
+
+        
+            }})
+            
+            function start(counter){
+                if(counter < 300){
+                    setTimeout(function(){
+                    counter++;
+                    if(cargadoIncompleto){
+                    cargando.innerHTML = "Conciliando " + counter + " segundos"
+                    start(counter)};
+                    }, 1000);
+                }else{
+                
+                    if(cargadoIncompleto){
+                    cargando.innerHTML = "Hubo un problema. Recargue la página"}
+                }
+            }
+
+            
+    }

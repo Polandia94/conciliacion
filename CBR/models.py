@@ -91,7 +91,7 @@ class Cbtcta(models.Model):
     codbco = models.CharField(verbose_name='Banco', db_column='codbco', max_length=5)
     nrocta = models.CharField(verbose_name='Numero de Cuenta', db_column='nrocta', max_length=30)
     descta = models.CharField(verbose_name='Descripcion de la cuenta', db_column='descta', max_length=50)
-    monbasebco = models.CharField(verbose_name='Moneda de base de banco', db_column='monbasebco', max_length=3)
+    monbasebco = models.CharField(verbose_name='Moneda', db_column='monbasebco', max_length=3)
     ano = models.SmallIntegerField(verbose_name='Año',db_column='ano', blank=True, null=True)
     mes = models.SmallIntegerField(db_column='mes', blank=True, null=True)
     saldoinibco = models.DecimalField(verbose_name='Saldo Inicial Banco', db_column='saldoinibco', max_digits=16, decimal_places=2)
@@ -762,8 +762,8 @@ class Cbtcli(models.Model):
     def save(self, *args, **kwargs):
         if Cbtpai.objects.filter(codpai=self.cliente[0:2]).exists():
             if Cbtcli.objects.filter(idtcli=self.idtcli).exists()== False:
-                Cbtcfg(cliente=self.cliente, codcfg=1, ordencfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
-                Cbtcfg(cliente=self.cliente, codcfg=2, ordencfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+                Cbtcfg(cliente=self.cliente, codcfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+                Cbtcfg(cliente=self.cliente, codcfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
             super( Cbtcli, self ).save( *args, **kwargs )
         else:
             return False
@@ -909,7 +909,6 @@ class Cbtcfg(models.Model):
     idtcfg = models.AutoField( verbose_name='ID', db_column='idtcfg', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     codcfg = models.SmallIntegerField(verbose_name='Codigo de configuracion',db_column='codcfg')
-    ordencfg = models.SmallIntegerField(verbose_name='Orden de comparacion',db_column='ordencfg')
     actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
@@ -925,7 +924,7 @@ class Cbtcfg(models.Model):
 class Cbtcfgc(models.Model):
     idtcfgc = models.AutoField( verbose_name='ID', db_column='idtcfgc', primary_key=True )
     idtcfg = models.ForeignKey( 'Cbtcfg', models.DO_NOTHING, db_column='idtcfg')
-    
+    ordencfg = models.SmallIntegerField(verbose_name='Orden de comparacion',db_column='ordencfg')
     campobco = models.CharField(verbose_name='Campo Banco',db_column='campobco', max_length=30)
     campoerp = models.CharField(verbose_name='Campo ERP',db_column='campoerp', max_length=30)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)

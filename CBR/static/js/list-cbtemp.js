@@ -27,8 +27,24 @@ $(function () {
             {"data": "pais"},
             {"data": "empresa"},
             {"data": "desemp"},
-            {"data": "codhomerp"},
-            {"data": "actpas"},
+            {"data": "codhomerp", "render": function (data,type,full,meta) {
+                if (data==""){
+                    return "Por Defecto"
+                }else{
+                    return data
+                }
+            }},
+            {"data": "actpas", "render": function (data, type, full, meta) {
+                if (data == "A"){
+                    return "Activo"
+                }else{
+                    if (data=="P"){
+                        return "Pasivo"
+                    }else{
+                        return data
+                    }
+                }
+                }},
             {"data": null},
         ],
         columnDefs: [

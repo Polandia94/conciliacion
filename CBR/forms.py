@@ -118,13 +118,10 @@ class CbtctaForm( ModelForm ):
         try:
             if form.is_valid():
                 data = form.save(commit=True)
-                print("se guardo")
             else:
-                print("no se guardo")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
-            print("error 1")
             print(e)
             data['error']=str( e )
         return data
@@ -155,7 +152,7 @@ class CbtctaForm( ModelForm ):
                           'class': 'form-control'}
             ),
             'monbasebco': TextInput(
-                attrs = { 'placeholder': 'Mes Base Banco',
+                attrs = { 'placeholder': 'Moneda',
                           'class': 'form-control'}
             ),
             'ano': NumberInput(
@@ -266,7 +263,7 @@ class CbtusuForm( ModelForm ):
 
     class Meta:
         model = Cbtusu
-        fields = ['idusu1', 'descusu','tipousu','actpas']
+        fields = ['idusu1', 'descusu','tipousu','actpas', 'indconc']
         # fields = '__all__'
         widgets = {
             'idusu1': TextInput(
@@ -284,7 +281,11 @@ class CbtusuForm( ModelForm ):
             'actpas': CheckboxInput(
                 attrs = { 'placeholder': 'Cuenta',
                           'class': 'form-control'}
-            )        
+            ),
+            'indconc': CheckboxInput(
+                attrs = { 'placeholder': 'Cuenta',
+                          'class': 'form-control'}
+            )       
                  
         }
 
@@ -299,20 +300,15 @@ class CbtempForm( ModelForm ):
 
     def save(self, commit=True):
         data={}
-        print("aca")
         form=super()
-        print("alla")
 
         try:            
             if form.is_valid():
                 data = form.save(commit=True)
-                print("se guardo")
             else:
-                print("error 1")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
-            print("error 2")
             print(e)
             data['error']=str( e )
         return data

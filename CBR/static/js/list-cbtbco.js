@@ -26,7 +26,17 @@ $(function () {
             {"data": "pais"},
             {"data": "codbco"},
             {"data": "desbco"},
-            {"data": "actpas"},
+            {"data": "actpas", "render": function (data, type, full, meta) {
+                if (data == "A"){
+                    return "Activo"
+                }else{
+                    if (data=="P"){
+                        return "Pasivo"
+                    }else{
+                        return data
+                    }
+                }
+                }},
             {"data": null},
         ],
         columnDefs: [

@@ -105,8 +105,6 @@ $(function () {
                 targets: [9,10,11],
                 class: 'text-center pt-4',
                 render: function (data, type, row) {
-                    console.log(data)
-                    console.log(data+1)
                     return row['moneda'] + parseFloat(data).toLocaleString('en-US', {minimumFractionDigits:2})
                 }
             },
@@ -160,7 +158,6 @@ $(function () {
             {targets: [9],
                 createdCell: function (cell) {
                     var row = table.row(cell)
-                    console.log(row)
                     if(row.data()['saldobcoori'] != null){
                         var monto = parseFloat(row.data()['saldobcoori']);
                         $(cell).attr("title", "Saldo Original: "+ row.data()['moneda'] + monto.toLocaleString('en-US', {minimumFractionDigits:2}))
@@ -198,7 +195,7 @@ $(function () {
                     }
                     if (row['estado'] == '3') CodeStatus = 4;
                     if (row['estado'] == '2') CodeStatus = 5; //nuevo codestatus 5 para conciliados
-                    if (row["usuario"] != "") CodeStatus = 3;
+                    if (row["enuso"]) CodeStatus = 3;
                     var classMain = 'btn btn-app';
                     var classDetalles = '';
                     var classLog = '';
@@ -281,7 +278,7 @@ $(function () {
                         `<a class="${classMain}" href="tiempo/?idrenc=${row.idrenc}" ><i class="fas fa-clock"></i>Tiempo</a>`)
                         .addClass(classLog));
                     // ##### desconciliar ######
-                    if(globalVariable.classDesconciliador){
+                    if(globalVariable.classDesconciliador != 'False'){
                         $elDiv.children().append($(
                         `<a class="${classMain}" id="btnDesconciliar${row.idrenc}" data-idrenc="${row.idrenc}" ><i class="fas fa-unlock-alt"></i>Desconciliar</a>`)
                         .addClass(classDesconciliar)); 
