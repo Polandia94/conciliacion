@@ -346,6 +346,7 @@ def conciliarSaldos(request):
                 # Define si es posible conciliar(es primera vez, se acepto la sobreescritura y el estado no es conciliado ni eliminado)
                 if ((sobreescribir == 'true') or (existe == 0)):
                     with transaction.atomic():
+                        Cbwres.objects.filter(idrenc=idrenc).delete()
                         aCbrenc=Cbrenc.objects.get(idrenc=idrenc)
                         ano = aCbrenc.ano
                         mes = aCbrenc.mes
@@ -377,6 +378,10 @@ def conciliarSaldos(request):
                                 aUnir.debe=element.debebco
                                 aUnir.haber=element.haberbco
                                 aUnir.saldo=element.saldobco
+                                try:
+                                    aUnir.codtcobco=element.codtcobco
+                                except:
+                                    aUnir.codtcobco=""
                                 aUnir.idrbcoe=Cbrbcoe.objects.filter(idrenc=element.idrenc).first()
                                 bcoDataSet.insert(0,aUnir)
                         if aCbrencAnterior is not None:
@@ -399,6 +404,7 @@ def conciliarSaldos(request):
                                 aUnir.haber = element.habererp
                                 aUnir.saldo = element.saldoerp
                                 aUnir.fechacon = element.fechaconerp
+                                aUnir.codtcoerp=element.codtcoerp
                                 aUnir.idrerpe=Cbrerpe.objects.filter(idrenc=element.idrenc).first()
                                 ##Completar con el resto de las cosas
                                 erpDataSet.insert(0,aUnir)
@@ -464,10 +470,13 @@ def conciliarSaldos(request):
                                         ano=Cbrenc.objects.get(idrenc=idrenc).ano,
                                         mes=Cbrenc.objects.get(idrenc=idrenc).mes,
                                         estadobco=0,
-                                        codtcobco=" ",
                                         pautado=color
                                         # --------------------
                                     )
+                                    try:
+                                        insCbsres.codtcobco=vwRow.codtcobco
+                                    except:
+                                        insCbsres.codtcobco=""
                                     insCbsres.fechact = dt.datetime.now(
                                         tz=timezone.utc)
                                     insCbsres.idusu = request.user.username
@@ -568,9 +577,9 @@ def conciliarSaldos(request):
                         while n < Cbsres.objects.filter(idrenc=idrenc).count():
                             aCbsres = listado[n]
                             if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debebco=aCbsres.debebco, haberbco=aCbsres.haberbco).count() == 1:
-                                if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).count() == 1:
+                                if Cbsres.objects.filter(idrenc=idrenc, fechatraerp=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).count() == 1:
                                     bCbsres = Cbsres.objects.filter(
-                                        idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).first()
+                                        idrenc=idrenc, fechatraerp=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).first()
                                     aCbsres.estadobco = 1
                                     bCbsres.estadoerp = 1
                                     aCbsres.idrerpdl = bCbsres.idrerpd
@@ -719,7 +728,10 @@ def Unir(vwRow, insCbsres, idrenc, color):
     insCbsres.fechatraerp = vwRow.fechatra
     insCbsres.debeerp = vwRow.debe
     insCbsres.habererp = vwRow.haber
-    insCbsres.codtcoerp = " "
+    try:
+        insCbsres.codtcoerp = vwRow.codtcoerp
+    except:
+        insCbsres.codtcoerp = ""
     if insCbsres.saldodiferencia == 0:
         insCbsres.historial = 3
     insCbsres.nrotraerp = vwRow.nrotra
@@ -787,7 +799,6 @@ def editCbwres(request):
                 aCbwsres.idrerpdl = int(fila["idrerpdl"])
             except:
                 aCbwsres.idrerpdl = int(0)
-            print(fila)
             try:
                 aCbwsres.codtcobco = fila["codtcobco"]
             except:
@@ -825,26 +836,16 @@ def cerrarConciliacion(request):
             CbrencUpd = Cbrenc.objects.get(idrenc=idrenc)
             diccionario = clienteYEmpresas(request)
             if CbrencUpd.empresa in diccionario["empresas"] and CbrencUpd.cliente == diccionario["cliente"]:
-                print("empieza a guardar")
                 guardado(idrenc,request)
-                print("se guardo")
                 lista = Cbsres.objects.filter(idrenc=idrenc).all()
                 error = False
                 for aCbsres in lista:
-                    print("recorre lista")
-
                     if (aCbsres.estadobco == 0 and (aCbsres.codtcobco == "" or aCbsres.codtcobco == None) or (aCbsres.estadoerp == 0 and (aCbsres.codtcoerp == "" or aCbsres.codtcoerp == None))):
-                        print("existe error")
                         error = True
                         data={}
                         data["exito"] = False
                         data["error"] = "El idsres " + str(aCbsres.idsres) + " no se encuentra conciliado ni tiene un código de conciliación"
-                        print("SE MANDO POR ACA")
-                        print(data)
                         return JsonResponse(data)
-                    elif aCbsres.estadobco == 0:
-                        print(aCbsres.codtcobco)
-                print("termina de recorrer lista")
                 CbrencUpd.estado = 2
                 CbrencUpd.save()
                 data = {"idrenc": idrenc}
@@ -954,7 +955,7 @@ def getguardado(request):
         for registro in Cbwres.objects.filter(idrenc=idrenc).all():
             if registro.idrerpd != 0:
                 aCbrerpd = Cbrerpd.objects.filter(idrerpd=registro.idrerpd).first()
-                if (aCbrerpd.debe != registro.debeerp or aCbrerpd.haber != registro.habererp) and (registro.codtcoerp == " " or registro.codtcoerp == None):
+                if (aCbrerpd.debe != registro.debeerp or aCbrerpd.haber != registro.habererp) and (registro.codtcoerp == "" or registro.codtcoerp == None):
                     data = {
                         "guardado": "Explique la modificacion en IDSRES =" + str(registro.idsres)}
     return JsonResponse(data)
@@ -1218,7 +1219,6 @@ def guardado(idrenc, request):
     aCbrenct.accion = 4
     aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)
     aCbrenct.save()
-    print("empieza el while")
     with transaction.atomic():
         while Cbwres.objects.filter(idrenc=idrenc).exists():
             idsres = Cbwres.objects.filter(idrenc=idrenc).first().idsres
@@ -1238,9 +1238,7 @@ def guardado(idrenc, request):
             aCbsres.estadoerp = aCbwres.estadoerp
             aCbsres.save()
             aCbwres.delete()
-        print("guardo los cbsres")
         tiposDeConciliacion = json.loads(getTiposDeConciliacion(request,idrenc).content)
-        print("recibio los tipos de conciliacion")
         for idsres in tiposDeConciliacion["listado"]:
             dato = tiposDeConciliacion[str(idsres)]
             try:
@@ -1255,14 +1253,14 @@ def guardado(idrenc, request):
                 aCbsresc = Cbsresc(idsres=idsres, codtco=dato[1], debeerp=dato[2],
                                 habererp=dato[3], saldoacumesbco=dato[6], saldoacumeserp=dato[7])
                 aCbsresc.save()
-        try:
-            aCbsres = Cbsres.objects.filter(
+        aCbsres = Cbsres.objects.filter(
                 idrenc=idrenc).order_by('-idsres').first()
-            aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
-            aCbrenc.saldobco = tiposDeConciliacion["saldobcototal"]
-            aCbrenc.saldoerp = tiposDeConciliacion["saldoerptotal"]
-            aCbrenc.difbcoerp = tiposDeConciliacion["saldodiferenciatotal"]
-            aCbrenc.save()
+        aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
+        aCbrenc.saldobco = tiposDeConciliacion["saldobcototal"]
+        aCbrenc.saldoerp = tiposDeConciliacion["saldoerptotal"]
+        aCbrenc.difbcoerp = tiposDeConciliacion["saldodiferenciatotal"]
+        aCbrenc.save()
+        try:
             ultimoDebeErp = aCbsres.debeerp
             if ultimoDebeErp is None:
                 ultimoDebeErp = 0
@@ -1282,7 +1280,6 @@ def guardado(idrenc, request):
             anteriorCbrencl = Cbrencl.objects.filter(idrenc=aCbrencl.idrenc).last()
             if aCbrencl.status != anteriorCbrencl.status or aCbrencl.difbcoerp != anteriorCbrencl.difbcoerp or aCbrencl.saldobco != anteriorCbrencl.saldobco:
                 aCbrencl.save(aCbrencl)
-            print("calculo los totales")
         except Exception as e:
             print(e)
             pass
@@ -1417,7 +1414,7 @@ def getContext(request, context, titulo, formulario):
     context['sesiones_url'] = reverse_lazy('CBR:visualizacion_usuarios')
     context['idrenc'] = request.GET.get('idrenc')
     context['conciliacion_semiautomatica'] = reverse_lazy('CBR:conciliacion_semiautomatica')
-
+    context["erppordefecto"] = aCbtcli.codhomerp
     if aCbtusu.tipousu == "S":
         context['superusuario'] = True
         context['idusu1'] = aCbtusu.idusu1

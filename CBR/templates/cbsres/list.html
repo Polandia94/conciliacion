@@ -131,6 +131,11 @@
     <script src="{% static 'js/list-cbsres.js' %}"></script>
     {% else %}
     <script src="{% static 'js/list-cbsres-view.js' %}"></script>
+    <script>
+    var globalVariableIndtco={
+        moneda: "{{moneda}}"
+    };
+    </script>
 
     {% endif %}
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>

@@ -184,10 +184,6 @@ class CbsresListView(ListView):
                         fecha = item["fechatrabco"]
                         if fecha is None:
                             fecha = item["fechatraerp"]
-                        print(fecha.year)
-                        print(ano)
-                        print(fecha.month)
-                        print(mes)
                         if primerRegistro == False  and fecha.year== ano and fecha.month == mes:
                             item["primerRegistro"] = True
                             primerRegistro = True
@@ -271,6 +267,14 @@ class CbsresviewListView(ListView):
                     # item['id']=position
                     item['ID'] = position
                     item['position'] = position
+                    if item['idrerpd'] == 0:
+                        item['debeerporiginal'] = 0
+                        item['habererporiginal'] = 0
+                    else:
+                        aCbrerpd = Cbrerpd.objects.filter(
+                            idrerpd=item['idrerpd']).first()
+                        item['debeerporiginal'] = aCbrerpd.debe
+                        item['habererporiginal'] = aCbrerpd.haber
                     data.append(item)
                     position += 1
                 createCbrenct(request,idrenc, 7, "CBF02")
@@ -366,7 +370,7 @@ class CbrencCreateView(CreateView):
                                                                                                # cliente=cliente,
                                                                                                empresa=empresa,
                                                                                                ).exists() == False:
-                if Cbrenc.objects.filter(codbco=codbco,
+                if Cbrenc.objects.exclude(estado=3).filter(codbco=codbco,
                                          nrocta=nrocta,
                                          ano=anoanterior,
                                          mes=mesanterior,
@@ -410,75 +414,75 @@ class CbrencCreateView(CreateView):
                     return JsonResponse(data)
 
                 # Crea el CBRENC
-                with transaction.atomic():
-                    form = self.get_form()
-                    form.fechact = dt.datetime.now(tz=timezone.utc)
-                    form.idusualt = request.user.username
-                    self.CbrencNew = form.save()
-                    codbco = request.POST.get( 'codbco')
-                    empresa = request.POST.get( 'empresa')
-                    aCbmbco = Cbmbco.objects.filter(codbco=codbco).first()
-                    error = False
-                    if aCbmbco == None:
+                #with transaction.atomic():
+                form = self.get_form()
+                form.fechact = dt.datetime.now(tz=timezone.utc)
+                form.idusualt = request.user.username
+                self.CbrencNew = form.save()
+                codbco = request.POST.get( 'codbco')
+                empresa = request.POST.get( 'empresa')
+                aCbmbco = Cbmbco.objects.filter(codbco=codbco).first()
+                error = False
+                if aCbmbco == None:
+                    data['error'] = "El Banco no tiene un sistema homologador válido"
+                    error = True
+                
+                aCbtemp = Cbtemp.objects.filter(empresa=empresa).first()
+                if aCbtemp == None:
+                    data['error'] = "El ERP no tiene un sistema homologador válido"
+                    error = True
+                if error == False:
+                    codhombco = aCbmbco.codhombco
+                    if codhombco == "VEBOD":
+                        HomologacionBcoBOD(request, self.CbrencNew,
+                                        data, saldobcoanterior)
+                    else:
                         data['error'] = "El Banco no tiene un sistema homologador válido"
                         error = True
+
                     
-                    aCbtemp = Cbtemp.objects.filter(empresa=empresa).first()
-                    if aCbtemp == None:
+                    # Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
+                    codhomerp = aCbtemp.codhomerp
+                    if codhomerp == "":
+                        codhomerp = Cbtcli.objects.filter(cliente=diccionario["cliente"]).first().codhomerp
+                if error == False:
+                    if codhomerp == "VEGAL":
+                        HomologacionErpGAL(request, self.CbrencNew,
+                                            data, saldoerpanterior)
+                    else:
                         data['error'] = "El ERP no tiene un sistema homologador válido"
                         error = True
-                    if error == False:
-                        codhombco = aCbmbco.codhombco
-                        if codhombco == "VEBOD":
-                            HomologacionBcoBOD(request, self.CbrencNew,
-                                            data, saldobcoanterior)
-                        else:
-                            data['error'] = "El Banco no tiene un sistema homologador válido"
-                            error = True
-
-                        
-                        # Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
-                        codhomerp = aCbtemp.codhomerp
-                        if codhomerp == "":
-                            codhomerp = Cbtcli.objects.filter(cliente=diccionario["cliente"]).first().codhomerp
-                    if error == False:
-                        if codhomerp == "VEGAL":
-                            HomologacionErpGAL(request, self.CbrencNew,
-                                                data, saldoerpanterior)
-                        else:
-                            data['error'] = "El ERP no tiene un sistema homologador válido"
-                            error = True
-                    if error == False:
-                        self.CbrencNew.cliente = diccionario["cliente"]
-                        self.CbrencNew.save()
-                        try:
-                            imgbco = base64.b64encode(open(str(Path(__file__).resolve(
-                            ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
-                            aCbrencibco = Cbrencibco(
-                                idrenc=self.CbrencNew.idrenc, imgbco=imgbco)
-                            aCbrencibco.save()
-                            time.sleep(2)
-                            os.remove(str(Path(__file__).resolve().parent.parent) +
-                                    "/media/" + str(self.CbrencNew.archivoimgbco))
-                        except:
-                            print("No hay imagen de banco")
-                            # Guarda la imagen del ERP. Se encuentra funcionando pero no es necesario.
-                            #try:
-                            #    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
-                            #    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
-                            #    aCbrencierp = Cbrencierp(
-                            #        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
-                            #    aCbrencierp.save()
-                            #    time.sleep(2)
-                            #    os.remove(str(Path(__file__).resolve().parent.parent) +
-                            #              "/media/" + str(self.CbrencNew.archivoimgerp))
-                            #except:
-                            #    print("No hay imagen de ERP")
-                        try:
-                            print(data['error'])
-                            error = True
-                        except:
-                            error = False
+                if error == False:
+                    self.CbrencNew.cliente = diccionario["cliente"]
+                    self.CbrencNew.save()
+                    try:
+                        imgbco = base64.b64encode(open(str(Path(__file__).resolve(
+                        ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
+                        aCbrencibco = Cbrencibco(
+                            idrenc=self.CbrencNew.idrenc, imgbco=imgbco)
+                        aCbrencibco.save()
+                        time.sleep(2)
+                        os.remove(str(Path(__file__).resolve().parent.parent) +
+                                "/media/" + str(self.CbrencNew.archivoimgbco))
+                    except:
+                        pass
+                        # Guarda la imagen del ERP. Se encuentra funcionando pero no es necesario.
+                        #try:
+                        #    imgerp = base64.b64encode(open(str(Path(__file__).resolve(
+                        #    ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgerp), 'rb').read())
+                        #    aCbrencierp = Cbrencierp(
+                        #        idrenc=self.CbrencNew.idrenc, imgerp=imgerp)
+                        #    aCbrencierp.save()
+                        #    time.sleep(2)
+                        #    os.remove(str(Path(__file__).resolve().parent.parent) +
+                        #              "/media/" + str(self.CbrencNew.archivoimgerp))
+                        #except:
+                        #    print("No hay imagen de ERP")
+                    try:
+                        print(data['error'])
+                        error = True
+                    except:
+                        error = False
 
                     if error == True:
                         Cbrbod.objects.filter(
@@ -1893,6 +1897,8 @@ class CbtempCreateView(CreateView):
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
                 codhomerp = request.POST["codhomerp"]
+                if codhomerp == Cbtcli.objects.get(cliente=diccionario["cliente"]).codhomerp:
+                    codhomerp = ""
                 try:
                     actpas = request.POST["actpas"]
                     if actpas == "on":
@@ -1950,10 +1956,15 @@ class CbtempCreateView(CreateView):
         context['editable'] = True
         context["inactiva"] = False
         context['empresas_url'] = reverse_lazy('CBR:cbtemp-list')
-        homologadores = Cbthom.objects.filter(indhom="E").all()
+        homologadores = Cbthom.objects.filter(indhom="E").order_by("codhom").all()
         cbthom = []
         for aCbthom in homologadores:
             cbthom.append({"nombre":aCbthom.codhom, "selected":False})
+        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
+        aCbtcli = Cbtcli.objects.filter(cliente=aCbtusu.cliente).first()
+        for acbthom in cbthom:
+            if acbthom["nombre"]==aCbtcli.codhomerp:
+                acbthom["selected"]=True
         context['codhomerp'] = cbthom
         return context
 
@@ -1995,7 +2006,8 @@ class CbtempEditView(CreateView):
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
                 codhomerp = request.POST["codhomerp"]
-
+                if codhomerp == Cbtcli.objects.get(cliente=diccionario["cliente"]).codhomerp:
+                    codhomerp = ""
                 try:
                     actpas = request.POST["actpas"]
                     if actpas == "on":
@@ -2070,12 +2082,18 @@ class CbtempEditView(CreateView):
         if Cbrenc.objects.exclude(estado=3).filter(empresa=empresa.empresa).exists() or Cbtcta.objects.filter(empresa=empresa.empresa).exists():
             context["editable"] = False
         cbthom = []
-        homologadores = Cbthom.objects.filter(indhom="E").all()
+        homologadores = Cbthom.objects.filter(indhom="E").order_by("codhom").all()
         for aCbthom in homologadores:
             if empresa.codhomerp == aCbthom.codhom:
                 cbthom.append({"nombre":aCbthom.codhom, "selected":True})
             else:
                 cbthom.append({"nombre":aCbthom.codhom, "selected":False})
+            if empresa.codhomerp == "":
+                aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
+                aCbtcli = Cbtcli.objects.filter(cliente=aCbtusu.cliente).first()
+                for acbthom in cbthom:
+                    if acbthom["nombre"]==aCbtcli.codhomerp:
+                        acbthom["selected"]=True
         context['codhomerp'] = cbthom
         
         context['empresas_url'] = reverse_lazy('CBR:cbtemp-list')

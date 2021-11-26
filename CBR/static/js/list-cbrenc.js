@@ -207,37 +207,42 @@ $(function () {
                     var classDesconciliar = '';
 
                     switch (CodeStatus) {
+                        // Error no cargado
                         case 0: {
                             var classBackground = '';
-
+                            classIndicador = 'callout-danger';
                             classDetalles = 'disabled'; //OK
                             classDesconciliar = 'disabled';
                             break;
                         }
+                        // Cargado con misma cantidad de registros de ambos lados
                         case 1: {
-                            classIndicador = 'callout-warning'; //OK
+                            classIndicador = 'callout-danger'; //OK
                             classDesconciliar = 'disabled';
                             break;
                         }
+                        // Cargado con distinta cantidad de registros en cada lado
                         case 2: {
-                            classIndicador = 'callout-info';
+                            classIndicador = 'callout-danger';
                             classDesconciliar = 'disabled';
                             break;
                         }
+                        // Conciliacion que se encuentra en uso
                         case 3: {
                             // classConciliar = 'disabled'; //OK
                             classResultados = ''; //OK
                             classEliminar = 'disabled'; //OK
-                            classIndicador = 'callout-success';
+                            classIndicador = 'callout-danger';
                             classConciliar = 'disabled';
                             classDesconciliar = 'disabled';
                             break;
                         }
+                        // conciliacion eliminada
                         case 4: {
                             // classConciliar = 'disabled'; //OK
                             classResultados = ''; //OK
                             classEliminar = 'disabled'; //OK
-                            classIndicador = 'callout-success';
+                            classIndicador = 'callout-danger';
                             classConciliar = 'disabled';
                             classDesconciliar = 'disabled';
 

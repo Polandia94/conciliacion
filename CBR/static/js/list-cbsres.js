@@ -404,9 +404,7 @@ $.ajax({
                     let saldo = 0
                     let primerRegistro = false
                     for (let fila = 0; fila<1000; fila++) {
-                        console.log(table.row(fila).data()["idsres"])
                         if(table.row(fila).data()["primerRegistro"] == true){
-                            console.log("capto primer registro")
                             table.row(fila).data()["idsres"]
                             primerRegistro = true
                         }
@@ -596,7 +594,7 @@ $.ajax({
                                     try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch {}
                                     globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
-                                    if(globalVariable.SaldoDiferenciaTotal == 0){
+                                    if(respons.saldodiferenciatotal == 0){
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
                                     }else{
@@ -1338,7 +1336,6 @@ $.ajax({
                                 //    var tr = $(cell);
                                 //    tr.css('color', '#ff0000');
                                 //}
-                                                                console.log(saldo)
                                 cell.setAttribute('contenteditable', true)
                                 cell.setAttribute('spellcheck', false)
         
@@ -1353,7 +1350,7 @@ $.ajax({
                                 })
                                 cell.addEventListener('blur', function (e) {
                                     var row = table.row(e.target.parentElement)
-                                    if (original == null || row.data()['habererp'] != 0 || row.data()['estadoerp'] == "1") {
+                                    if (original == null || row.data()['habererp'] != 0 || row.data()['estadoerp'] == "1" || row.data()['estadoerp'] == 1 || isNaN(e.target.textContent.replace(globalVariableIndtco.moneda, "").replace(searchRegExp, ""))) {
                                         e.target.textContent = original
                                     }
                                     else if (original !== e.target.textContent) {
@@ -1418,7 +1415,7 @@ $.ajax({
                                 })
                                 cell.addEventListener('blur', function (e) {
                                     var row = table.row(e.target.parentElement)
-                                    if (original == null || row.data()['debeerp'] != 0 || row.data()['estadoerp'] == 1) {
+                                    if (original == null || row.data()['debeerp'] != 0 || row.data()['estadoerp'] == 1 || isNaN(e.target.textContent.replace(globalVariableIndtco.moneda, "").replace(searchRegExp, ""))) {
                                         e.target.textContent = original
                                     } else {
                                         if (original !== e.target.textContent) {
@@ -1710,7 +1707,7 @@ $.ajax({
                                         break;
                                     }
                                     case 2: {
-                                        var $Etiqueta = $('<p>Conciliado Sugerido</p>');
+                                        var $Etiqueta = $('<p>Sugerido</p>');
                                         classBackground = 'callout-warning';
                                         break;
                                     }
@@ -1725,6 +1722,18 @@ $.ajax({
                                 $elDiv.children().removeClass();
                                 $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ' + classBackground);
                                 if (row['estadobco'] == 2){
+                                    var disabled = "disabled"
+                                    var clase = "warning"
+                                    table.rows(function (idx, data, node) {
+                                    var rowg = table.row(idx)
+                                            
+                                            if (rowg.data()["idrbcodl"] == row["idrbcod"]) { 
+                                                if(rowg.data()["debeerp"] == row["haberbco"]&&rowg.data()["habererp"] == row["debebco"]){
+                                                    disabled = ""
+                                                    clase = "sucess"
+                                                }
+                                            }
+                                        })
                                     $elDiv.append('<div id="estadobco-'+row['idsres']+`" style="display: none;">
                                     <script>
                                     function cambioEstadoBanco(accion, id){
@@ -1791,7 +1800,7 @@ $.ajax({
                                             }
                                     }
                                     </script>
-                                    <button type="button" onclick="cambioEstadoBanco('aceptarbanco',`+meta.row+`)" id="aceptarBanco-`+row['idsres']+`" class="btn btn-success btn-sm">✔</button>
+                                    <button type="button" `+disabled+` onclick="cambioEstadoBanco('aceptarbanco',`+meta.row+`)" id="aceptarBanco-`+row['idsres']+`" class="btn btn-`+ clase +` btn-sm">✔</button>
                                         <button type="button" onclick="cambioEstadoBanco('rechazarbanco',`+meta.row+`)" id="cancelarBanco-`+row['idsres']+`" class="btn btn-danger btn-sm">X</button>
                                             </div>
                                             `)
@@ -1979,7 +1988,7 @@ $.ajax({
                                         break;
                                     }
                                     case 2: {
-                                        var $Etiqueta = $('<p>Conciliado Sugerido</p>');
+                                        var $Etiqueta = $('<p>Sugerido</p>');
                                         classBackground = 'callout-warning';
                                         break;
                                     }
@@ -1994,6 +2003,22 @@ $.ajax({
                                 $elDiv.children().removeClass();
                                 $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ' + classBackground);
                                 if (row['estadoerp'] == 2){
+                                    var disabled = "disabled"
+                                    var clase = "warning"
+                                    table.rows(function (idx, data, node) {
+                                    var rowg = table.row(idx)
+                                            
+                                            if (rowg.data()["idrerpdl"] == row["idrerpd"]) { 
+                                                if(rowg.data()["debebco"] == row["habererp"]&&rowg.data()["haberbco"] == row["debeerp"]){
+
+                                                    rowg.data()["idsres"]
+                                                    row["idsres"]
+                                                    disabled = ""
+                                                    clase = "success"
+                                                    
+                                                }
+                                            }
+                                        })
                                     $elDiv.append('<div id="estadoerp-'+row['idsres']+`" style="display: none;">
                                     <script>
                                     function cambioEstadoErp(accion, id){
@@ -2060,8 +2085,8 @@ $.ajax({
                                             }
                                     }
                                     </script>
-                                    <button type="button" onclick="cambioEstadoErp('aceptarerp',`+meta.row+`)" id="aceptarErp-`+row['idsres']+`" class="btn btn-success btn-sm">✔</button>
-                                        <button type="button" onclick="cambioEstadoErp('rechazarerp',`+meta.row+`)" id="cancelarErp-`+row['idsres']+`" class="btn btn-danger btn-sm">X</button>
+                                    <button type="button" `+ disabled +` onclick="cambioEstadoErp('aceptarerp',`+meta.row+`)" id="aceptarErp-`+row['idsres']+`" class="btn btn-`+ clase +` btn-sm">✔</button>
+                                        <button type="button"   onclick="cambioEstadoErp('rechazarerp',`+meta.row+`)" id="cancelarErp-`+row['idsres']+`" class="btn btn-danger btn-sm">X</button>
                                             </div>
                                             `)
                                 }

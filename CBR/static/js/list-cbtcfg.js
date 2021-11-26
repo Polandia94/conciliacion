@@ -28,10 +28,10 @@ $(function () {
             {"data": "ordencfg"},
             {"data": "codcfg", "render": function (data, type, full, meta) {
                 if (data == 1){
-                    return "Busqueda de importe en fechas posteriores del Banco"
+                    return "Busqueda de importe del Erp en fechas posteriores del Banco"
                 }else{
                     if (data==2){
-                        return "Busqueda de importe en fechas posteriores del ERP"
+                        return "Busqueda de importe del Banco en fechas posteriores del ERP"
                     }else{
                         if(data==3){
                             return "Compara campos del lado del Banco y ERP"
@@ -82,17 +82,14 @@ $(function () {
                     if(table.row(meta.row).data()["codcfg"]==3){
                         let nombre = ""
                         switch(data){
-                            case "oficina":
-                                nombre = "oficina"
-                                break;
                             case "desctra":
-                                nombre = "Descripcion de Transaccion"
+                                nombre = "Desc Trans"
                                 break;
                             case "reftra":
-                                nombre = "Referencia de Transaccion"
+                                nombre = "Ref Trans"
                                 break;
                             case "codtra":
-                                nombre = "Codigo de transaccion"
+                                nombre = "Cod Trans"
                                 break;
                             
                         }
@@ -100,10 +97,9 @@ $(function () {
                         <td><nobr>
                         <select class="form-control" name="tipo" id="optionbco-${row['idtcfg']}">
                         <option selected hidden value="`+data+`">`+nombre+`</option>
-                        <option value="oficina">oficina</option>
-                        <option value="desctra">Descripcion de Transaccion </option>
-                        <option value="reftra">Referencia de Transaccion</option>
-                        <option value="codtra">Codigo de transaccion</option>
+                        <option value="desctra">Desc Trans</option>
+                        <option value="reftra">Ref Trans</option>
+                        <option value="codtra">Cod Trans</option>
                         </td></nobr>
                         `
                         return formulario
@@ -121,16 +117,19 @@ $(function () {
                         let nombre = ""
                         switch(data){
                             case "nrocomperp":
-                                nombre = "Numero de Comprobante"
+                                nombre = "Num Compro Erp"
                                 break;
                             case "auxerp":
-                                nombre = "Auxiliar"
+                                nombre = "Auxiliar ERP"
                                 break;
                             case "referp":
-                                nombre = "Referencia de Transaccion"
+                                nombre = "Referencia ERP"
                                 break;
                             case "glosaerp":
                                 nombre = "Glosa"
+                                break;
+                            case "nrotraerp":
+                                nombre = "Nro Trans Erp"
                                 break;
                             
                         }
@@ -138,9 +137,10 @@ $(function () {
                         <td><nobr>
                         <select class="form-control" name="tipo" id="optionerp-${row['idtcfg']}">
                         <option selected hidden value="`+data+`">`+nombre+`</option>
-                        <option value="nrocomperp">Numero de Comprobante</option>
-                        <option value="auxerp">Auxiliar </option>
-                        <option value="referp">Referencia de Transaccion</option>
+                        <option value="nrotraerp">Nro Trans Erp</option>
+                        <option value="nrocomperp">Num Compro Erp</option>
+                        <option value="auxerp">Auxiliar ERP</option>
+                        <option value="referp">Referencia ERP</option>
                         <option value="glosaerp">Glosa</option>
                         </td></nobr>
                         `
@@ -173,7 +173,6 @@ $(function () {
                 data["fila"] = event.target["id"]
                 data["checked"] = document.getElementById(data["fila"]).checked
                 data["value"] = document.getElementById(data["fila"]).value
-                console.log(data)
                 $.ajax({
                     type: "POST",
                     url: '/updatecbtcfg/',

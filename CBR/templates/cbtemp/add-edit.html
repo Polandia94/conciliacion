@@ -50,7 +50,6 @@
                         <div class="form-group col-6">
                             <label for="codhomerp" class="col-form-label">Codigo de homologacion</label>
                                 <select class="form-control" name="codhomerp" id="id_codhomerp">
-                                    <option value="">Por Defecto</option>
                                 {% for i in codhomerp %}
                                     {% if i.selected %}
                                         <option value={{i.nombre}} selected>{{i.nombre}}</option>

@@ -29,7 +29,7 @@ $(function () {
             {"data": "desemp"},
             {"data": "codhomerp", "render": function (data,type,full,meta) {
                 if (data==""){
-                    return "Por Defecto"
+                    return globalVariable.erppordefecto
                 }else{
                     return data
                 }

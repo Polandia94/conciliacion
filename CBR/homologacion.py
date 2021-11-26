@@ -35,12 +35,12 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
     try:
         Cbrbode.objects.all().delete()
         try:
-            dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)) )
+            dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)) ).fillna('')
         except:
             try:
-                dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)), encoding= "cp1252")
+                dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)), encoding= "cp1252").fillna('')
             except:
-                dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)), encoding= "ISO-8859-1" )
+                dataBco=pd.read_csv( str(Path(__file__).resolve().parent.parent)+ "/media/"+ str( aCbrenc.archivobco ), delimiter="|", header=None, index_col=False, names = list(range(0,23)), encoding= "ISO-8859-1" ).fillna('')
         n = 0
 #================================================================================================================
 #2021-10-29 F.Salgado
@@ -200,7 +200,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
 
                 #En caso de errores deja solo los errores en la tabla
         if fallo:
-            data["error"] = '''<p>Verifique errores de banco en  <a href="#" onClick="window.open('../../cbrbode', '_blank')">Formulario CBF10</a></p>'''
+            data["error"] = '''<p>Verifique errores de banco en  <a href="javascript:void(0)" onClick="window.open('../../cbrbode', '_blank')">Formulario CBF10</a></p>'''
     #Caso contrario carga el cbrbcoe
         else:
             Cbrbcoe.objects.filter( idrenc=aCbrenc.idrenc ).delete()
@@ -260,12 +260,12 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             pass
         Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
         try:
-            dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)))
+            dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15))).fillna('')
         except:
             try:
-                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)), encoding= "cp1252")
+                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)), encoding= "cp1252").fillna('')
             except:
-                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)), encoding= "ISO-8859-1")
+                dataErp=pd.read_csv( str(Path(__file__).resolve().parent.parent)+"/media/" +str( aCbrenc.archivoerp ), header=None, delimiter = "|", index_col=False, names = list(range(0,15)), encoding= "ISO-8859-1").fillna('')
     # quirox, 2021-10-26: 
     #         adicionar un try y si este try cae en except, entonces envie un mensaje de no lectura exitosa y se detiene
         iniciado = False
@@ -302,15 +302,13 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             fechatra=dataErp.loc[i, dataErp.columns[0]]
                             errores.append(1)
                     aCbrgal.nrocomp = dataErp.loc[i, dataErp.columns[1]]
-                    if pd.isnull(dataErp.loc[i, dataErp.columns[2]]):
+                    if dataErp.loc[i, dataErp.columns[2]] == "":
                         aux = 0
                     else:
                         aux = dataErp.loc[i, dataErp.columns[2]]
                     aCbrgal.aux = aux
-                    if pd.isnull(dataErp.loc[i, dataErp.columns[3]]):
-                        ref = ""
-                    else:
-                        ref=dataErp.loc[i, dataErp.columns[3]]
+                    
+                    ref=dataErp.loc[i, dataErp.columns[3]]
                     aCbrgal.ref = ref
                     aCbrgal.glosa = dataErp.loc[i, dataErp.columns[4]]
                     try:
@@ -393,9 +391,9 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>"
         if fallo:
             try:
-                data["error"] = '''<p>Verifique errores de ERP en <a href="#" onClick="window.open('../../cbrbode', '_blank')"> Formulario CBF11</a></p>'''+ data["error"] 
+                data["error"] = '''<p>Verifique errores de ERP en <a  href="javascript:void(0)" onClick="window.open('../../cbrgale', '_blank')"> Formulario CBF11</a></p>'''+ data["error"] 
             except:
-                data["error"] = '''<p>Verifique errores de ERP en  <a href="#" onClick="window.open('../../cbrbode', '_blank')"> Formulario CBF11</a></p>'''
+                data["error"] = '''<p>Verifique errores de ERP en  <a href="javascript:void(0)" onClick="window.open('../../cbrgale', '_blank')"> Formulario CBF11</a></p>'''
         else:
             try:
                 Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()

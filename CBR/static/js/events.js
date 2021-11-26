@@ -332,23 +332,42 @@ function getCuenta(){
         if(globalVariable.bloqueado){
             window.alert("Espere a que termine de guardar")
         }else{
-        if (globalVariable.SaldoDiferenciaTotal == 0){
-        ajax_confirm("../cerrarConciliacion/", 'Notificación',
-            '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
-            function () {
+        if (globalVariable.SaldoDiferenciaTotal == 0 || globalVariable.SaldoDiferenciaTotal == globalVariableIndtco.moneda + 0){
                 $.ajax({
-                    method: 'POST',
+                    method: 'GET',
                     beforeSend: function (request) {
                         request.setRequestHeader("X-CSRFToken", csrftoken);
                     },
-                    url: '/cbtusuc/guardado/',
-                    data: {'cbtusuc': enviar},
+                    url: '/getGuardado',
+                    data: {'idrenc': idrenc},
                     success: function (respons) {
-                        location.href = "/"
-                }
-            });
+                        if (respons.guardado=="si") {
+                            globalVariable.bloqueado = true;
+                            globalVariable.editado = 0;
+                            ajax_confirm("../cerrarConciliacion/", 'Notificación',
+                            '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
+                            function () {
+                                $.ajax({
+                                    method: 'POST',
+                                    beforeSend: function (request) {
+                                        request.setRequestHeader("X-CSRFToken", csrftoken);
+                                    },
+                                    url: '/cbtusuc/guardado/',
+                                    data: {'cbtusuc': enviar},
+                                    success: function (respons) {
+                                        location.href = "/"
+                                }
+                            });
+                        });
+                        } else {
+                            alert(respons.guardado)
+                        }}
+                });
+        
                 
-            });
+        
+        }else{
+            window.alert("El saldo no es 0. es" + globalVariable.SaldoDiferenciaTotal)
         }
     }
 
@@ -377,6 +396,7 @@ function getCuenta(){
     $("#btnConciliar").on('click', function () {
         const visibilidad = JSON.parse(localStorage.getItem("DataTables_data_/cbsres/"))["columns"]
         let enviar = {}
+        globalVariable.editado = 0;
         for(let i=0; i<visibilidad.length;i++){
             enviar[i]=visibilidad[i]["visible"]
         }  
