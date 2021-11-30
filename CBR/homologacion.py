@@ -209,7 +209,6 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
             except Exception as e:
                 print(e)
             tableBcoEnc = Cbrbcoe(
-                idrbcoe=aCbrenc.idrenc,
                 idrenc=aCbrenc,
                 fechact1 = dt.datetime.now(tz=timezone.utc),
                 idusu1 = request.user.username
@@ -396,12 +395,10 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                 data["error"] = '''<p>Verifique errores de ERP en  <a href="javascript:void(0)" onClick="window.open('../../cbrgale', '_blank')"> Formulario CBF11</a></p>'''
         else:
             try:
-                Cbrerpd.objects.filter(idrbcoe=Cbrerpe.objects.filter( idrerpe=aCbrenc.idrenc ).first().idrerpe).delete()
+                Cbrerpd.objects.filter(idrerpe=Cbrerpe.objects.filter( idrenc=aCbrenc.idrenc ).first().idrerpe).delete()
             except:
                 pass
-            Cbrerpd.objects.filter( idrerpe=aCbrenc.idrenc ).delete()
             tableErpEnc = Cbrerpe(
-                idrerpe=aCbrenc.idrenc,
                 idrenc=aCbrenc,
                 fechact = dt.datetime.now(tz=timezone.utc),
                 idusu = request.user.username
@@ -458,5 +455,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
             return True
            
     except Exception as e:
+        print("ahi")
         print(e)
+        print("alal")
         data["error"] = "Problema desconocido en el archivo del ERP"

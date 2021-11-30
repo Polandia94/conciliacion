@@ -311,6 +311,7 @@ async function primeraCargaCbsres(){
             url: "../conciliarSaldos/",
             data: {'idrenc': idrencparam, "sobreescribir": 'false'},
             success: function (respons) {
+                    console.log(respons)
                     if(respons.hasOwnProperty('existe_info') == false) {
                         //window.location = window.location + '#loaded';
                         window.location.reload();

@@ -363,8 +363,12 @@ def conciliarSaldos(request):
                             bcoDataSetAnterior =  Cbsres.objects.filter(estadobco=0, fechatrabco__isnull=False, idrenc=aCbrencAnterior.idrenc).order_by("-fechatrabco")
                         else:
                             bcoDataSetAnterior = []
+                        print("PASA POR ACA")
+                        aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenc)
                         bcoDataSet = list(Cbrbcod.objects.filter(
-                            idrbcoe=idrenc).order_by('fechatra', 'horatra','idrbcod'))
+                            idrbcoe=aCbrbcoe.idrbcoe).order_by('fechatra', 'horatra','idrbcod'))
+                        print("POR ACA NO")
+                        
                         for element in bcoDataSetAnterior:
                             if Cbttco.objects.filter(codtco=element.codtcobco, erpbco=2, indpend=0).exists() == False:
                                 aUnir = Object()
@@ -388,8 +392,10 @@ def conciliarSaldos(request):
                             erpDataSetAnterior = Cbsres.objects.filter(estadoerp=0, fechatraerp__isnull=False, idrenc=aCbrencAnterior.idrenc).order_by("-fechatraerp")
                         else:
                             erpDataSetAnterior = []
+                        print("LLEGA ACA")
+                        aCbrerpe = Cbrerpe.objects.get(idrenc=idrenc)
                         erpDataSet = list(Cbrerpd.objects.filter(
-                            idrerpe=idrenc).order_by('fechatra','idrerpd'))
+                            idrerpe=aCbrerpe.idrerpe).order_by('fechatra','idrerpd'))
                         for element in erpDataSetAnterior:
                             if Cbttco.objects.filter(codtco=element.codtcoerp, erpbco=1, indpend=0).exists()==False:
                                 aUnir = Object()
@@ -410,10 +416,10 @@ def conciliarSaldos(request):
                                 erpDataSet.insert(0,aUnir)
 
                         rowInicialbco = Cbrbcod.objects.filter(
-                            idrbcoe=idrenc).order_by('fechatra', 'horatra').first()
+                            idrbcoe=aCbrbcoe.idrbcoe).order_by('fechatra', 'horatra').first()
 
                         rowInicialerp = Cbrerpd.objects.filter(
-                            idrerpe=idrenc).order_by('fechatra').first()
+                            idrerpe=aCbrerpe.idrerpe).order_by('fechatra').first()
 
                         currentDay = rowInicialbco.fechatra
                         Cbsres.objects.filter(idrenc=idrenc).delete()
@@ -1303,10 +1309,18 @@ def conservarGuardado(request):
 def eliminarCarga(request):
     aCbrenc = Cbrenc.objects.order_by('-idrenc').first()
     idrenc = aCbrenc.idrenc
+    idrbcoe = Cbrbcoe.objects.filter(
+        idrenc=idrenc).first()
+    if idrbcoe is not None:
+        idrbcoe=idrbcoe.idrbcoe
+    idrerpe = Cbrerpe.objects.filter(
+        idrenc=idrenc).first()
+    if idrerpe is not None:
+        idrerpe=idrerpe.idrerpe
     Cbrbod.objects.filter(idrenc=idrenc).delete()
     Cbrgal.objects.filter(idrenc=idrenc).delete()
-    Cbrbcod.objects.filter(idrbcoe=idrenc).delete()
-    Cbrerpd.objects.filter(idrerpe=idrenc).delete()
+    Cbrbcod.objects.filter(idrbcoe=idrbcoe).delete()
+    Cbrerpd.objects.filter(idrerpe=idrerpe).delete()
     Cbrbcoe.objects.filter(idrenc=idrenc).delete()
     Cbrerpe.objects.filter(idrenc=idrenc).delete()
     Cbrencl.objects.filter(idrenc=idrenc).delete()
@@ -1333,7 +1347,7 @@ def verificarCarga(request):
                                              nrocta=nrocta,
                                              ano=anoanterior,
                                              mes=mesanterior,
-                                             # cliente=cliente,
+                                             #  cliente=cliente,
                                              empresa=empresa,
                                              ).first()
     aCbtcta = Cbtcta.objects.filter(
@@ -1345,12 +1359,14 @@ def verificarCarga(request):
     else:
         saldobcoanterior = aCberencAnterior.saldobco
         saldoerpanterior = aCberencAnterior.saldoerp
+    aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenc)
+    aCbrerpe = Cbrerpe.objects.get(idrenc=idrenc)
     primerRegistroBco = Cbrbcod.objects.filter(
-        idrbcoe=idrenc).order_by("idrbcod").order_by("fechatra").first()
+        idrbcoe=aCbrbcoe.idrbcoe).order_by("idrbcod").order_by("fechatra").first()
     saldobco = primerRegistroBco.saldo + \
         primerRegistroBco.debe - primerRegistroBco.haber
     primerRegistroErp = Cbrerpd.objects.filter(
-        idrerpe=idrenc).order_by("idrerpd").order_by("fechatra").first()
+        idrerpe=aCbrerpe.idrerpe).order_by("idrerpd").order_by("fechatra").first()
     saldoerp = primerRegistroErp.saldo - \
         primerRegistroErp.debe + primerRegistroErp.haber
     if saldoerp == saldoerpanterior and saldobco == saldobcoanterior:

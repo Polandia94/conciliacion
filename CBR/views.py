@@ -494,9 +494,16 @@ class CbrencCreateView(CreateView):
                     print("SE ELIMINO")
                     print(self.CbrencNew.idrenc)
                     idrbcoe = Cbrbcoe.objects.filter(
-                        idrenc=self.CbrencNew.idrenc).idrbcoe
+                        idrenc=self.CbrencNew.idrenc).first()
+                    print(idrbcoe)
+                    if idrbcoe is not None:
+                        idrbcoe=idrbcoe.idrbcoe
+                    print(idrbcoe)
+                    print("paso")
                     idrerpe = Cbrerpe.objects.filter(
-                        idrenc=self.CbrencNew.idrenc).idrerpe
+                        idrenc=self.CbrencNew.idrenc).first()
+                    if idrerpe is not None:
+                        idrerpe=idrerpe.idrerpe
                     Cbrbod.objects.filter(
                         idrenc=self.CbrencNew.idrenc).delete()
                     Cbrgal.objects.filter(
@@ -514,19 +521,19 @@ class CbrencCreateView(CreateView):
                     print("termino")
                     return JsonResponse(data)
                     # Crea el log correspondiente
-                    aCbrencl = Cbrencl(
-                        idrenc=self.CbrencNew,
-                        status=0,
-                        saldobco=self.CbrencNew.saldobco,
-                        saldoerp=self.CbrencNew.saldoerp,
-                        difbcoerp=self.CbrencNew.difbcoerp,
-                        idusu=request.user.username)
+                aCbrencl = Cbrencl(
+                    idrenc=self.CbrencNew,
+                    status=0,
+                    saldobco=self.CbrencNew.saldobco,
+                    saldoerp=self.CbrencNew.saldoerp,
+                    difbcoerp=self.CbrencNew.difbcoerp,
+                    idusu=request.user.username)
 
-                    aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)
-                    aCbrencl.save(aCbrencl)
-                    # Crea el archivo de tiempo correspondiente
-                    createCbrenct(request, self.CbrencNew.idrenc,1, "CBF03")
-                    # Crea la imagen de banco correspondiente
+                aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbrencl.save(aCbrencl)
+                # Crea el archivo de tiempo correspondiente
+                createCbrenct(request, self.CbrencNew.idrenc,1, "CBF03")
+                # Crea la imagen de banco correspondiente
 
             else:
                 if Cbrenc.objects.filter(codbco=codbco,
@@ -586,8 +593,11 @@ class Uploadimage(CreateView):
             return redirect("/")
 
     def get_initial(self):
-        aCbrenc = Cbrenc.objects.filter(idrenc=self.request.GET.get("idrbcoe")).first()
+
+        
         try:
+            aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=self.request.GET.get("idrbcoe"))
+            aCbrenc = Cbrenc.objects.filter(idrenc=aCbrbcoe.idrenc.idrenc).first()
             empresa = aCbrenc.empresa
             codbco = aCbrenc.codbco
             nrocta = aCbrenc.nrocta
@@ -626,7 +636,8 @@ class Uploadimage(CreateView):
         context = super().get_context_data(**kwargs)
         getContext(self.request,context, 'Carga de Datos', 'CBF03')
         context["action"]= "edit"
-        context["idrenc"]= self.request.GET.get("idrbcoe")
+        aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=self.request.GET.get("idrbcoe"))
+        context["idrenc"]= aCbrbcoe.idrenc.idrenc
         return context
 #************************* CBF04 - FORMULARIO DE LOGS *************************#
 
@@ -768,18 +779,19 @@ class DetalleBcoListView(ListView):
     def post(self, request, *args, **kwargs):
         data = {}
         try:
-            idrbcoe = request.POST['idrbcoe']
-
+            idrenc = request.POST['idrbcoe']
+            aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenc)
             action = request.POST['action']
             data = []
             position = 1
-            for i in Cbrbcod.objects.filter(idrbcoe=idrbcoe):
+            for i in Cbrbcod.objects.filter(idrbcoe=aCbrbcoe.idrbcoe):
                 item = i.toJSON()
                 item['position'] = position
                 item['ID'] = position
                 data.append(item)
                 position += 1
-            createCbrenct(request, idrbcoe, 7, "CBF06" )
+            
+            createCbrenct(request, aCbrbcoe.idrenc.idrenc, 7, "CBF06" )
                 
 
         except Exception as e:
@@ -791,7 +803,8 @@ class DetalleBcoListView(ListView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Detalle de carga del archivo de Banco', 'CBF06')
         idrenc = self.request.GET['idrbcoe']
-        context['idrbcoe'] = idrenc
+        aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenc)
+        context['idrbcoe'] = aCbrbcoe.idrbcoe
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
         context['imagen'] = False
         if aCbrenc.archivoimgbco != "":
@@ -800,10 +813,12 @@ class DetalleBcoListView(ListView):
             context["modificable"] = True
         else:
             context["modificable"] = False
+        
         idrenca = self.request.GET.get('idrbcoe')
         if idrenca is None:
             idrenca = self.request.POST.get('idrbcoe')
-        aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
+        aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenca)
+        aCbrenc = aCbrbcoe.idrenc
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
         return context
 
@@ -824,7 +839,8 @@ class DetalleErpListView(ListView):
         data = {}
         try:
             action = request.POST['action']
-            idrerpe = request.POST['idrerpe']
+            idrenc = request.POST['idrerpe']
+            idrerpe = Cbrerpe.objects.get(idrenc=idrenc).idrerpe
             if action == 'searchdata':
                 data = []
                 position = 1
@@ -835,7 +851,7 @@ class DetalleErpListView(ListView):
                     # item['idrenc']=i.idrenc
                     data.append(item)
                     position += 1
-                createCbrenct(request, idrerpe, 7, "CBF07")
+                createCbrenct(request, idrenc, 7, "CBF07")
                 
             else:
                 data['error'] = 'Ha ocurrido un error'
@@ -846,6 +862,7 @@ class DetalleErpListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Detalle de carga del archivo del ERP', 'CBF07')
+        
         context['idrerpe'] = self.request.GET.get('idrerpe')
         idrenc = context['idrerpe']
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
@@ -2493,7 +2510,8 @@ class CbrbcodDetailView(UpdateView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
-        createCbrenct(request, self.kwargs.get('idrbcoe'), 8, "CBF02")
+        aCbrbcoe = Cbrbcoe.objects.get(self.kwargs.get('idrbcoe'))
+        createCbrenct(request, aCbrbcoe.idrenc.idrenc, 8, "CBF02")
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self):
@@ -2505,7 +2523,8 @@ class CbrbcodDetailView(UpdateView):
         getContext(self.request, context, 'Registro original del archivo del Banco', "Detalles")
         context['id'] = self.kwargs.get('idrbcod')
         context['nombre_id'] = 'IDRBCOD'
-        context['idrenc'] = self.kwargs.get('idrbcoe')
+        aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=self.kwargs.get('idrbcoe'))
+        context['idrenc'] = aCbrbcoe.idrenc.idrenc
         context['list_cbsres_url'] = reverse_lazy('CBR:cbsres-list')
         context['return_url'] = self.request.GET['return_url']
         return context
@@ -2516,9 +2535,9 @@ class DescargarArchivoView(View):
     def get(self, request, *args, **kwargs):
         chequearNoDobleConexion(request)
         idrbcoe = request.GET.get('idrbcoe')
-        idrerpe = request.GET.get('idrerpe')
         if idrbcoe is not None:
-            imgbco = Cbrencibco.objects.filter(idrenc=idrbcoe).first().imgbco
+            aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=idrbcoe)
+            imgbco = Cbrencibco.objects.filter(idrenc=aCbrbcoe.idrenc.idrenc).first().imgbco
             try:
                 os.remove(str(Path(__file__).resolve().parent.parent) +
                         "/media/" + 'temp/imagen.pdf')
