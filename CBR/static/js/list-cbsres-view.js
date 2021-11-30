@@ -1068,21 +1068,9 @@ $.ajax({
                         {
                             targets: ["codtcobco"],
                             createdCell: function (cell) {
-                                cell.addEventListener('mouseleave', function (e) {
-                                    var row = table.row(e.target.parentElement)
-                                    var valor = document.getElementById('optionbco-' + row.data()['idsres']);
-                                    try { var value = valor.value }
-                                    catch { }
-                                    if (value != row.data()['codtcobco']) {
-                                        globalVariable.editado = 1
-                                        row.data()['codtcobco'] = value
-                                        let original = 0
-                                        let estadooriginal = row.data()["historial"]
-                                        calcularSaldos(original, row, e, estadooriginal)
-                                    }
-                                }
+                                
         
-                                )
+                                
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarerp(e) })
         
@@ -1092,21 +1080,8 @@ $.ajax({
                         {
                             targets: ["codtcoerp"],
                             createdCell: function (cell) {
-                                cell.addEventListener('mouseleave', function (e) {
-                                    var row = table.row(e.target.parentElement)
-                                    var valor = document.getElementById('optionerp-' + row.data()['idsres']);
-                                    try { var value = valor.value }
-                                    finally { }
-                                    if (value != row.data()['codtcoerp']) {
-                                        globalVariable.editado = 1
-                                        row.data()['codtcoerp'] = value
-                                        let original = 0
-                                        let estadooriginal = row.data()["historial"]
-                                        calcularSaldos(original, row, e, estadooriginal)
-                                    }
-        
-                                }
-                                )
+                                
+                                
                                 cell.addEventListener('mouseenter', function (e) { resaltarbco(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarbco(e) })
         

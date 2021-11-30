@@ -333,6 +333,7 @@ function getCuenta(){
             window.alert("Espere a que termine de guardar")
         }else{
         if (globalVariable.SaldoDiferenciaTotal == 0 || globalVariable.SaldoDiferenciaTotal == globalVariableIndtco.moneda + 0){
+                globalVariable.bloqueado = true;
                 $.ajax({
                     method: 'GET',
                     beforeSend: function (request) {
@@ -342,7 +343,7 @@ function getCuenta(){
                     data: {'idrenc': idrenc},
                     success: function (respons) {
                         if (respons.guardado=="si") {
-                            globalVariable.bloqueado = true;
+                            globalVariable.bloqueado = false;
                             globalVariable.editado = 0;
                             ajax_confirm("../cerrarConciliacion/", 'Notificación',
                             '¿Cerrar conciliación? La conciliación se pasará a estus Conciliado y revisado.', parameters,
@@ -360,6 +361,7 @@ function getCuenta(){
                             });
                         });
                         } else {
+                            globalVariable.bloqueado = false;
                             alert(respons.guardado)
                         }}
                 });

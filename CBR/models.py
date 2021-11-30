@@ -896,7 +896,7 @@ class Cbthom(models.Model):
     idthom = models.AutoField( verbose_name='ID', db_column='idthom', primary_key=True )
     indhom = models.CharField(verbose_name='Indicador de Homologacion', db_column='indhom', max_length=1)
     codhom = models.CharField(verbose_name='Codigo de homologador', db_column='codhom', max_length=5)
-    deschom = models.CharField(verbose_name='Descripcion del homologador', db_column='desemp', max_length=50)
+    deschom = models.CharField(verbose_name='Descripcion del homologador', db_column='deschom', max_length=50)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
     

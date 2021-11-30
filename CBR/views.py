@@ -346,7 +346,7 @@ class CbrencCreateView(CreateView):
                                                          nrocta=nrocta,
                                                          ano=ano,
                                                          mes=mes,
-                                                         # cliente=cliente,
+                                                         cliente=cliente,
                                                          empresa=empresa,
                                                          ).exists():
 
@@ -431,6 +431,14 @@ class CbrencCreateView(CreateView):
                 if aCbtemp == None:
                     data['error'] = "El ERP no tiene un sistema homologador válido"
                     error = True
+                ##Verifica la existencia del codhomerp
+                if error == False:
+                    codhomerp = aCbtemp.codhomerp
+                    if codhomerp == "":
+                        codhomerp = Cbtcli.objects.filter(cliente=diccionario["cliente"]).first().codhomerp
+                    if codhomerp != "VEGAL":
+                        data['error'] = "El ERP no tiene un sistema homologador válido"
+                        error = True
                 if error == False:
                     codhombco = aCbmbco.codhombco
                     if codhombco == "VEBOD":
@@ -442,9 +450,7 @@ class CbrencCreateView(CreateView):
 
                     
                     # Homologa el ERP Gal, posteriormente debe verificar que es lo que se encuentra en request.POST.get( 'coderp') para saber que homologacion usar
-                    codhomerp = aCbtemp.codhomerp
-                    if codhomerp == "":
-                        codhomerp = Cbtcli.objects.filter(cliente=diccionario["cliente"]).first().codhomerp
+                    
                 if error == False:
                     if codhomerp == "VEGAL":
                         HomologacionErpGAL(request, self.CbrencNew,
@@ -484,22 +490,29 @@ class CbrencCreateView(CreateView):
                     except:
                         error = False
 
-                    if error == True:
-                        Cbrbod.objects.filter(
-                            idrenc=self.CbrencNew.idrenc).delete()
-                        Cbrgal.objects.filter(
-                            idrenc=self.CbrencNew.idrenc).delete()
-                        Cbrbcod.objects.filter(
-                            idrbcoe=self.CbrencNew.idrenc).delete()
-                        Cbrerpd.objects.filter(
-                            idrerpe=self.CbrencNew.idrenc).delete()
-                        Cbrbcoe.objects.filter(
-                            idrenc=self.CbrencNew.idrenc).delete()
-                        Cbrerpe.objects.filter(
-                            idrenc=self.CbrencNew.idrenc).delete()
-                        Cbrenc.objects.filter(
-                            idrenc=self.CbrencNew.idrenc).delete()
-                        return JsonResponse(data)
+                if error == True:
+                    print("SE ELIMINO")
+                    print(self.CbrencNew.idrenc)
+                    idrbcoe = Cbrbcoe.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).idrbcoe
+                    idrerpe = Cbrerpe.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).idrerpe
+                    Cbrbod.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrgal.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrbcod.objects.filter(
+                        idrbcoe=idrbcoe).delete()
+                    Cbrerpd.objects.filter(
+                        idrerpe=idrerpe).delete()
+                    Cbrbcoe.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrerpe.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrenc.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    print("termino")
+                    return JsonResponse(data)
                     # Crea el log correspondiente
                     aCbrencl = Cbrencl(
                         idrenc=self.CbrencNew,
@@ -2442,6 +2455,10 @@ class CbsresNoConciliados(ListView):
         context['idrenc']=idrenca
         aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
+        if self.request.GET["return"] == 'cbttco':
+            context['return_url'] =  "/cbttco/?idrenc=" + str(idrenca)
+        elif self.request.GET["return"] == 'cbsres':
+            context['return_url'] =  "/cbsres/?idrenc=" + str(idrenca)
         # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         return context
 #************************* DETALLES *************************#
