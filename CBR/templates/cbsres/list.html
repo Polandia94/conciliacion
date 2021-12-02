@@ -10,9 +10,11 @@
     <a id="btnSalir" class="btn btn-primary btn-flat mb-3" data-toggle="tooltip" data-toggle="tooltip" data-placement="bottom" title="Regresar a la lista principal">
         <i class="fas fa-arrow-circle-left"></i>
     </a>
+    {% if editable == 'Editable' %} 
     <a id="btnRecargar" class="btn btn-info btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Recargar datos.">
         <i class="fas fa-sync"></i>
     </a>
+    {% endif %}
     <a id="btnResetColumns" class="btn btn-secondary btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Reiniciar posición de las columnas al estado original">
         <i class="fas fa-columns"></i>
     </a>
@@ -38,6 +40,7 @@
     </a>
     {% endif %}
     <label class="ml-2" id="cargando"></label>
+    <div hidden id="saldodiferenciatotaloculto">{{saldodiferenciatotal}}</div>
 
 
 
@@ -124,6 +127,9 @@
             indtco_bco: "{{indtco_bco}}".split(","),
             moneda: "{{moneda}}"
         };
+        window.onload= async function(){
+        primeraCargaCbsres()
+    }
     </script>
     <script>
 
@@ -149,8 +155,6 @@
     function alertac() {
                     alert("{{alertac}}");
                     }
-    window.onload= async function(){
-        primeraCargaCbsres()
-    }
+
                     </script>
 {% endblock %}

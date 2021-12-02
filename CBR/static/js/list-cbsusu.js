@@ -6,7 +6,7 @@ $(function () {
 
         var title = $(this).text();
 
-        var busqueda = window.localStorage.getItem(i)
+        var busqueda = window.localStorage.getItem("conectados"  + i)
         $(this).html( function(){
             if (busqueda == null){
                 return '<input type="text"/> '
@@ -14,8 +14,8 @@ $(function () {
             return '<input type="text"value="'+busqueda+ '"/> '
       }});
         $( 'input', this ).on( 'keyup change', function () {
-                window.localStorage.setItem(i, this.value)
-                var busqueda = window.localStorage.getItem(i)
+                window.localStorage.setItem("conectados"+i, this.value)
+                var busqueda = window.localStorage.getItem("conectados"+i)
                 if (busqueda != null){
                 table
                     .column(i)
@@ -24,7 +24,7 @@ $(function () {
                 }
             } );
         $( 'input', this ).ready(function () {
-                var busqueda = window.localStorage.getItem(i)
+                var busqueda = window.localStorage.getItem("conectados"+i)
                 if (busqueda != null){
                     table
                         .column(i)

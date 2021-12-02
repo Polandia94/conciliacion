@@ -314,7 +314,7 @@ class CbrencCreateView(CreateView):
         if chequearNoDobleConexion(request):
             return super().dispatch(request, *args, **kwargs)
         else:
-            return super().dispatch(request, *args, **kwargs)
+            return redirect("/")
             
 
     def post(self, request, *args, **kwargs):
@@ -491,15 +491,10 @@ class CbrencCreateView(CreateView):
                         error = False
 
                 if error == True:
-                    print("SE ELIMINO")
-                    print(self.CbrencNew.idrenc)
                     idrbcoe = Cbrbcoe.objects.filter(
                         idrenc=self.CbrencNew.idrenc).first()
-                    print(idrbcoe)
                     if idrbcoe is not None:
                         idrbcoe=idrbcoe.idrbcoe
-                    print(idrbcoe)
-                    print("paso")
                     idrerpe = Cbrerpe.objects.filter(
                         idrenc=self.CbrencNew.idrenc).first()
                     if idrerpe is not None:
@@ -518,7 +513,6 @@ class CbrencCreateView(CreateView):
                         idrenc=self.CbrencNew.idrenc).delete()
                     Cbrenc.objects.filter(
                         idrenc=self.CbrencNew.idrenc).delete()
-                    print("termino")
                     return JsonResponse(data)
                     # Crea el log correspondiente
                 aCbrencl = Cbrencl(
@@ -2486,9 +2480,11 @@ class CbrerpdDetailView(UpdateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
-        createCbrenct(request, self.kwargs.get('idrerpe'), 9, "CBF02")
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            createCbrenct(request, self.kwargs.get('idrerpe'), 9, "CBF02")
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def get_object(self):
         idrerpd = self.kwargs.get('idrerpd')
@@ -2509,10 +2505,12 @@ class CbrbcodDetailView(UpdateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
-        aCbrbcoe = Cbrbcoe.objects.get(self.kwargs.get('idrbcoe'))
-        createCbrenct(request, aCbrbcoe.idrenc.idrenc, 8, "CBF02")
-        return super().dispatch(request, *args, **kwargs)
+        if chequearNoDobleConexion(request):
+            #aCbrbcoe = Cbrbcoe.objects.get(idrenc=self.kwargs.get('idrbcoe'))
+            createCbrenct(request, self.kwargs.get('idrbcoe'), 8, "CBF02")
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
 
     def get_object(self):
         idrbcod = self.kwargs.get('idrbcod')
@@ -2523,8 +2521,8 @@ class CbrbcodDetailView(UpdateView):
         getContext(self.request, context, 'Registro original del archivo del Banco', "Detalles")
         context['id'] = self.kwargs.get('idrbcod')
         context['nombre_id'] = 'IDRBCOD'
-        aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=self.kwargs.get('idrbcoe'))
-        context['idrenc'] = aCbrbcoe.idrenc.idrenc
+        #aCbrbcoe = Cbrbcoe.objects.get(idrenc=self.kwargs.get('idrbcoe'))
+        #context['idrenc'] = aCbrbcoe.idrenc.idrenc
         context['list_cbsres_url'] = reverse_lazy('CBR:cbsres-list')
         context['return_url'] = self.request.GET['return_url']
         return context
@@ -2533,30 +2531,32 @@ class CbrbcodDetailView(UpdateView):
 
 class DescargarArchivoView(View):
     def get(self, request, *args, **kwargs):
-        chequearNoDobleConexion(request)
-        idrbcoe = request.GET.get('idrbcoe')
-        if idrbcoe is not None:
-            aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=idrbcoe)
-            imgbco = Cbrencibco.objects.filter(idrenc=aCbrbcoe.idrenc.idrenc).first().imgbco
-            try:
-                os.remove(str(Path(__file__).resolve().parent.parent) +
-                        "/media/" + 'temp/imagen.pdf')
-            except:
-                pass
-            file = open(str(Path(__file__).resolve().parent.parent) +
-                        "/media/" + 'temp/imagen.pdf', 'wb')
-            file.write(base64.b64decode(imgbco))
-            file.close()
-            wrapper = FileWrapper(open(str(Path(__file__).resolve(
-            ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
-            response = HttpResponse(wrapper, content_type='application/pdf')
-            response['Content-Disposition'] = 'inline; filename=' + \
-                'imagenbanco.pdf'
-            return response
+        if chequearNoDobleConexion(request):
+            idrbcoe = request.GET.get('idrbcoe')
+            if idrbcoe is not None:
+                aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=idrbcoe)
+                imgbco = Cbrencibco.objects.filter(idrenc=aCbrbcoe.idrenc.idrenc).first().imgbco
+                try:
+                    os.remove(str(Path(__file__).resolve().parent.parent) +
+                            "/media/" + 'temp/imagen.pdf')
+                except:
+                    pass
+                file = open(str(Path(__file__).resolve().parent.parent) +
+                            "/media/" + 'temp/imagen.pdf', 'wb')
+                file.write(base64.b64decode(imgbco))
+                file.close()
+                wrapper = FileWrapper(open(str(Path(__file__).resolve(
+                ).parent.parent) + "/media/" + 'temp/imagen.pdf', 'rb'))
+                response = HttpResponse(wrapper, content_type='application/pdf')
+                response['Content-Disposition'] = 'inline; filename=' + \
+                    'imagenbanco.pdf'
+                return response
+            else:
+                data = {}
+                data['error'] = "No existe imagen del banco"
+                return JsonResponse(data)
         else:
-            data = {}
-            data['error'] = "No existe imagen del banco"
-            return JsonResponse(data)
+            return redirect("/")
         #   Para descargar imagen ERP
         #    imgerp = Cbrencierp.objects.filter(idrenc=idrerpe).first().imgerp
         #    try:

@@ -2056,8 +2056,7 @@ $.ajax({
                     },
                     drawCallback: function () {
                         cargando.innerHTML = ""
-                        globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotalhtml").textContent.substring(1))
-                       
+
                     },
                     createdRow: function (row, data, dataIndex) {
         

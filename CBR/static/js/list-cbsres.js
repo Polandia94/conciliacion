@@ -593,6 +593,7 @@ $.ajax({
                                     catch { }
                                     try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch {}
+                                    saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
                                     globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
                                     if(respons.saldodiferenciatotal == 0){
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
@@ -727,7 +728,7 @@ $.ajax({
         
                 globalVariable.editado = 0;
                 globalVariableSaldo.saldo = 0;
-                try { globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotalhtml").textContent.substring(1)) }
+                try { globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotaloculto").textContent.substring(1)) }
                 catch { }
                 const urlParams = new URLSearchParams(window.location.search);
                 const idrenc = urlParams.get('idrenc');
@@ -2137,7 +2138,7 @@ $.ajax({
                     },
                     drawCallback: function () {
                         cargando.innerHTML = ""
-                        globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotalhtml").textContent.substring(1))
+                        globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotaloculto").textContent.substring(1))
                        
                     },
                     createdRow: function (row, data, dataIndex) {

@@ -121,9 +121,10 @@ def post_logout(sender, user, request, **kwargs):
 def cerrarsesionusuario(request):
     usuario = request.POST.get("usuario")
     data = {}
-    aCbsusu = Cbsusu.objects.filter(idusu1=usuario).last()
-    aCbsusu.finlogin = dt.datetime.now(tz=timezone.utc)
-    aCbsusu.save()
+    aCbsusu = Cbsusu.objects.filter(idusu1=usuario, finlogin = None).all()
+    for registro in aCbsusu:
+        registro.finlogin = dt.datetime.now(tz=timezone.utc)
+        registro.save()
     return JsonResponse(data)
 
 
@@ -148,11 +149,12 @@ def login(request):
         data["noexiste"] = True
     else:
         data["noexiste"] = False
-    aCbsusu = Cbsusu.objects.filter(idusu1=usuario).last()
+    aCbsusu = Cbsusu.objects.filter(idusu1=usuario, finlogin=None).first()
     try:
-        data["iniciodesesion"] = aCbsusu.iniciologin
-        if aCbsusu.finlogin == None:
+        
+        if aCbsusu is not None:
             data["yaconectado"] = True
+            data["iniciodesesion"] = aCbsusu.iniciologin
         else:
             data["yaconectado"] = False
     except Exception as e:
@@ -192,7 +194,7 @@ def reiniciarUsuario(request):
 def post_login(sender, user, request, **kwargs):
     aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
     aCbsusu = Cbsusu.objects.filter(
-        idusu1=request.user.username).order_by("corrusu").last()
+        idusu1=request.user.username, finlogin = None).all()
     try:
         cliente = aCbtusu.cliente
         idusu1 = request.user.username
