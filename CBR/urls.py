@@ -18,8 +18,11 @@ urlpatterns = [
 
     path('getAnoMes/', utils.getanomes, name='getAnoMes'),
     path('getdesbco/', utils.getdesbco, name='getdesbco'),
+    path('getcuenta', utils.getcuenta, name='getcuenta'),
     path('getGuardado/', utils.getguardado, name='getGuardado'),
-    path('getTiposDeConciliacion/', utils.getTiposDeConciliacion, name='getTiposDeConciliacion'),  path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
+    path('getTiposDeConciliacionpost/', utils.getTiposDeConciliacionpost, name='getTiposDeConciliacion'),  
+    path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
+    path('conciliarSaldosExistentes/', utils.conciliarSaldosExistentes, name='conciliarSaldosExistentes'),
     path('getColumnas/', utils.getColumnas, name='getColumnas'),
 
 
@@ -42,7 +45,7 @@ urlpatterns = [
     path('cbrbcod/', views.DetalleBcoListView.as_view(), name='cbrbcod-list'),
     path('cbrerpd/', views.DetalleErpListView.as_view(), name='cbrerpd-list'),
     path('cbsusu/', views.visualizacionUsuarios.as_view(), name='visualizacion_usuarios'),
-
+    path('cbtcfg/', views.ConciliacionSemiautomatica.as_view(), name='conciliacion_semiautomatica'),
     #*********** Crear Nuevo ***********
 
     path('cbtemp/new', views.CbtempCreateView.as_view(), name='empresa-nueva'),
@@ -50,13 +53,14 @@ urlpatterns = [
     path('cbtusu/new', views.CbtusuCreateView.as_view(), name='usuario-nuevo'),
     path('list/add/', views.CbrencCreateView.as_view(), name='cbrenc_nueva'),
     path('list/addaccount/', views.CbtctaCreateView.as_view(), name='cbtcta_nueva_cuenta'),
-
+    path('cbtcfg/nuevo/', utils.CbtcfgCreate, name='cbtcfg_nueva_cbtcfg'),
     #*********** Eliminar ************
     path('cbrenc/del/', views.ConciliacionDeleteForm.as_view(), name='cbrenc-del'),
     path('cbtcta/del/', utils.cbtctaDelete, name='cbtcta_delete_cuenta'),
     path('cbtemp/del/', views.cbtempDelete, name='cbtemp_delete_empresa'),
     path('cbtbco/del/', views.cbtbcoDelete, name='cbtbco_delete_banco'),
     path('cbtusu/del/', views.cbtusuDelete, name='cbtusu-del'),
+    path('cbrenc/desc/', utils.cbrencDesconciliar, name='cbrenc-desc'),
 
     #********* Editar Elementos *********
 
@@ -65,13 +69,22 @@ urlpatterns = [
     path('cbtemp/edit/', views.CbtempEditView.as_view(), name='cbtemp_edit_empresa'),
     path('cbtbco/edit/', views.CbtbcoEditView.as_view(), name='cbtbco_edit_banco'),
     path('uploadimage', views.Uploadimage.as_view(), name='uploadimage'),
-
+    
     #********** Detalles ***************
 
     path('cbrbcod/<int:idrbcod>/<int:idrbcoe>/', views.CbrbcodDetailView.as_view(), name='cbrbcod-detail'),
     path('cbrerpd/<int:idrerpd>/<int:idrerpe>/', views.CbrerpdDetailView.as_view(), name='cbrerpd-detail'),
-
+    path('noconciliados/<int:idrenc>/', views.CbsresNoConciliados.as_view(), name='noconciliados'),
+    
+    #*********** Enviar mails *******************
+    path('enviarmail/ladobancohtml', utils.enviarMailLadoBancoHtml, name='enviarMailLadoBancoHtml'),
+    path('enviarmail/ladobancopdf', utils.enviarMailLadoBancoPdf, name='enviarMailLadoBancoPdf'),
+    path('enviarmail/ladoerphtml', utils.enviarMailLadoErpHtml, name='enviarMailLadoErpHtml'),
+    path('enviarmail/ladoerppdf', utils.enviarMailLadoErpPdf, name='enviarMailLadoErpHtml'),
+    
     #* Otras Acciones
+    path('getMailEmpresa/', utils.getMailEmpresa, name='getMailEmpresa'),
+    path('cbtusu/check/', utils.chequearUsuarioConectado, name='chequearUsuarioConectado'),
     path('reiniciarusuario/', views.reiniciarUsuario, name='reiniciarUsuario'),
     path('cerrarConciliacion/', views.cerrarConciliacion, name='cerrarConciliacion'),
     path('definircolumnas/', views.definirColumnas.as_view(), name='definirColumnas'),
@@ -86,5 +99,9 @@ urlpatterns = [
     path('updateCbtusue/', views.updateCbtusue, name='update-cbtusue'),
     path('descargarArchivos/', views.DescargarArchivoView.as_view(), name='descargar_archivo'),
     path('posibilidaddeconciliar/', utils.posibilidadDeConciliar, name='posibilidad_de_conciliar'),
-    path('updatecbtusuc/', utils.updateCbtusuc, name='posibilidad_de_conciliar')
+    path('updatecbtusuc/', utils.updateCbtusuc, name='posibilidad_de_conciliar'),
+    path('usercheck/', utils.userCheck, name='usercheck'),
+    path('cierredeemergencia/', utils.cierreDeEmergencia, name='cierredeemergencia'),
+    path('updatecbtcfg/', utils.updateCbtcfg, name='update_cbtcfg')
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -32,9 +32,9 @@ $(function () {
             {"data": "erpbco"},
             {'data': 'indsum'},
             {"data": "codtco"},
-            {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, window.opener.moneda)},
+            {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, window.opener.moneda)},
+            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, window.opener.moneda)},
             
         ],
         columnDefs: [
@@ -102,9 +102,9 @@ $(function () {
             {"data": "erpbco"},
             {'data': 'indsum'},
             {"data": "codtco"},
-            {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {'data': 'debe', render: $.fn.dataTable.render.number(',', '.', 2, window.opener.moneda)},
+            {'data': 'haber', render: $.fn.dataTable.render.number(',', '.', 2, window.opener.moneda)},
+            {'data': 'saldoacumulado', render: $.fn.dataTable.render.number(',', '.', 2, window.opener.moneda)},
             
         ],
         columnDefs: [

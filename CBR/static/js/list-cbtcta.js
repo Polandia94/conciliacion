@@ -27,18 +27,26 @@ $(function () {
             {"data": "codbco"},
             {"data": "nrocta"},
             {"data": "descta"},
+            {"data": "diremail"},
+            {"data": "codctaconbco"},
             {"data": "monbasebco"},
-            {"data": "monbaseerp"},
             {"data": "ano"},
             {"data": "mes"},
-            {"data": "saldoinibco", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "saldoinierp", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
+            {"data": "saldoinibco"},
+            {"data": "saldoinierp"},
             {"data": null}
         ],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5, 6,7,8,9,10],
+                targets: [0, 1, 2, 3, 4, 5, 6,7,8,9],
                 class: 'text-center pt-4',
+            },
+            {
+                targets: [10, 11],
+                class: 'text-center pt-4',
+                render: function (data, type, row) {
+                    return row['monbasebco'] + data.toLocaleString('en-US')
+                }
             },
             {
                 targets: ['acciones-header'],

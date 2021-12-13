@@ -16,7 +16,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="{{ action }}">
                 <input type="hidden" name="modificable" value={{ modificable }}>
-                <input type="hidden" name="idtusu" value={{ idtusu }}>
+                <input type="hidden" name="idtusu" id="idtusu" value={{ idtusu }}>
                 <div class="card-body pt-0">
                     {% if form.errors %}
                         <div class="alert alert-danger alert-dismissible">
@@ -58,10 +58,21 @@
                         </div>
 
                     </div>
+                    <div class="row">
+                        <div class="form-group col-6">
+                            <label for="indconc" class="col-form-label">¿Puede Aprobar Conciliaciones?</label>
+                            {{ form.indconc}}
+
+                        </div>
+                    </div>
                     
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px" disabled >Crear</button>
+                        {% if action == "edit" %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px" disabled >Grabar</button>
+                        {% else %}
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px" disabled >Crear</button>
+                        {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ list_cbtusu_url }}'">Cancelar</button>
                     </div>
@@ -77,10 +88,26 @@
         $('form').on('submit', function (e) {
             e.preventDefault();
             var parameters = new FormData(this);
-            submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
-                location.href = "{% url 'CBR:cbtusu-list' %}";
+            $.ajax({
+                method: 'POST',
+                data : {idtusu:$("#idtusu").val()},
+                beforeSend: function (request) {
+                    request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                },
+                url: '/cbtusu/check/',
+                success: function (respons) {
+                    if (respons.enuso && document.getElementById('id_actpas').checked==false){
+                        submit_(window.location.pathname, 'Notificación', 'Usuario conectado, por favor comuniquese con el Usuario para que guarde sus modificaciones y cierre su Sesión. \n NOTA: el usuario perderá todas las modificaciones que haya realizado sobre sus conciliaciones al momento de pasivar y cerrarle la Sesión. \n Confirme si desea Cerrar su Sesión y Pasivar al Usuario', parameters, function (data) {
+                            location.href = "{% url 'CBR:cbtusu-list' %}";
+                        })
+                    }   else{     
+                        submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {            
+                    location.href = "{% url 'CBR:cbtusu-list' %}";
+                        })
+                    }
+                }
             });
-        });
+        })
         $('.form-control').on("change", function(e){
              $('#btnGuardar').attr('disabled', false);
         });

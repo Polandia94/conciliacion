@@ -30,10 +30,10 @@
             <i class="fas fa-user"></i>
         </a>
         
-        <a href="{{ empresas_url }}" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
+        <a href="cbtemp/" method="post" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
         title="Administración de Empresas">
          <i class="fas fa-building"></i>
-        
+        </a>
         <a href="{{ usuario_empresas_url }}" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
          title="Administración de Usuarios/Empresas">
           <i class="fas fa-key"></i>
@@ -46,8 +46,15 @@
            title="Visualización de Sesiones">
             <i class="fas fa-clock"></i>
 
+            <a href="{{ conciliacion_semiautomatica }}" class="btn btn-primary btn-flat mb-3 margin-left" data-toggle="tooltip" data-placement="bottom"
+            title="Configuración de conciliación Semi-automática">
+             <i class="fas fa-cog"></i>
+        </a>
          {% endif %}
-     </a>
+         {% if proximoavencimiento %}
+         Su licencia de uso caduca en fecha  {{fechalic}}.  Favor comunicarse con su proveedor.
+         {% endif %}
+     
         <div class="custom-control custom-checkbox ml-5 mt-2">
             <input id="cbox_conciliados" class="custom-control-input" type="checkbox" value="option1">
             <label for="cbox_conciliados" class="custom-control-label">Conciliados</label>
@@ -85,4 +92,11 @@
 {% block javascript %}
 
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+{% endblock %}
+{% block scripts_cbr %}
+<script>
+    var globalVariable={
+        classDesconciliador: "{{desconciliador}}"
+    };
+</script>
 {% endblock %}

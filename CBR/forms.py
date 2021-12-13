@@ -118,20 +118,17 @@ class CbtctaForm( ModelForm ):
         try:
             if form.is_valid():
                 data = form.save(commit=True)
-                print("se guardo")
             else:
-                print("no se guardo")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
-            print("error 1")
             print(e)
             data['error']=str( e )
         return data
 
     class Meta:
         model = Cbtcta
-        fields = ['idtcta', 'empresa', 'codbco', 'nrocta','descta', 'monbasebco', 'monbaseerp', 'ano', 'mes', 'saldoinibco', 'saldoinierp' ]
+        fields = ['idtcta', 'empresa', 'codbco', 'nrocta','descta', 'diremail','codctaconbco', 'monbasebco', 'ano', 'mes', 'saldoinibco', 'saldoinierp' ]
         # fields = '__all__'
         widgets = {
             'idtcta': TextInput(
@@ -154,12 +151,16 @@ class CbtctaForm( ModelForm ):
                 attrs = { 'placeholder': 'Descripcion Cuenta',
                           'class': 'form-control'}
             ),
-            'monbasebco': TextInput(
-                attrs = { 'placeholder': 'Mes Base Banco',
+            'diremail': EmailInput(
+                attrs = { 'placeholder': 'Direccion de Mail',
                           'class': 'form-control'}
             ),
-            'monbaseerp': TextInput(
-                attrs = { 'placeholder': 'Mes Base ERP',
+            'codctaconbco': TextInput(
+                attrs = { 'placeholder': 'Codigo de Cuenta',
+                          'class': 'form-control'}
+            ),
+            'monbasebco': TextInput(
+                attrs = { 'placeholder': 'Moneda',
                           'class': 'form-control'}
             ),
             'ano': NumberInput(
@@ -270,7 +271,7 @@ class CbtusuForm( ModelForm ):
 
     class Meta:
         model = Cbtusu
-        fields = ['idusu1', 'descusu','tipousu','actpas']
+        fields = ['idusu1', 'descusu','tipousu','actpas', 'indconc']
         # fields = '__all__'
         widgets = {
             'idusu1': TextInput(
@@ -288,7 +289,11 @@ class CbtusuForm( ModelForm ):
             'actpas': CheckboxInput(
                 attrs = { 'placeholder': 'Cuenta',
                           'class': 'form-control'}
-            )        
+            ),
+            'indconc': CheckboxInput(
+                attrs = { 'placeholder': 'Cuenta',
+                          'class': 'form-control'}
+            )       
                  
         }
 
@@ -303,27 +308,22 @@ class CbtempForm( ModelForm ):
 
     def save(self, commit=True):
         data={}
-        print("aca")
         form=super()
-        print("alla")
 
         try:            
             if form.is_valid():
                 data = form.save(commit=True)
-                print("se guardo")
             else:
-                print("error 1")
                 print(form.errors)
                 data['error']=form.errors
         except Exception as e:
-            print("error 2")
             print(e)
             data['error']=str( e )
         return data
 
     class Meta:
         model = Cbtemp
-        fields = ['empresa', 'desemp','actpas']
+        fields = ['empresa', 'desemp','actpas', 'codhomerp']
         # fields = '__all__'
         widgets = {
             'empresa': TextInput(
@@ -332,6 +332,10 @@ class CbtempForm( ModelForm ):
             ),            
             'desemp': TextInput(
                 attrs = { 'placeholder': 'Descripcion de la Empresa',
+                          'class': 'form-control'}
+            ),
+            'codhomerp': TextInput(
+                attrs = { 'placeholder': 'Código',
                           'class': 'form-control'}
             ),
             'actpas': CheckboxInput(

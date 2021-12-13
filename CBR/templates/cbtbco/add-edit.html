@@ -35,21 +35,19 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="form-group col-12">
-                        <label for="id_desbco" class="col-form-label">Descripción</label>
-                        <input id="id_desbco" name="desbco" class= "form-control" type="text"  disabled>
-                    </div>
+
                         {% else %}
                         <div class="form-group col-6">
                         <label for="codbco" class="col-form-label">{{ form.codbco.label }}</label>
-                         </div>
-                        <div class="form-group col-6">
-                        <label for="id_desbco" class="col-form-label">Descripción</label>
-                        <input id="id_desbco" name="codbco" class= "form-control" type="text" readonly value={{form.codbco.value}}>                        
-                        
+                        <input  type="text" name="codbco" readonly class="form-control getdesbco" value={{form.codbco.value}} maxlength="5" autocomplete="off" required="" id="id_codbco">    
+                    </div>
+                        {% endif %}
+                        <div class="form-group col-12">
+                            <label for="id_desbco" class="col-form-label">Descripción</label>
+                            <input id="id_desbco" name="desbco" class= "form-control" type="text"  disabled>
                         </div>
                         
-                        {% endif %}
+                        
                     </div>
 
                     </div>
@@ -64,9 +62,9 @@
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
                         {% if action == "edit" %}
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Editar</button>
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px"  >Editar</button>
                         {% else %}
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px"  >Crear</button>
                         {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ bancos_url }}'">Cancelar</button>
@@ -82,10 +80,14 @@
     <script>
         $('form').on('submit', function (e) {
             e.preventDefault();
+            if ($("#id_desbco").val() != ""){
             var parameters = new FormData(this);
             submit_(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function (data) {
                 location.href = "{% url 'CBR:cbtbco-list' %}";
             });
+            }else{
+                message_info("Banco no existente", null, null)
+            }
         });
         $('.form-control').on("change", function(e){
              $('#btnGuardar').attr('disabled', false);
@@ -94,5 +96,6 @@
 {% endblock %}
 {% block scripts %}
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+    <script>getdesbco()</script>
 {% endblock %}
 

@@ -22,9 +22,11 @@
 {% block columns %}
     <tr>
         <th scope="col" style="width: 2% !important;">IDTEMP</th>
+        <th scope="col" style="width: 2% !important;">Movimiento</th>
         <th scope="col" style="width: 2% !important;">Pais</th>
         <th scope="col" style="width: 2% !important;">Empresa</th>
         <th scope="col" style="width: 3%;">Descripcion</th>
+        <th scope="col" style="width: 3%;"><div> Codigo de Homologación.</div> <div>Por defecto: {{erppordefecto}}</div></th>
         <th scope="col" style="width: 5%;">Activo/Pasivo</th>
         <th scope="col" style="width: 5%;">Accciones</th>
 
@@ -36,4 +38,12 @@
 {% endblock %}
 {% block javascript %}
     <script src="{% static 'js/events.js' %}" type="text/javascript"></script>
+
 {% endblock %}
+{% block scripts_cbr %}
+<script>
+    var globalVariable = {erppordefecto:"{{erppordefecto}}"};
+    console.log(globalVariable.erppordefecto)
+    </script>
+{% endblock %}
+

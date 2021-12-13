@@ -88,13 +88,14 @@ class Cbtcta(models.Model):
     idtcta = models.IntegerField(verbose_name='ID', db_column='idtcta', primary_key=True)
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
+    diremail = models.CharField(verbose_name='Mail de la cuenta', db_column='diremail', max_length=60)
     codbco = models.CharField(verbose_name='Banco', db_column='codbco', max_length=5)
     nrocta = models.CharField(verbose_name='Numero de Cuenta', db_column='nrocta', max_length=30)
     descta = models.CharField(verbose_name='Descripcion de la cuenta', db_column='descta', max_length=50)
-    monbasebco = models.CharField(verbose_name='Moneda de base de banco', db_column='monbasebco', max_length=3)
-    monbaseerp = models.CharField(verbose_name='Moneda de base de erp', db_column='monbaseerp', max_length=3)
-    ano = models.SmallIntegerField(verbose_name='Año',db_column='ano', blank=True, null=True)
-    mes = models.SmallIntegerField(db_column='mes', blank=True, null=True)
+    codctaconbco =  models.CharField(verbose_name='Codigo de cuenta asociado', db_column='codctaconbco', max_length=15)
+    monbasebco = models.CharField(verbose_name='Moneda', db_column='monbasebco', max_length=3)
+    ano = models.SmallIntegerField(verbose_name='Año',db_column='ano')
+    mes = models.SmallIntegerField(db_column='mes')
     saldoinibco = models.DecimalField(verbose_name='Saldo Inicial Banco', db_column='saldoinibco', max_digits=16, decimal_places=2)
     saldoinierp = models.DecimalField(verbose_name='Saldo Inicial ERP',db_column='saldoinierp', max_digits=16, decimal_places=2)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
@@ -131,6 +132,7 @@ class Cbttco(models.Model):
     erpbco = models.SmallIntegerField(db_column='erpbco', blank=True, null=True)
     inddebhab = models.CharField(db_column='inddebhab', blank=True, null=True, max_length=1)
     indsuma = models.SmallIntegerField(db_column='indsuma', blank=True, null=True)
+    indpend = models.SmallIntegerField(db_column='indpend', blank=True, null=True)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
     idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
     
@@ -383,7 +385,7 @@ class Cbrerpd(models.Model):
     nrotra = models.TextField(db_column='nrotra', null=True)
     fechatra = models.DateField(db_column='fechatra', blank=True, null=True)
     nrocomp = models.TextField(db_column='nrocomp', null=True)
-    aux = models.SmallIntegerField(db_column='aux', blank=True, null=True)
+    aux = models.TextField(db_column='aux', blank=True, null=True)
     ref = models.TextField(db_column='ref')
     glosa = models.TextField(db_column='glosa')
     debe = models.DecimalField(db_column='debe', max_digits=16, decimal_places=2)
@@ -580,7 +582,7 @@ class Cbsres(models.Model):
     nrotraerp = models.TextField(db_column='nrotra', blank=True, null=True)
     fechatraerp = models.DateField(db_column='fechatraerp', blank=True, null=True)
     nrocomperp = models.TextField(db_column='nrocomp', blank=True, null=True)
-    auxerp = models.SmallIntegerField(db_column='auxerp', blank=True, null=True)
+    auxerp = models.TextField(db_column='auxerp', blank=True, null=True)
     referp = models.TextField(db_column='referp', blank=True, null=True)
     glosaerp = models.TextField(db_column='glosa', blank=True, null=True)
     debeerp = models.DecimalField(db_column='debeerp', max_digits=16, decimal_places=2, blank=True, null=True)
@@ -591,7 +593,7 @@ class Cbsres(models.Model):
     fechaconerp = models.DateField(db_column='fechaconerp', blank=True, null=True)
     idrerpd = models.IntegerField( db_column='idrerpd', blank=True, null=True, default=0  )
 
-    estadoerp=models.SmallIntegerField( verbose_name='Estado Erp', db_column='estado', null=True)
+    estadoerp=models.SmallIntegerField( verbose_name='Estado Erp', db_column='estadoerp', null=True)
 
     estadobco=models.SmallIntegerField( verbose_name='Estado Banco', db_column='estadobco', null=True)
     codtcobco = models.CharField(db_column='codtcobco', blank=True, null=True, max_length=4)
@@ -642,7 +644,7 @@ class Cbwres(models.Model):
     nrotraerp = models.TextField(db_column='nrotra', blank=True, null=True)
     fechatraerp = models.DateField(db_column='fechatraerp', blank=True, null=True)
     nrocomperp = models.TextField(db_column='nrocomp', blank=True, null=True)
-    auxerp = models.SmallIntegerField(db_column='auxerp', blank=True, null=True)
+    auxerp = models.TextField(db_column='auxerp', blank=True, null=True)
     referp = models.TextField(db_column='referp', blank=True, null=True)
     glosaerp = models.TextField(db_column='glosa', blank=True, null=True)
     debeerp = models.DecimalField(db_column='debeerp', max_digits=16, decimal_places=2, blank=True, null=True)
@@ -653,7 +655,7 @@ class Cbwres(models.Model):
     fechaconerp = models.DateField(db_column='fechaconerp', blank=True, null=True)
     idrerpd = models.IntegerField( db_column='idrerpd', blank=True, null=True, default=0  )
 
-    estadoerp=models.SmallIntegerField( verbose_name='Estado Erp', db_column='estado', null=True)
+    estadoerp=models.SmallIntegerField( verbose_name='Estado Erp', db_column='estadoerp', null=True)
 
     estadobco=models.SmallIntegerField( verbose_name='Estado Banco', db_column='estadobco', null=True)
     codtcobco = models.CharField(db_column='codtcobco', blank=True, null=True, max_length=4)
@@ -698,6 +700,7 @@ class Cbmbco(models.Model):
     idmbco = models.AutoField( verbose_name='ID', db_column='idmbco', primary_key=True )
     codbco = models.CharField( verbose_name='Codigo del Banco', db_column='codbco', max_length=5)
     desbco = models.CharField(verbose_name='Descripcion del Banco', db_column='desbco', max_length=50)
+    codhombco = models.CharField(verbose_name='Codigo de homologador bco', db_column='codhombco', max_length=5, default="vebod")
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -732,8 +735,10 @@ class Cbtemp(models.Model):
     idtemp = models.AutoField( verbose_name='ID', db_column='idtemp', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
+    diremail = models.CharField(verbose_name='Mail de la empresa', db_column='diremail', max_length=60)
     desemp = models.CharField(verbose_name='Descripcion de la empresa', db_column='desemp', max_length=60)
-    actpas = models.CharField(verbose_name='Descripcion de la empresa', db_column='actpas', max_length=1)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, blank=True)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
     
@@ -749,6 +754,9 @@ class Cbtcli(models.Model):
     idtcli = models.AutoField( verbose_name='ID', db_column='idtcli', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     descli = models.CharField(verbose_name='Descripcion del cliente', db_column='descli', max_length=60)
+    diremail = models.CharField(verbose_name='Mail del cliente', db_column='diremail', max_length=60)
+    celsopo = models.CharField(verbose_name='Whatsapp del cliente', db_column='celsopo', max_length=15)
+    codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, default="vegal")
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -758,6 +766,9 @@ class Cbtcli(models.Model):
     
     def save(self, *args, **kwargs):
         if Cbtpai.objects.filter(codpai=self.cliente[0:2]).exists():
+            if Cbtcli.objects.filter(idtcli=self.idtcli).exists()== False:
+                Cbtcfg(cliente=self.cliente, codcfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+                Cbtcfg(cliente=self.cliente, codcfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
             super( Cbtcli, self ).save( *args, **kwargs )
         else:
             return False
@@ -770,6 +781,7 @@ class Cbtlic(models.Model):
     nroempresa = models.SmallIntegerField(verbose_name='Numero de Empresa',db_column='nroempresa')
     nrocodbco = models.SmallIntegerField(verbose_name='Numero de Bancos',db_column='nrocodbco')
     nrocuenta = models.SmallIntegerField(verbose_name='Numero de Cuenta',db_column='nrocuenta')
+    fechalic = models.DateTimeField( verbose_name='Fecha de Vencimiento', db_column='fechalic')
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -795,6 +807,8 @@ class Cbtusu(models.Model):
     pasusu = models.BooleanField(verbose_name='Password Reseteable', db_column='pasusu', default=False)
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     tipousu = models.CharField(verbose_name='Tipo de usuario', db_column='tipousu', max_length=1, blank=True)
+    superusu = models.CharField(verbose_name='Superusuario', db_column='superusu', max_length=1, blank=True)
+    indconc = models.CharField(verbose_name='Puede Conciliar', db_column='indconc', max_length=1, blank=True)    
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1, blank=True)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
@@ -882,3 +896,158 @@ class Cbsusu(models.Model):
         self.corrusu = Cbsusu.objects.filter(idusu1 = self.idusu1).count()+1
         super( Cbsusu, self ).save( *args, **kwargs )
     
+
+class Cbthom(models.Model):
+    idthom = models.AutoField( verbose_name='ID', db_column='idthom', primary_key=True )
+    indhom = models.CharField(verbose_name='Indicador de Homologacion', db_column='indhom', max_length=1)
+    codhom = models.CharField(verbose_name='Codigo de homologador', db_column='codhom', max_length=5)
+    deschom = models.CharField(verbose_name='Descripcion del homologador', db_column='deschom', max_length=50)
+    fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
+    idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+    
+    class Meta:
+        managed = True
+        db_table = 'cbthom'
+
+
+class Cbtcfg(models.Model):
+    idtcfg = models.AutoField( verbose_name='ID', db_column='idtcfg', primary_key=True )
+    cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+    codcfg = models.SmallIntegerField(verbose_name='Codigo de configuracion',db_column='codcfg')
+    actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
+    fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
+    idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcfg'
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+class Cbtcfgc(models.Model):
+    idtcfgc = models.AutoField( verbose_name='ID', db_column='idtcfgc', primary_key=True )
+    idtcfg = models.ForeignKey( 'Cbtcfg', models.DO_NOTHING, db_column='idtcfg')
+    ordencfg = models.SmallIntegerField(verbose_name='Orden de comparacion',db_column='ordencfg')
+    campobco = models.CharField(verbose_name='Campo Banco',db_column='campobco', max_length=30)
+    campoerp = models.CharField(verbose_name='Campo ERP',db_column='campoerp', max_length=30)
+    fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
+    idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcfgc'
+        
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+class Cbtcam(models.Model):
+    idtcam = models.AutoField(db_column='idtcam', primary_key=True)
+    cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+    nrocol = models.SmallIntegerField(verbose_name='Numero de columna',db_column='nrocol')
+    descampo = models.CharField(verbose_name='Descripcion del campo', db_column='descampo', max_length=50)
+    indcampo = models.SmallIntegerField(verbose_name='Indicador de donde se leerá el dato',db_column='indcampo')
+    cbscampo = models.CharField(verbose_name='Campo en el cbsres donde se cargara en el erp', db_column='cbscampo', max_length=16)
+    cbdcampo = models.CharField(verbose_name='Campo en el cbf25 donde se cargara en el erp', db_column='cbfcampo', max_length=16)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcam'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcam, self ).save( *args, **kwargs )
+
+        # - - - - -
+
+class Cbtcon(models.Model):
+    idtcon = models.AutoField(db_column='idtcon', primary_key=True)
+    codcon = models.CharField(verbose_name='Codigo de cuenta contable', db_column='codcon', max_length=15)
+    descon = models.CharField(verbose_name='Descripcion de cuenta contable', db_column='descon', max_length=50)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcon'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcon, self ).save( *args, **kwargs )
+
+        # - - - - -
+
+class Cbtcoye(models.Model):
+    idtcoye = models.AutoField(db_column='idtcon', primary_key=True)
+    cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+    nrocol = models.SmallIntegerField(verbose_name='Numero de columna',db_column='nrocol')
+    codcampo = models.SmallIntegerField(verbose_name='Codigo del campo',db_column='codcampo')
+    descampo = models.CharField(verbose_name='Descripcion del campo', db_column='descampo', max_length=50)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcoye'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcoye, self ).save( *args, **kwargs )
+
+        # - - - - -
+
+class Cbtcoyd(models.Model):
+    idtcoyd = models.AutoField(db_column='idtcon', primary_key=True)
+    idtcoye = models.ForeignKey( 'Cbtcoye', models.DO_NOTHING, db_column='idtcoye')
+    corridtcoy = models.SmallIntegerField(verbose_name='Correlativo',db_column='corridtcoy')
+    tipoval = models.CharField(verbose_name='Tipo de Valor', db_column='tipoval', max_length=1)
+    codval = models.TextField(verbose_name='Codigo de Valor', db_column='codval')
+    desval = models.TextField(verbose_name='Descripcion de Valor', db_column='desval')
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcoyd'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcoyd, self ).save( *args, **kwargs )
+
+        # - - - - -

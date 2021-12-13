@@ -36,9 +36,9 @@ $(function () {
             {"data": "desctra"},
             {"data": "reftra"},
             {"data": "codtra"},
-            {"data": "debe", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "haber", render: $.fn.dataTable.render.number(',', '.', 2, '$')},
-            {"data": "saldo", render: $.fn.dataTable.render.number(',', '.', 2, '$')}
+            {"data": "debe", render: $.fn.dataTable.render.number(',', '.', 2, globalVariable.moneda)},
+            {"data": "haber", render: $.fn.dataTable.render.number(',', '.', 2, globalVariable.moneda)},
+            {"data": "saldo", render: $.fn.dataTable.render.number(',', '.', 2, globalVariable.moneda)}
         ],
         columnDefs: [
             {

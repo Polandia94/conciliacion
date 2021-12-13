@@ -36,7 +36,7 @@
                         {% else %}
                         <div class="form-group col-6">
                         <label for="empresa" class="col-form-label">{{ form.empresa.label }}</label>
-                        <input id=id_empresa name="empresa" class= 'form-control' type="text" readonly value={{form.empresa.value}}                        
+                        <input id=id_empresa name="empresa" class= 'form-control' type="text" readonly value={{form.empresa.value}}></input>                   
                         </div>
                         {% endif %}
                     </div>
@@ -45,9 +45,22 @@
                                 {{ form.desemp}}
 
                         </div>
-                    </div>
+                    
                     <div class="row">
-                        {% if editable %}
+                        <div class="form-group col-6">
+                            <label for="codhomerp" class="col-form-label">Codigo de homologacion</label>
+                                <select class="form-control" name="codhomerp" id="id_codhomerp">
+                                {% for i in codhomerp %}
+                                    {% if i.selected %}
+                                        <option value={{i.nombre}} selected>{{i.nombre}}</option>
+                                    {% else %}
+                                        <option value={{i.nombre}} >{{i.nombre}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                </select>
+
+                        </div>
+                        {% if inactiva %}
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label">¿Es Empresa Activa?</label>
                                 {{ form.actpas}}
@@ -57,18 +70,20 @@
                         <div class="form-group col-6">
                             <label for="actpas" class="col-form-label" >¿Es Empresa Activa?</label>
                                 
-                            <input disabled type="checkbox" name="actpas" placeholder="¿Está activa?" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked>
+                            <input  type="checkbox" name="actpas" placeholder="¿Está activa?" class="form-control" maxlength="1" autocomplete="off" id="id_actpas" checked>
 
                         </div>
                         {% endif %}
                     </div>
+                    </div>
                     
                     <!-- /.card-body -->
                     <div class="card-footer text-right">
+                        
                         {% if action == "edit" %}
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Grabar</button>
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px"  >Grabar</button>
                         {% else %}
-                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg" style="width: 150px"  >Crear</button>
+                        <button id="btnGuardar" type="submit" class="btn btn-primary btn-lg usercheck" style="width: 150px"  >Crear</button>
                         {% endif %}
                         <button type="button" class="btn btn-secondary btn-lg" style="width: 150px"
                                 onclick="location.href='{{ empresas_url }}'">Cancelar</button>

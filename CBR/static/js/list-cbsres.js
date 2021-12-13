@@ -375,6 +375,49 @@ if(columnasVisibles == null){
 }
 
 $.ajax({
+    method: 'GET',
+    beforeSend: function (request) {
+        request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+    },
+    url: '/getTiposDeConciliacionpost',
+    data: { 'idrenc': idrenc },
+    success: function (respons) {
+        try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch {}
+        saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
+        globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
+        console.log(respons.saldodiferenciatotal)
+        console.log(respons.puedeCerrar)
+        if(respons.saldodiferenciatotal == 0 && respons.puedeCerrar == 1){
+            try{
+            document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
+            document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
+            document.getElementById("btnCerrarConciliacion").disabled = false
+        }catch{}
+        }else{
+            try{
+            document.getElementById("btnCerrarConciliacion").className = "btn btn-light btn-flat mb-3"
+            document.getElementById("btnCerrarConciliacion").title = "Los saldos no concilian"
+            document.getElementById("btnCerrarConciliacion").disabled = true
+            }catch{}
+        }
+        cargando.innerHTML = ""
+    }
+})
+
+$.ajax({
     type: "POST",
     url: '/getColumnas/',
     data: {},
@@ -390,6 +433,7 @@ $.ajax({
         $(function () {
             "use strict"
             $(document).ready(function () {
+            
                 const searchRegExp = /,/g;
                 const csrftoken = getCookie('csrftoken');
                 /*funcion que vuelve a calcular los saldos, historial y tipo de conciliacion en cada caso*/
@@ -400,63 +444,85 @@ $.ajax({
                     let saldodia = parseFloat(0)
                     /*saldoi es el saldo inicial*/
                     let saldoi = parseFloat(0)
+                    let saldo = 0
+                    let primerRegistro = false
+                    for (let fila = 0; fila<1000; fila++) {
+                        if(table.row(fila).data()["primerRegistro"] == true){
+                            table.row(fila).data()["idsres"]
+                            primerRegistro = true
+                        }
+
+                        if (primerRegistro == true){
+                            saldo = parseFloat(table.cell(fila, ".saldoacumeserp").data()) - parseFloat(table.cell(fila, ".debeerp").data()) + parseFloat(table.cell(fila, ".habererp").data())
+                            break
+                        }
+                    }
+                    globalVariableSaldo.saldo = saldo
+
                     saldoi = parseFloat(globalVariableSaldo.saldo)
                     
                     var datasend = []
                     /*para cada fila*/
+                    primerRegistro = false
                     for (let fila = 0; fila < table.rows().count(); fila++) {
-                        let totalmasdebe = parseFloat(0)
-                        let totalmashaber = parseFloat(0)
-                        /*suma al debe y al haber para el subtotal*/
-                        if (table.cell(fila, ".debeerp").data() == null || table.cell(fila, ".debeerp").data() == 0) {
-                            totalmasdebe = parseFloat(0)
-                            totaldebe = totaldebe + totalmasdebe
-                        } else {
-                            totalmasdebe = parseFloat(table.cell(fila, ".debeerp").data().replace("$", ""))
-                            totaldebe = totaldebe + totalmasdebe
+                        if(table.row(fila).data()["primerRegistro"] == true){
+                            primerRegistro = true
                         }
-                        if (table.cell(fila, ".habererp").data() == null || table.cell(fila, ".habererp").data() == 0) {
-                            totalmashaber = parseFloat(0)
-                            totalhaber = totalhaber + totalmashaber
-                        } else {
-                            totalmashaber = parseFloat(table.cell(fila, ".habererp").data().replace("$", ""))
-                            totalhaber = totalhaber + totalmashaber
+                        if(primerRegistro == true ){
+                            let totalmasdebe = parseFloat(0)
+                            let totalmashaber = parseFloat(0)
+                            /*suma al debe y al haber para el subtotal*/
+                            if (table.cell(fila, ".debeerp").data() == null || table.cell(fila, ".debeerp").data() == 0) {
+                                totalmasdebe = parseFloat(0)
+                                totaldebe = totaldebe + totalmasdebe
+                            } else {
+                                totalmasdebe = parseFloat(table.cell(fila, ".debeerp").data().replace("$", ""))
+                                totaldebe = totaldebe + totalmasdebe
+                            }
+                            if (table.cell(fila, ".habererp").data() == null || table.cell(fila, ".habererp").data() == 0) {
+                                totalmashaber = parseFloat(0)
+                                totalhaber = totalhaber + totalmashaber
+                            } else {
+                                totalmashaber = parseFloat(table.cell(fila, ".habererp").data().replace("$", ""))
+                                totalhaber = totalhaber + totalmashaber
+                            }
+                            /*Establece cuanto su agrega al saldo y lo agrega para el saldo erp*/
+                            let saldomas = parseFloat(0)
+                            if (table.cell(fila, ".debeerp").data() == null) {
+                                saldomas = parseFloat(0)
+                            } else { saldomas = parseFloat(table.cell(fila, ".debeerp").data()) }
+            
+                            let saldomenos = parseFloat(0)
+            
+                            if (table.cell(fila, ".habererp").data() == null) {
+                                saldomenos = parseFloat(0)
+                            } else { saldomenos = parseFloat(table.cell(fila, ".habererp").data()) }
+            
+                            saldoi = saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
+                            table.cell(fila, ".saldoacumeserp").data(saldoi);
+                            /*Calcula el saldo de diferencia */
+                            var saldodiferencia = parseFloat(table.cell(fila, ".saldoacumesbco").data().replace("$", "")) - parseFloat(table.cell(fila, ".saldoacumeserp").data())
+                            /* si el dia coincide suma a saldo dia, si no parte de cero*/
+                            table.cell(fila, ".saldodiferencia").data(saldodiferencia); if (table.cell(fila - 1, ".fechatraerp").data() == table.cell(fila, ".fechatraerp").data()) {
+                                saldodia = saldodia + saldomas - saldomenos
+                            } else {
+                                saldodia = saldomas - saldomenos
+                            }
+                            table.cell(fila, ".saldoacumdiaerp").data(saldodia);
+                            var rows = table.row(fila)
+                            /*Llena los html de los subtotales */
+                            try { saldodiferenciahtml.innerHTML = globalVariableIndtco.moneda + Number(saldodiferencia).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            catch { }
+                            try { saldoerphtml.innerHTML = globalVariableIndtco.moneda +Number(saldoi).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            catch { }
+                            try { debeerphtml.innerHTML = globalVariableIndtco.moneda + Number(totaldebe).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            catch { }
+                            try { habererphtml.innerHTML = globalVariableIndtco.moneda +  Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            catch { }
+                            /*va llenando la informacion a enviar al back */
+                            let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                            datasend.push(agregar);
                         }
-                        /*Establece cuanto su agrega al saldo y lo agrega para el saldo erp*/
-                        let saldomas = parseFloat(0)
-                        if (table.cell(fila, ".debeerp").data() == null) {
-                            saldomas = parseFloat(0)
-                        } else { saldomas = parseFloat(table.cell(fila, ".debeerp").data()) }
-        
-                        let saldomenos = parseFloat(0)
-        
-                        if (table.cell(fila, ".habererp").data() == null) {
-                            saldomenos = parseFloat(0)
-                        } else { saldomenos = parseFloat(table.cell(fila, ".habererp").data()) }
-        
-                        saldoi = saldoi + parseFloat(saldomas) - parseFloat(saldomenos);
-                        table.cell(fila, ".saldoacumeserp").data(saldoi);
-                        /*Calcula el saldo de diferencia */
-                        var saldodiferencia = parseFloat(table.cell(fila, ".saldoacumesbco").data().replace("$", "")) - parseFloat(table.cell(fila, ".saldoacumeserp").data())
-                        /* si el dia coincide suma a saldo dia, si no parte de cero*/
-                        table.cell(fila, ".saldodiferencia").data(saldodiferencia); if (table.cell(fila - 1, ".fechatraerp").data() == table.cell(fila, ".fechatraerp").data()) {
-                            saldodia = saldodia + saldomas - saldomenos
-                        } else {
-                            saldodia = saldomas - saldomenos
-                        }
-                        table.cell(fila, ".saldoacumdiaerp").data(saldodia);
-                        var rows = table.row(fila)
-                        /*Llena los html de los subtotales */
-                        try { saldodiferenciahtml.innerHTML = Number(saldodiferencia).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
-                        catch { }
-                        try { saldoerphtml.innerHTML = Number(saldoi).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
-                        catch { }
-                        try { debeerphtml.innerHTML = Number(totaldebe).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
-                        catch { }
-                        try { habererphtml.innerHTML = Number(totalhaber).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
-                        catch { }
-                        /*va llenando la informacion a enviar al back */
-                        datasend.push(rows.data());
                     }
                     if (row.data()["idrbcodl"] == -1) { row.data()["idrbcodl"] = 0 }
                     table.rows(function (idx, data, node) {
@@ -487,21 +553,28 @@ $.ajax({
                             table.rows(function (idx, data, node) {
                                 var rowc = table.row(idx)
                                 if (rowc.data()["idrbcodl"] == row.data()["idrbcodl"]) {
+                                    if (rowc.data()["estadoerp"] != 2){
                                     rowc.data()["estadoerp"] = 1
+                                    }
                                 }
                                 if (aConciliarVarios > 1) { rowb.data()['idrerpdl'] = -1 } else if (aConciliarVarios == 1 && rowb.data()['idrbcodl'] == 0) {
                                     rowb.data()['idrbcodl'] = rowc.data()['idrbcod']
                                 }
                             });
-                            rowb.data()['estadobco'] = 1
+                            if(rowb.data()['estadobco'] != 2){
+                            rowb.data()['estadobco'] = 1}
                         } else if (rowb.data()['idrbcod'] == row.data()["idrbcodl"]) {
                             table.rows(function (idx, data, node) {
                                 var rowc = table.row(idx)
                                 if (rowc.data()["idrbcodl"] == row.data()["idrbcodl"]) {
+                                    if(rowc.data()["estadoerp"] != 2){
                                     rowc.data()["estadoerp"] = 0
+                                    }
                                 }
                             });
+                            if(rowb.data()['estadobco'] != 2){
                             rowb.data()['estadobco'] = 0
+                            }
                         }
                     });
         
@@ -537,7 +610,7 @@ $.ajax({
                     $.ajax({
                         type: "POST",
                         url: '/updateScript/',
-                        data: JSON.stringify(datasend).replace("$", ""),
+                        data: JSON.stringify(datasend).replace(globalVariableIndtco.moneda, ""),
                         headers: {
                             'X-CSRFToken': csrfToken
                         },
@@ -547,31 +620,39 @@ $.ajax({
                                 beforeSend: function (request) {
                                     request.setRequestHeader("X-CSRFToken", csrftoken);
                                 },
-                                url: '/getTiposDeConciliacion',
+                                url: '/getTiposDeConciliacionpost',
                                 data: { 'idrenc': idrenc },
                                 success: function (respons) {
-                                    try { debebcototal.innerHTML = Number(respons.debebcototal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldobcototal.innerHTML = Number(respons.saldobcototal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { debeerptotalhtml.innerHTML = Number(respons.debeerptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }) }
+                                    try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch {}
-                                    globalVariable.SaldoDiferenciaTotal = Number(respons.saldodiferenciatotal)
-                                    if(globalVariable.SaldoDiferenciaTotal == 0){
+                                    saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
+                                    globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
+                                    console.log(respons.saldodiferenciatotal)
+                                    console.log(respons.puedeCerrar)
+                                    if(respons.saldodiferenciatotal == 0 && respons.puedeCerrar == 1){
+                                        try{
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
+                                        document.getElementById("btnCerrarConciliacion").disabled = false
+                                        }catch{}
                                     }else{
+                                        try{
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-light btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Los saldos no concilian"
-        
+                                        document.getElementById("btnCerrarConciliacion").disabled = true
+                                        }catch{}
                                     }
                                     cargando.innerHTML = ""
                                 }
@@ -586,6 +667,7 @@ $.ajax({
         
         
                 }
+                
                 function resaltarerp(e) {
                     var row = table.row(e.target.parentElement)
                     if (row.data()["idrerpdl"] == -1) {
@@ -600,7 +682,13 @@ $.ajax({
                         table.rows(function (idx, data, node) {
                             var rowe = table.row(idx)
                             if (row.data()["idrerpdl"] == rowe.data()["idrerpd"] && row.data()["idrerpdl"] != 0 && row.data()["idrerpdl"] != "") {
-                                $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#84cf84" });
+                                if(row.data()["estadobco"] == 0){
+                                    $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#CD5C5C" });
+                                }else if(row.data()["estadobco"] == 1){
+                                    $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#aacf84" });
+                                }else{
+                                    $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "#FFFF33" });
+                                }
                             }
         
                         })
@@ -633,7 +721,13 @@ $.ajax({
                         table.rows(function (idx, data, node) {
                             var rowe = table.row(idx)
                             if (row.data()["idrerpd"] == rowe.data()["idrerpdl"] && row.data()["idrerpd"] != 0 && row.data()["idrerpd"] != "") {
-                                $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#84cf84" });
+                                if(row.data()["estadoerp"] == 0){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#CD5C5C" });
+                                }else if(row.data()["estadoerp"] == 1){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#aacf84" });
+                                }else{
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#FFFF33" });
+                                }                                
                             }
         
                         })
@@ -641,8 +735,13 @@ $.ajax({
                         table.rows(function (idx, data, node) {
                             var rowe = table.row(idx)
                             if (row.data()["idrbcodl"] == rowe.data()["idrbcod"] && row.data()["idrbcodl"] != 0 && row.data()["idrbcodl"] != "") {
-                                $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#84cf84" });
-                            }
+                                if(row.data()["estadoerp"] == 0){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#CD5C5C" });
+                                }else if(row.data()["estadoerp"] == 1){
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#aacf84" });
+                                }else{
+                                    $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "#FFFF33" });
+                                }                              }
                         })
                     }
                 }
@@ -664,10 +763,23 @@ $.ajax({
                         })
                     }
                 }
+                function mostrarEstadoBanco(idsres){
+                    document.getElementById('estadobco-'+idsres).style.display = 'inline';
+                }
+                function ocultarEstadoBanco(idsres){
+                    document.getElementById('estadobco-'+idsres).style.display = 'none';
+                }
+                function mostrarEstadoErp(idsres){
+                    document.getElementById('estadoerp-'+idsres).style.display = 'inline';
+                }
+                function ocultarEstadoErp(idsres){
+                    document.getElementById('estadoerp-'+idsres).style.display = 'none';
+                }
+                
         
                 globalVariable.editado = 0;
                 globalVariableSaldo.saldo = 0;
-                try { globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotalhtml").textContent.substring(1)) }
+                try { globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotaloculto").textContent.substring(1)) }
                 catch { }
                 const urlParams = new URLSearchParams(window.location.search);
                 const idrenc = urlParams.get('idrenc');
@@ -688,12 +800,25 @@ $.ajax({
                         url: '../static/lib/datatables-es.json'
                     },
                     buttons: [
-                        'copy', 'csv', 'excel', 'print',
+                        {extend: 'copy',
+                        exportOptions: { orthogonal: 'export' }
+                        },
+                        {extend: 'csv',
+                        exportOptions: { orthogonal: 'export' }
+                        },
+                        {extend: 'excel',
+                        exportOptions: { orthogonal: 'export' }
+                        },
+                        {extend: 'print',
+                        exportOptions: { orthogonal: 'export' }
+                        },
                         {
                             extend: ['colvis'],
+                            exportOptions: { orthogonal: 'export' },
                             collectionLayout: 'fixed three-column',
                             columns: ':not(.noVis)',
-                        }
+                            
+                        },
                     ],
         
                     stripeClasses: [],
@@ -727,19 +852,19 @@ $.ajax({
                         { "data": "horatrabco", className: "dt-bancoColor" },
                         { "data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         {
                             "data": "saldoacumesbco",
                             name: "saldoacumesbco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         {
@@ -747,29 +872,32 @@ $.ajax({
                             name: "saldoacumdiabco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         { "data": 'oficina', className: "dt-bancoColor" },
                         {
                             "data": 'desctra', className: "dt-bancoColor", "render": function (data, type, full, meta) {
+                                if(type == 'export'){return data}else{
                                 var zone_html = "";
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
+                            }
                             }
                         },
                         {
                             "data": 'reftra', className: "dt-bancoColor", "render": function (data, type, full, meta) {
                                 var zone_html = "";
+                                if(type == 'export'){return data}else{
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
-                            }
+                            }}
                         },
                         { "data": 'codtra', className: "dt-bancoColor" },
                         { "data": 'idrbcod', className: "dt-bancoColor" },
@@ -791,30 +919,30 @@ $.ajax({
                         },
                         { "data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         {
                             "data": "saldoacumeserp",
                             name: "saldoacumeserp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         {
                             "data": "saldoacumdiaerp",
                             name: "saldoacumdiaerp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"|| type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         { "data": "saldodiferencia", name: "saldodiferencia", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"){{return "$" + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
         
                         { "data": 'nrotraerp' },
                         {
@@ -828,22 +956,24 @@ $.ajax({
                         {
                             "data": 'referp', "render": function (data, type, full, meta) {
                                 var zone_html = "";
+                                if(type == 'export'){return data}else{
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
-                            }
+                            }}
                         },
                         {
                             "data": 'glosaerp', "render": function (data, type, full, meta) {
+                                if(type=='export'){return data}else{
                                 var zone_html = "";
                                 if (data != null && data.length > maximosCaracteres) {
                                     zone_html = data.substring(0, maximosCaracteres - 7) + "..." + data.substring(data.length - 5)
                                 }
                                 else if (data != null) { zone_html = data }
                                 return "<td><nobr>" + zone_html + "</nobr></td>";
-                            }
+                            }}
                         },
                         {
                             "data": 'fechaconerp', "render": function (data, type, full, meta) {
@@ -883,14 +1013,14 @@ $.ajax({
                     columnDefs: [
                         {orderData: [0]},
                         {
-                            targets: [2, 8, 10, 11, 12, 13],
+                            targets: [2, 8, 10, 11, 12],
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarerp(e) })
                             }
                         },
                         {
-                            targets: [16, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+                            targets: [19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 32],
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseenter', function (e) { resaltarbco(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarbco(e) })
@@ -977,8 +1107,10 @@ $.ajax({
                             createdCell: function (cell) {
                                 var row = table.row(cell)
                                 if (table.column(cell).visible() === true) {
-                                    if (row.data()['glosaerp'] != null && row.data()['glosaerp'].length > maximosCaracteres) {
-                                        $(cell).attr("title", row.data()['glosaerp'])
+                                    if (row.data()['glosaerp'] != null){
+                                        if (row.data()['glosaerp'].length > maximosCaracteres) {
+                                            $   (cell).attr("title", row.data()['glosaerp'])
+                                        }
                                     };
                                     cell.addEventListener('mouseenter', function (e) { resaltarbco(e) })
                                     cell.addEventListener('mouseleave', function (e) { desresaltarbco(e) })
@@ -1008,6 +1140,7 @@ $.ajax({
         
                             }
                         },
+                        
                         {
                             targets: ["codtcoerp"],
                             createdCell: function (cell) {
@@ -1113,9 +1246,12 @@ $.ajax({
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
                                                             if (rowc.data()["idrerpdl"] == e.target.textContent) {
+                                                                if(rowc.data()["estadobco"] != 2){
                                                                 rowc.data()["estadobco"] = 1
+                                                                }
                                                             }
                                                         });
+                                                        if(rowb.data()['estadoerp'] != 2){
                                                         rowb.data()['estadoerp'] = 1
                                                         rowb.data()['historial'] = "4"
                                                         table.rows(function (idx, data, node) {
@@ -1125,16 +1261,18 @@ $.ajax({
                                                             }
         
                                                         })
+                                                        }
         
                                                         if (aConciliarVarios > 1) { rowb.data()['idrbcodl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrbcodl'] = row.data()['idrbcod'] }
                                                     } else if (rowb.data()['idrerpd'] == e.target.textContent) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
-                                                            if (rowc.data()["idrerpdl"] == e.target.textContent) {
+                                                            if (rowc.data()["idrerpdl"] == e.target.textContent && rowc.data()["estadobco"] != 2) {
                                                                 rowc.data()["estadobco"] = 0
                                                             }
                                                         });
-                                                        rowb.data()['estadoerp'] = 0
+                                                        if(rowb.data()['estadoerp'] = 0){
+                                                        rowb.data()['estadoerp'] = 0}
                                                         if (rowb.data()['historial'] == "2" || rowb.data()['historial'] == "3" || rowb.data()['historial'] == "4") {
                                                             rowb.data()['historial'] = "5"
                                                         }
@@ -1166,10 +1304,11 @@ $.ajax({
                                                     if (rowb.data()['idrerpd'] == original && original != 0 && (debebco != 0 || haberbco != 0)) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
-                                                            if (rowc.data()["idrerpdl"] == original && original != 0) {
+                                                            if (rowc.data()["idrerpdl"] == original && original != 0 && rowc.data()["estadobco"] != 2) {
                                                                 rowc.data()["estadobco"] = 1
                                                             }
                                                         });
+                                                        if(rowb.data()['estadoerp'] != 2){
                                                         rowb.data()['estadoerp'] = 1
                                                         rowb.data()['historial'] = "4"
                                                         table.rows(function (idx, data, node) {
@@ -1179,18 +1318,21 @@ $.ajax({
                                                             }
         
                                                         })
+                                                        }
                                                         if (aConciliarVarios > 1) { rowb.data()['idrbcodl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrbcodl'] = row.data()['idrbcod'] }
                                                     } if (rowb.data()['idrerpd'] == original && original != 0) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
-                                                            if (rowc.data()["idrerpdl"] == original && original != 0) {
+                                                            if (rowc.data()["idrerpdl"] == original && original != 0 && rowc.data()["estadobco"] != 2) {
                                                                 rowc.data()["estadobco"] = 0
                                                             }
                                                         });
+                                                        if(rowb.data()['estadoerp'] != 2){
                                                         rowb.data()['estadoerp'] = 0
                                                         if (rowb.data()['historial'] == "2" || rowb.data()['historial'] == "3" || rowb.data()['historial'] == "4") {
                                                             rowb.data()['historial'] = "5"
                                                         }
+                                                    }
                                                         rowb.data()['idrbcodl'] = 0
                                                     }
                                                 });
@@ -1199,7 +1341,8 @@ $.ajax({
                                                 var datasend = []
                                                 for (let fila = 0; fila < table.rows().count(); fila++) {
                                                     var rows = table.row(fila)
-                                                    datasend.push(rows.data());
+                                                    let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                                                    datasend.push(agregar);
                                                 }
         
         
@@ -1246,11 +1389,6 @@ $.ajax({
                                 //    var tr = $(cell);
                                 //    tr.css('color', '#ff0000');
                                 //}
-                                saldo = parseFloat(table.cell(0, ".saldoacumeserp").data()) - parseFloat(table.cell(0, ".debeerp").data()) + parseFloat(table.cell(0, ".habererp").data())
-                                for (let fila = 1; isNaN(saldo); fila++) {
-                                    saldo = parseFloat(table.cell(fila, ".saldoacumeserp").data()) - parseFloat(table.cell(fila, ".debeerp").data()) + parseFloat(table.cell(fila, ".habererp").data())
-                                }
-                                globalVariableSaldo.saldo = saldo
                                 cell.setAttribute('contenteditable', true)
                                 cell.setAttribute('spellcheck', false)
         
@@ -1265,13 +1403,13 @@ $.ajax({
                                 })
                                 cell.addEventListener('blur', function (e) {
                                     var row = table.row(e.target.parentElement)
-                                    if (original == null || row.data()['habererp'] != 0 || row.data()['estadoerp'] == "1") {
+                                    if (original == null || row.data()['habererp'] != 0 || row.data()['estadoerp'] == "1" || row.data()['estadoerp'] == 1 || isNaN(e.target.textContent.replace(globalVariableIndtco.moneda, "").replace(searchRegExp, ""))) {
                                         e.target.textContent = original
                                     }
                                     else if (original !== e.target.textContent) {
                                         globalVariable.editado = 1
         
-                                        row.data()['debeerp'] = e.target.textContent.replace("$", "").replace(searchRegExp, "")
+                                        row.data()['debeerp'] = e.target.textContent.replace(globalVariableIndtco.moneda, "").replace(searchRegExp, "")
                                         calcularSaldos(original, row, e, estadooriginal)
                                     }
                                     try{
@@ -1330,14 +1468,14 @@ $.ajax({
                                 })
                                 cell.addEventListener('blur', function (e) {
                                     var row = table.row(e.target.parentElement)
-                                    if (original == null || row.data()['debeerp'] != 0 || row.data()['estadoerp'] == 1) {
+                                    if (original == null || row.data()['debeerp'] != 0 || row.data()['estadoerp'] == 1 || isNaN(e.target.textContent.replace(globalVariableIndtco.moneda, "").replace(searchRegExp, ""))) {
                                         e.target.textContent = original
                                     } else {
                                         if (original !== e.target.textContent) {
                                             //var tr = $(this);
                                             //tr.css('color', '#ff0000');
                                             globalVariable.editado = 1
-                                            row.data()['habererp'] = e.target.textContent.replace("$", "").replace(searchRegExp, "")
+                                            row.data()['habererp'] = e.target.textContent.replace(globalVariableIndtco.moneda, "").replace(searchRegExp, "")
                                             calcularSaldos(original, row, e, estadooriginal)
                                         }
                                         try{
@@ -1438,7 +1576,7 @@ $.ajax({
                                                     if (rowb.data()['idrbcod'] == e.target.textContent && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
-                                                            if (rowc.data()["idrbcodl"] == e.target.textContent) {
+                                                            if (rowc.data()["idrbcodl"] == e.target.textContent && rowc.data()["estadoerp"] != 2) {
                                                                 rowc.data()["estadoerp"] = 1
                                                                 rowc.data()["historial"] = "4"
                                                                 table.rows(function (idx, data, node) {
@@ -1450,20 +1588,24 @@ $.ajax({
                                                                 })
                                                             }
                                                         });
-                                                        rowb.data()['estadobco'] = 1
+                                                        if(rowb.data()['estadobco'] = 1){
+                                                        rowb.data()['estadobco'] = 1}
                                                         if (aConciliarVarios > 1) { rowb.data()['idrerpdl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrerpdl'] = row.data()['idrerpd'] }
                                                     } else if (rowb.data()['idrbcod'] == e.target.textContent) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
-                                                            if (rowc.data()["idrbcodl"] == e.target.textContent) {
+                                                            if (rowc.data()["idrbcodl"] == e.target.textContent && rowc.data()["estadoerp"] != 2) {
                                                                 rowc.data()["estadoerp"] = 0
                                                                 if (rowc.data()["historial"] == "2" || rowc.data()["historial"] == "4" || rowc.data()["historial"] == "3") {
                                                                     rowc.data()["historial"] = "5"
                                                                 }
                                                             }
                                                         });
+                                                        if(rowb.data()['estadobco'] != 2){
                                                         rowb.data()['estadobco'] = 0
                                                         rowb.data()['idrerpdl'] = 0
+
+                                                        }
                                                     }
                                                 });
                                                 row = table.row(e.target.parentElement)
@@ -1490,7 +1632,7 @@ $.ajax({
                                                     if (rowb.data()['idrbcod'] == original && original != 0 && rowb.data()['debebco'] == habererp && rowb.data()['haberbco'] == debeerp && (debeerp != 0 || habererp != 0)) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
-                                                            if (rowc.data()["idrbcodl"] == original && original != 0) {
+                                                            if (rowc.data()["idrbcodl"] == original && original != 0 && rowc.data()["estadoerp"] != 2) {
                                                                 rowc.data()["estadoerp"] = 1
                                                                 rowc.data()["historial"] = "5"
                                                                 table.rows(function (idx, data, node) {
@@ -1502,20 +1644,25 @@ $.ajax({
                                                                 })
                                                             }
                                                         });
-                                                        rowb.data()['estadobco'] = 1
+                                                        if(rowb.data()['estadobco'] != 2){
+                                                        rowb.data()['estadobco'] = 1}
                                                         if (aConciliarVarios > 1) { rowb.data()['idrerpdl'] = -1 } else if (aConciliarVarios == 1) { rowb.data()['idrerpdl'] = row.data()['idrerpd'] }
                                                     } else if (rowb.data()['idrbcod'] == original && original != 0) {
                                                         table.rows(function (idx, data, node) {
                                                             var rowc = table.row(idx)
                                                             if (rowc.data()["idrbcodl"] == original && original != 0) {
+                                                                if(rowc.data()["estadoerp"] = 0){
                                                                 rowc.data()["estadoerp"] = 0
                                                                 if (rowc.data()["historial"] == "2" || rowc.data()["historial"] == "4" || rowc.data()["historial"] == "3") {
                                                                     rowc.data()["historial"] = "5"
                                                                 }
+                                                                }
                                                             }
                                                         });
+                                                        if(rowb.data()['estadobco'] != 2){
                                                         rowb.data()['estadobco'] = 0
                                                         rowb.data()['idrerpdl'] = 0
+                                                        }
                                                     }
                                                 });
                                                 if (row.data()['historial'] == "0") {
@@ -1527,7 +1674,8 @@ $.ajax({
                                                 var datasend = []
                                                 for (let fila = 0; fila < table.rows().count(); fila++) {
                                                     var rows = table.row(fila)
-                                                    datasend.push(rows.data());
+                                                    let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                                                    datasend.push(agregar);
                                                 }
         
                                                 if (estadooriginal == "2" || estadooriginal == "3" || estadooriginal == "4") {
@@ -1566,7 +1714,7 @@ $.ajax({
                             targets: ["idrbcod"],
                             render: function (data, type, row) {
                                 if (((data != "0") && (data != null) && (data != undefined) && (data != ''))) {
-                                    return `</nobr></td> <a class=d-inline href="#!" onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></nobr></td>`
+                                    return `</nobr></td> <button class="link"  onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></nobr></td>`
                                 } else { return "" }
                             }
         
@@ -1577,19 +1725,55 @@ $.ajax({
                             targets: ["estadobco"],
                             className: "p-0 pb-0 ",
                             orderable: true,
-                            render: function (data, type, row) {
+                            createdCell: function (cell) {
+                                cell.addEventListener('mouseleave', function (e) {
+                                    var row = table.row(e.target.parentElement)
+                                    let idsres = row.data()["idsres"]
+                                    if (row.data()["estadobco"]==2){
+                                    ocultarEstadoBanco(idsres)
+                                    }
+                                    desresaltarerp(e)
+                                    }
+                                )
+                                cell.addEventListener('click', function (e) {
+                                    table.rows(function (idx, data, node) {
+                                        var rowe = table.row(idx)
+                                        $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "" });
+                                    })
+                                    //var row = table.row(e.target.parentElement)
+                                    
+                                }
+                                )
+                                cell.addEventListener('mouseenter', function (e) {
+                                    var row = table.row(e.target.parentElement)
+                                    let idsres = row.data()["idsres"]
+                                    if (row.data()["estadobco"]==2){
+                                    mostrarEstadoBanco(idsres)
+                                    }
+                                    resaltarerp(e)
+                                    }
+                                )
+                            },
+
+                            render: function (data, type, row, meta) {
                                 var $elDiv = $('<div></div>');
                                 var classBackground = '';
+
                                 switch (row['estadobco']) {
                                     case 0: {
                                         var $Etiqueta = $('<p>No Conciliado</p>');
-                                        classBackground = 'callout-warning ';
+                                        classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
                                         var $Etiqueta = $('<p>Conciliado</p>');
                                         classBackground = 'callout-success';
+                                        break;
+                                    }
+                                    case 2: {
+                                        var $Etiqueta = $('<p>Sugerido</p>');
+                                        classBackground = 'callout-warning';
                                         break;
                                     }
                                     default: {
@@ -1602,6 +1786,91 @@ $.ajax({
                                 $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0">  </div>').append($Etiqueta));
                                 $elDiv.children().removeClass();
                                 $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ' + classBackground);
+                                if (row['estadobco'] == 2){
+                                    var disabled = "disabled"
+                                    var clase = "warning"
+                                    table.rows(function (idx, data, node) {
+                                    var rowg = table.row(idx)
+                                            
+                                            if (rowg.data()["idrbcodl"] == row["idrbcod"]) { 
+                                                if(rowg.data()["debeerp"] == row["haberbco"]&&rowg.data()["habererp"] == row["debebco"]){
+                                                    disabled = ""
+                                                    clase = "success"
+                                                }
+                                            }
+                                        })
+                                    $elDiv.append('<div id="estadobco-'+row['idsres']+`" style="display: none;">
+                                    <script>
+                                    async function cambioEstadoBanco(accion, id){
+                                        globalVariable.editado=1
+                                        var datasend = []
+                                        let table = $('#data').DataTable();
+                                        console.log(table.row(id))
+                                        if(accion=='aceptarbanco'){
+                                        table.row(id).data()['estadobco'] = 1
+                                        console.log(table.row(id).data()["idrbcod"])
+                                        table.rows(function (idx, data, node) {
+                                            var rowg = table.row(idx)
+                                            
+                                            if (rowg.data()["idrbcodl"] == table.row(id).data()["idrbcod"]) { 
+                                                rowg.data()["estadoerp"] = 1 
+                                                rowg.invalidate().draw(false)
+                                                datasend.push(rowg.data());
+                                            }
+                                        })
+                                        var rows = table.row(id)
+                                        datasend.push(rows.data());
+                                        table.row(id).invalidate().draw(false)     
+        
+                                                var token = $('input[name="csrfToken"]').attr('value')
+                                                let cookie = document.cookie
+                                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
+                                                $.ajax({
+                                                    type: "POST",
+                                                    url: '/updateScript/',
+                                                    data: JSON.stringify(datasend).replace(/[]/g, ""),
+                                                    headers: {
+                                                        'X-CSRFToken': csrfToken
+                                                    }
+                                                })
+                                        }
+                                        if(accion=='rechazarbanco'){
+                                            var datasend = []
+                                            table.row(id).data()['estadobco'] = 0
+                                            table.row(id).data()['idrerpdl'] = 0
+                                            table.rows(function (idx, data, node) {
+                                                var rowg = table.row(idx)
+                                                
+                                                if (rowg.data()["idrbcodl"] == table.row(id).data()["idrbcod"]) { 
+                                                    rowg.data()["estadoerp"] = 0
+                                                    rowg.data()["idrbcodl"] = 0
+                                                    datasend.push(rowg.data());
+
+                                                    rowg.invalidate().draw(false)
+                                                }
+                                            })
+                                            var rows = table.row(id)
+                                            datasend.push(rows.data());
+                                            table.row(id).invalidate().draw(false)
+                                            var token = $('input[name="csrfToken"]').attr('value')
+                                            let cookie = document.cookie
+                                            let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
+                                            $.ajax({
+                                                    type: "POST",
+                                                    url: '/updateScript/',
+                                                    data: JSON.stringify(datasend).replace(/[]/g, ""),
+                                                    headers: {
+                                                        'X-CSRFToken': csrfToken
+                                                    }
+                                                })
+                                            }
+                                    }
+                                    </script>
+                                    <button type="button" `+disabled+` onclick="cambioEstadoBanco('aceptarbanco',`+meta.row+`)" id="aceptarBanco-`+row['idsres']+`" class="btn btn-`+ clase +` btn-sm">✔</button>
+                                        <button type="button" onclick="cambioEstadoBanco('rechazarbanco',`+meta.row+`)" id="cancelarBanco-`+row['idsres']+`" class="btn btn-danger btn-sm">X</button>
+                                            </div>
+                                            `)
+                                }
                                 if (row['debebco'] != null) {
                                     return $elDiv.clone().html();
                                 } else {
@@ -1621,10 +1890,21 @@ $.ajax({
                                 else if (data == -1) {
                                     zone_html = '<i style="color: green;" class="fas fa-check"></i>'
                                 }
+                                else if (row['estadobco'] == 2) {
+                                    zone_html =
+        
+                                    ` <div class="linkconciliadoauto"><button class="link linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></div>
+                                        <script>
+                                        //function ventanaSecundaria (URL){ 
+                                        //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                                        //     } 
+                                        </script>`
+        
+                                }
                                 else if (row['estadobco'] == 1) {
                                     zone_html =
         
-                                    ` <div class="linkconciliadook"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                    ` <div class="linkconciliadook"><button class="link linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></div>
                                         <script>
                                         //function ventanaSecundaria (URL){ 
                                         //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1634,7 +1914,7 @@ $.ajax({
                                 else {
                                     zone_html =
         
-                                    ` <div class="linkconciliadofallo"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                    ` <div class="linkconciliadofallo"><button class="link linksid" ondblclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></div>
                                         <script>
                                         //function ventanaSecundaria (URL){ 
                                         //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1660,10 +1940,20 @@ $.ajax({
                                 else if (data == -1) {
                                     zone_html = '<i style="color: green;" class="fas fa-check"></i>'
                                 }
+                                else if (row['estadoerp'] == 2) {
+                                    zone_html =
+                                    ` <div class="linkconciliadoauto"><button class="link linksid"  ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></div>
+                                    <script>
+                                    //function ventanaSecundaria (URL){ 
+                                    //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
+                                    //     } 
+                                    </script>`
+        
+                                }
                                 else if (row['estadoerp'] == 1) {
                                     zone_html =
         
-                                    ` <div class="linkconciliadook"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                    ` <div class="linkconciliadook"><button class="link linksid" ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></div>
                                         <script>
                                         //function ventanaSecundaria (URL){ 
                                         //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1673,7 +1963,7 @@ $.ajax({
                                 else {
                                     zone_html =
         
-                                    ` <div class="linkconciliadofallo"><a href="#!" class"linksid" ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</a></div>
+                                    ` <div class="linkconciliadofallo"><button class="link linksid"  ondblclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></div>
                                         <script>
                                         //function ventanaSecundaria (URL){ 
                                         //        window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
@@ -1690,17 +1980,24 @@ $.ajax({
                         {
                             targets: ["codtcobco"],
                             render: function (data, type, row, meta) {
+                                if(type=='export'){return data}else{
                                 if (row['debebco'] != null) {
                                     let agregar = ""
                                     for (let opcion = 0; opcion < globalVariableIndtco.indtco_bco.length; opcion++) {
                                         agregar = agregar + '<option value="' + globalVariableIndtco.indtco_bco[opcion] + '">' + globalVariableIndtco.indtco_bco[opcion] + '</option>'
                                     }
+                                let vacio = ""
+                                if(row['estadobco']==1 && globalVariableIndtco.codigosExcluidos.includes(data) == false){
+                                    vacio = '<option value="" selected> </option>'
+                                }else{
+                                    vacio = '<option value=""> </option>'
+                                }
                                     let texto = `
                                 <td><nobr>
                                 <select class="miniselect" name="tipo" id="optionbco-${row['idsres']}">
                                 <option value="${table.row(meta.row).data()['codtcobco']}">${table.row(meta.row).data()['codtcobco']}</option>
-                                <option value=" "> </option>
-                                `
+                                <option value=""> </option>
+                                `       + vacio
                                         + agregar +
                                         `</select>
                               <a onclick="alertab()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
@@ -1708,15 +2005,16 @@ $.ajax({
                               </nobr></td>`
                                     return texto
                                 } else { return "" }
-                            }
+                            }}
                         },
                         {
                             targets: ["idrerpd"],
                             render: function (data, type, row) {
                                 if (((data != "0") && (data != null) && (data != undefined) && (data != ''))) {
-                                    return ` <a href="#!" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> ${data}</a>
+                                    return ` <button class="link" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> ${data}</button>
                             <script>
-                            function ventanaSecundaria (URL){ 
+                            function ventanaSecundaria (URL){
+                                    window.moneda = globalVariableIndtco.moneda
                                     window.open(URL,"Lupa","centerscreen=yes, top=10, left=50, width=520,height=650,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
                                  } 
                             </script>`
@@ -1728,19 +2026,53 @@ $.ajax({
                             targets: ["estadoerp"],
                             className: "p-0 pb-0 ",
                             orderable: true,
-                            render: function (data, type, row) {
+                            createdCell: function (cell) {
+                                cell.addEventListener('mouseleave', function (e) {
+                                    var row = table.row(e.target.parentElement)
+                                    let idsres = row.data()["idsres"]
+                                    if (row.data()["estadoerp"]==2){
+                                    ocultarEstadoErp(idsres)
+                                    }
+                                    desresaltarbco(e)
+                                    }
+                                )
+                                cell.addEventListener('click', function (e) {
+                                    table.rows(function(idx, data, node) {
+                                        var rowe = table.row(idx)
+                                        $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "" });
+                                    })
+                                    //var row = table.row(e.target.parentElement)
+                                    
+                                }
+                                )
+                                cell.addEventListener('mouseenter', function (e) {
+                                    var row = table.row(e.target.parentElement)
+                                    let idsres = row.data()["idsres"]
+                                    if (row.data()["estadoerp"]==2){
+                                    mostrarEstadoErp(idsres)
+                                    }
+                                    resaltarbco(e)
+                                    }
+                                )
+                            },
+                            render: function (data, type, row,meta) {
                                 var $elDiv = $('<div></div>');
                                 var classBackground = '';
                                 switch (parseInt(row['estadoerp'])) {
                                     case 0: {
                                         var $Etiqueta = $('<p>No Conciliado</p>');
-                                        classBackground = 'callout-warning ';
+                                        classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
                                         var $Etiqueta = $('<p>Conciliado</p>');
                                         classBackground = 'callout-success';
+                                        break;
+                                    }
+                                    case 2: {
+                                        var $Etiqueta = $('<p>Sugerido</p>');
+                                        classBackground = 'callout-warning';
                                         break;
                                     }
                                     default: {
@@ -1750,9 +2082,98 @@ $.ajax({
                                 }
         
                                 $Etiqueta.attr('style', "width: 50px; height: 6px");
-                                $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0">  </div>').append($Etiqueta));
+                                $elDiv.append($('<div style="font-size: x-small;" class="dt-nowrap p-0"> </div>').append($Etiqueta));
                                 $elDiv.children().removeClass();
                                 $elDiv.children().addClass('callout callout-conc m-0 pt-0 h-100 w-100 ' + classBackground);
+                                if (row['estadoerp'] == 2){
+                                    var disabled = "disabled"
+                                    var clase = "warning"
+                                    table.rows(function (idx, data, node) {
+                                    var rowg = table.row(idx)
+                                            
+                                            if (rowg.data()["idrerpdl"] == row["idrerpd"]) { 
+                                                if(rowg.data()["debebco"] == row["habererp"]&&rowg.data()["haberbco"] == row["debeerp"]){
+
+                                                    rowg.data()["idsres"]
+                                                    row["idsres"]
+                                                    disabled = ""
+                                                    clase = "success"
+                                                    
+                                                }
+                                            }
+                                        })
+                                    $elDiv.append('<div id="estadoerp-'+row['idsres']+`" style="display: none;">
+                                    <script>
+                                    function cambioEstadoErp(accion, id){
+                                        globalVariable.editado=1
+                                        var datasend = []
+                                        let table = $('#data').DataTable();
+                                        console.log(table.row(id))
+                                        if(accion=='aceptarerp'){
+                                        table.row(id).data()['estadoerp'] = 1
+                                        console.log(table.row(id).data()["idrerpd"])
+                                        table.rows(function (idx, data, node) {
+                                            var rowg = table.row(idx)
+                                            
+                                            if (rowg.data()["idrerpdl"] == table.row(id).data()["idrerpd"]) { 
+                                                rowg.data()["estadobco"] = 1 
+                                                rowg.invalidate().draw(false)
+                                                datasend.push(rowg.data());
+                                            }
+                                        })
+                                        var rows = table.row(id)
+                                        datasend.push(rows.data());
+                                        table.row(id).invalidate().draw(false)     
+        
+                                                var token = $('input[name="csrfToken"]').attr('value')
+                                                let cookie = document.cookie
+                                                let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
+                                                $.ajax({
+                                                    type: "POST",
+                                                    url: '/updateScript/',
+                                                    data: JSON.stringify(datasend).replace(/[]/g, ""),
+                                                    headers: {
+                                                        'X-CSRFToken': csrfToken
+                                                    }
+                                                })
+                                        }
+                                        if(accion=='rechazarerp'){
+                                            var datasend = []
+                                            table.row(id).data()['estadoerp'] = 0
+                                            table.row(id).data()['idrbcodl'] = 0
+                                            table.rows(function (idx, data, node) {
+                                                var rowg = table.row(idx)
+                                                
+                                                if (rowg.data()["idrerpdl"] == table.row(id).data()["idrerpd"]) { 
+                                                    rowg.data()["estadobco"] = 0
+                                                    rowg.data()["idrerpdl"] = 0
+                                                    datasend.push(rowg.data());
+
+                                                    rowg.invalidate().draw(false)
+                                                }
+                                            })
+                                            var rows = table.row(id)
+                                            datasend.push(rows.data());
+                                            table.row(id).invalidate().draw(false)
+                                            var token = $('input[name="csrfToken"]').attr('value')
+                                            let cookie = document.cookie
+                                            let csrfToken = cookie.substring(cookie.indexOf('=') + 1)
+                                            $.ajax({
+                                                    type: "POST",
+                                                    url: '/updateScript/',
+                                                    data: JSON.stringify(datasend).replace(/[]/g, ""),
+                                                    headers: {
+                                                        'X-CSRFToken': csrfToken
+                                                    }
+                                                })
+                                            }
+                                    }
+                                    </script>
+                                    <button type="button" `+ disabled +` onclick="cambioEstadoErp('aceptarerp',`+meta.row+`)" id="aceptarErp-`+row['idsres']+`" class="btn btn-`+ clase +` btn-sm">✔</button>
+                                        <button type="button"   onclick="cambioEstadoErp('rechazarerp',`+meta.row+`)" id="cancelarErp-`+row['idsres']+`" class="btn btn-danger btn-sm">X</button>
+                                            </div>
+                                            `)
+                                }
                                 if (row['debeerp'] != null) {
                                     return $elDiv.clone().html();
                                 } else { return "" }
@@ -1761,17 +2182,24 @@ $.ajax({
                         {
                             targets: ["codtcoerp"],
                             render: function (data, type, row, meta) {
+                                if(type=='export'){return data}else{
                                 if (row['debeerp'] != null) {
                                     let agregar = ""
                                     for (let opcion = 0; opcion < globalVariableIndtco.indtco_erp.length; opcion++) {
                                         agregar = agregar + '<option value="' + globalVariableIndtco.indtco_erp[opcion] + '">' + globalVariableIndtco.indtco_erp[opcion] + '</option>'
                                     }
+                                let vacio = ""
+                                if(row['estadoerp'] == 1 && globalVariableIndtco.codigosExcluidos.includes(data) == false){
+                                    vacio = '<option value="" selected> </option>'
+                                }else{
+                                    vacio = '<option value=""> </option>'
+                                }
                                     let texto = `
                                 <td><nobr>
                                 <select class="miniselect" name="tipo" id="optionerp-${row['idsres']}">
                                 <option value="${table.row(meta.row).data()['codtcoerp']}">${table.row(meta.row).data()['codtcoerp']}</option>
-                                <option value=" "> </option>
-                                `
+                                    
+                                `       +vacio
                                         + agregar +
                                         `</select>
                               <a onclick="alertaa()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
@@ -1779,7 +2207,7 @@ $.ajax({
                               </nobr></td>`
                                     return texto
                                 } else { return "" }
-                            }
+                            }}
                         },
         
                     ],
@@ -1799,6 +2227,7 @@ $.ajax({
                     },
                     drawCallback: function () {
                         cargando.innerHTML = ""
+                        globalVariable.SaldoDiferenciaTotal = parseFloat(document.getElementById("saldodiferenciatotaloculto").textContent.substring(1))
                        
                     },
                     createdRow: function (row, data, dataIndex) {
@@ -1850,7 +2279,7 @@ $.ajax({
         
                 
         
-        
+
         
                 $('#data tbody')
                     .on('mouseenter', 'td', function () {
