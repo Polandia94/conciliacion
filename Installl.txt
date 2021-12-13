@@ -12,6 +12,8 @@ pip install django-db-file-storage
 pip install pandas
 pip install python-dotenv
 pip install requests
+pip install python-pdf
+pip install PyPDF2
 python -m pip install --upgrade pip
 mod_wsgi-express module-config
 

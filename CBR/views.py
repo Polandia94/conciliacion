@@ -33,7 +33,7 @@ from CBR.forms import (CbrbcodForm, CbrencaForm, CbrencDeleteForm, CbrerpdForm,
 from CBR.homologacion import *
 from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc,
                         Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgale, Cbsres,
-                        Cbsresc, Cbsusu, Cbtbco, Cbtcfg,Cbtcfgc, Cbtcli, Cbtcol, Cbtcta,
+                        Cbsresc, Cbsusu, Cbtbco, Cbtcfg,Cbtcfgc, Cbtcli, Cbtcol, Cbtcon, Cbtcta,
                         Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
                         Cbtusuc, Cbtusue, Cbwres, Cbrencibco, Cbthom)
 from .utils import *
@@ -220,10 +220,19 @@ class CbsresListView(ListView):
         aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
         context['indconc'] = aCbtusu.indconc == "S"
         idrenca = self.request.GET.get('idrenc')
+        codigosExcluidos = ""
+        for i in Cbttco.objects.filter(indsuma="0"):
+            codigosExcluidos = codigosExcluidos + i.codtco
+        context["codigosExcluidos"] = codigosExcluidos
         if idrenca is None:
             idrenca = self.request.POST.get('idrenc')
         aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
+        context["empresa"]=aCbrenc.empresa
+        context["codbco"]=aCbrenc.codbco
+        context["nrocta"]=aCbrenc.nrocta
+        context["ano"]=aCbrenc.ano
+        context["mes"]=aCbrenc.mes
         # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         calcularTotales(self.request, context)
         return context
@@ -295,6 +304,11 @@ class CbsresviewListView(ListView):
             idrenca = self.request.POST.get('idrenc')
         aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
+        context["empresa"]=aCbrenc.empresa
+        context["codbco"]=aCbrenc.codbco
+        context["nrocta"]=aCbrenc.nrocta
+        context["ano"]=aCbrenc.ano
+        context["mes"]=aCbrenc.mes
         # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         calcularTotales(self.request, context)
         
@@ -932,6 +946,7 @@ class CbtctaCreateView(CreateView):
     url_redirect = success_url
 
     def get_initial(self):
+
         try:
             idtcta = Cbtcta.objects.order_by('-idtcta')[0].idtcta + 1
             return {'idtcta': idtcta}
@@ -986,6 +1001,10 @@ class CbtctaCreateView(CreateView):
             form.idusu = request.user.username
 
             form.save()
+            aCbtcon = Cbtcon(codcon=form.codctaconbco, descon=form.descta, actpas="A")
+            aCbtcon.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbtcon.idusu = request.user.username
+            aCbtcon.save()
         except Exception as e:
 
             data['error'] = str(e)
@@ -998,6 +1017,24 @@ class CbtctaCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Nueva Cuenta', 'CBF09')
         context['action'] = 'edit'
+        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
+        banco = []
+        empresa = []
+        if aCbtusu.tipousu == "S":
+            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("empresa"):
+                empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
+        else:
+            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"],actpas="A"):
+                if Cbtusue.objects.filter(idtusu=aCbtusu, empresa=empresaAAgregar.empresa).exists():
+                    empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
+        for bancoAAgregar in Cbtbco.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("codbco"):
+            try:
+                descripcion = Cbmbco.objects.filter(codbco=bancoAAgregar.codbco).first().desbco
+            except:
+                descripcion = ""
+            banco.append({"nombre":bancoAAgregar.codbco, "descripcion":descripcion})
+        context["empresas"]=empresa
+        context["bancos"]=banco
         return context
 
 class CbtctaEditView(CreateView):
@@ -1005,10 +1042,11 @@ class CbtctaEditView(CreateView):
     form_class = CbtctaForm
 
     def get_initial(self):
+
         try:
             idtcta = self.request.GET.get('idtcta')
             aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
-            return {'empresa': aCbtcta.empresa, 'codbco': aCbtcta.codbco, 'idtcta': idtcta, 'nrocta': aCbtcta.nrocta, 'descta': aCbtcta.descta, 'monbasebco': aCbtcta.monbasebco, 'ano': aCbtcta.ano, 'mes': aCbtcta.mes, 'saldoinibco': aCbtcta.saldoinibco, 'saldoinierp': aCbtcta.saldoinierp}
+            return {'empresa': aCbtcta.empresa, 'codbco': aCbtcta.codbco, 'idtcta': idtcta, 'nrocta': aCbtcta.nrocta, 'descta': aCbtcta.descta, 'diremail' : aCbtcta.diremail, 'monbasebco': aCbtcta.monbasebco, 'codctaconbco':aCbtcta.codctaconbco, 'ano': aCbtcta.ano, 'mes': aCbtcta.mes, 'saldoinibco': aCbtcta.saldoinibco, 'saldoinierp': aCbtcta.saldoinierp}
         except:
             pass
 
@@ -1081,7 +1119,10 @@ class CbtctaEditView(CreateView):
             # CREATE
             aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
             form = self.get_form()
-
+            nuevoCbtcon = False
+            if aCbtcta.codctaconbco != request.POST["codctaconbco"] or aCbtcta.descta != request.POST["descta"]:
+                nuevoCbtcon = True
+            aCbtcta.codctaconbco = request.POST["codctaconbco"]
             aCbtcta.empresa = request.POST["empresa"]
             aCbtcta.nrocta = request.POST["nrocta"]
             aCbtcta.codbco = request.POST["codbco"]
@@ -1094,6 +1135,11 @@ class CbtctaEditView(CreateView):
             aCbtcta.fechalt = dt.datetime.now(tz=timezone.utc)
             aCbtcta.idusualt = request.user.username
             aCbtcta.save()
+            if nuevoCbtcon:
+                aCbtcon = Cbtcon(codcon=aCbtcta.codctaconbco, descon=aCbtcta.descta, actpas="A")
+                aCbtcon.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtcon.idusu = request.user.username
+                aCbtcon.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
@@ -1108,6 +1154,27 @@ class CbtctaEditView(CreateView):
         context["editable"] = True
         context["action" ]= "edit"
         context['idtcta'] = self.request.GET.get('idtcta')
+        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
+        banco = []
+        empresa = []
+        if aCbtusu.tipousu == "S":
+            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("empresa"):
+                empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
+        else:
+            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"],actpas="A"):
+                if Cbtusue.objects.filter(idtusu=aCbtusu, empresa=empresaAAgregar.empresa).exists():
+                    empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
+        for bancoAAgregar in Cbtbco.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("codbco"):
+            try:
+                descripcion = Cbmbco.objects.filter(codbco=bancoAAgregar.codbco).first().desbco
+            except:
+                descripcion = ""
+            banco.append({"nombre":bancoAAgregar.codbco, "descripcion":descripcion})
+        context["empresas"]=empresa
+        context["bancos"]=banco
+        aCbtcta = Cbtcta.objects.get(idtcta=self.request.GET.get('idtcta'))
+        context["empresa"] = aCbtcta.empresa
+        context["banco"] = aCbtcta.codbco
         return context
 
 

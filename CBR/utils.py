@@ -18,6 +18,7 @@ from django.db import transaction
 from django.db.models.aggregates import Max
 from django.dispatch import receiver
 from django.http.response import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.template.loader import render_to_string
 from django.shortcuts import redirect, render
 from django.urls.base import reverse_lazy
 from django.utils import timezone
@@ -26,7 +27,19 @@ from django.views.decorators.csrf import csrf_exempt
 from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
                         Cbtbco, Cbtcli, Cbtcol, Cbtcta, Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
                         Cbtusuc, Cbtusue, Cbwres, Cbtcfg, Cbtcfgc)
+from pathlib import Path
+import smtplib
+from os.path import basename
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import COMMASPACE, formatdate
+from dotenv import dotenv_values
+import pydf as htmltopydf
+from PyPDF2 import PdfFileMerger, PdfFileReader
 
+#importa las variables de .env
+config = dotenv_values(".env")
 #endregion
 
 @login_required
@@ -104,9 +117,13 @@ def clienteYEmpresas(request):
 @receiver(user_logged_out)
 def post_logout(sender, user, request, **kwargs):
     try:
-        if request.POST.get("autocierre") != True:
+        print("estacosa")
+        cerrarCbrenct(request)
+        if Cbsusu.objects.filter(
+                idusu1=request.user.username, finlogin=None).count()>0:
+            
             aCbsusu = Cbsusu.objects.filter(
-                idusu1=request.user.username).order_by("corrusu").last()
+                idusu1=request.user.username, finlogin=None).order_by("corrusu").first()
             aCbsusu.finlogin = dt.datetime.now(tz=timezone.utc)
             aCbsusu.save()
         else:
@@ -125,6 +142,7 @@ def cerrarsesionusuario(request):
     for registro in aCbsusu:
         registro.finlogin = dt.datetime.now(tz=timezone.utc)
         registro.save()
+    cerrarCbrenct(request)
     return JsonResponse(data)
 
 
@@ -150,6 +168,10 @@ def login(request):
     else:
         data["noexiste"] = False
     aCbsusu = Cbsusu.objects.filter(idusu1=usuario, finlogin=None).first()
+    print("arte")
+    print(aCbsusu)
+    print(usuario)
+    print("artista")
     try:
         
         if aCbsusu is not None:
@@ -519,102 +541,7 @@ def conciliarSaldos(request):
                                 else:
                                     color = 0
                                 cambio = False
-                        n = 0
-                        primerRegistro = False
-                        for aCbsres in Cbsres.objects.filter(idrenc=idrenc).order_by('idsres').all():
-                            if n == 0:
-                                if primerRegistro == False:
-                                    fecha = aCbsres.fechatrabco
-                                    if fecha == None:
-                                        fecha = aCbsres.fechatraerp
-                                    if fecha.year == aCbrenc.ano and fecha.month == aCbrenc.mes:
-                                        primerRegistro = True
-                                if primerRegistro:
-                                    n = 1
-                                    saldoacumesbco = float(aCbsres.saldobco or 0)
-                                    saldoacumdiabco = float(
-                                        aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
-                                    saldoacumeserp = float(aCbsres.saldoerp or 0)
-                                    saldoacumdiaerp = float(
-                                        aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
-                                    saldodiferencia = saldoacumesbco - saldoacumeserp
-                                    diabcoant = aCbsres.fechatrabco
-                                    diaerpant = aCbsres.fechatraerp
-                                    aCbsres.saldodiferencia = saldodiferencia
-                                    aCbsres.saldoacumesbco = saldoacumesbco
-                                    aCbsres.saldoacumdiabco = saldoacumdiabco
-                                    aCbsres.saldoacumeserp = saldoacumeserp
-                                    aCbsres.saldoacumdiaerp = saldoacumdiaerp
-                                    aCbsres.fechact = dt.datetime.now(tz=timezone.utc)
-                                    aCbsres.idusualt = request.user.username
-                                    aCbsres.save()
-                            else:
-                                diabco = aCbsres.fechatrabco
-                                diaerp = aCbsres.fechatraerp
-                                saldoacumesbco = saldoacumesbco + \
-                                    float(aCbsres.haberbco or 0) - \
-                                    float(aCbsres.debebco or 0)
-                                if diabco == diabcoant or diaerp == diaerpant:
-                                    saldoacumdiabco = saldoacumdiabco + \
-                                        float(aCbsres.haberbco or 0) - \
-                                        float(aCbsres.debebco or 0)
-                                    saldoacumdiaerp = float(
-                                        saldoacumdiaerp or 0)+float(aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
-                                else:
-                                    saldoacumdiabco = float(
-                                        aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
-                                    saldoacumdiaerp = float(
-                                        aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
-                                saldoacumeserp = saldoacumeserp + \
-                                    float(aCbsres.debeerp or 0) - \
-                                    float(aCbsres.habererp or 0)
-                                saldodiferencia = saldoacumesbco - saldoacumeserp
-                                aCbsres.saldoacumesbco = saldoacumesbco
-                                aCbsres.saldoacumdiabco = saldoacumdiabco
-                                aCbsres.saldoacumeserp = saldoacumeserp
-                                aCbsres.saldoacumdiaerp = saldoacumdiaerp
-                                aCbsres.saldodiferencia = saldodiferencia
-                                diabcoant = diabco
-                                diaerpant = diaerp
-                                aCbsres.fechact = dt.datetime.now(tz=timezone.utc)
-                                aCbsres.idusualt = request.user.username
-                                aCbsres.save()
-                        n = 0
-                        listado = Cbsres.objects.filter(
-                                idrenc=idrenc).order_by('idsres')
-                        while n < Cbsres.objects.filter(idrenc=idrenc).count():
-                            aCbsres = listado[n]
-                            if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debebco=aCbsres.debebco, haberbco=aCbsres.haberbco).count() == 1:
-                                if Cbsres.objects.filter(idrenc=idrenc, fechatraerp=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).count() == 1:
-                                    bCbsres = Cbsres.objects.filter(
-                                        idrenc=idrenc, fechatraerp=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).first()
-                                    aCbsres.estadobco = 1
-                                    bCbsres.estadoerp = 1
-                                    aCbsres.idrerpdl = bCbsres.idrerpd
-                                    bCbsres.idrbcodl = aCbsres.idrbcod
-                                    aCbsres.save()
-                                    bCbsres.save()
-                                    if bCbsres.debeerp == bCbsres.haberbco and bCbsres.habererp == bCbsres.debebco:
-                                        bCbsres.estadobco = 1
-                                        bCbsres.idrerpdl = bCbsres.idrerpd
-                                        bCbsres.save()
-                            n = n+1
-                        ### CONCILIACION SEMI AUTOMATICA
-                        
-                        #Si aparece despues en el banco
-                        cliente = clienteYEmpresas(request)["cliente"]
-                        if Cbtcfg.objects.filter(codcfg=1, actpas="A", cliente=cliente).exists():
-                            conciliarBancoFechaPosterior(idrenc)
-                        #Si aparece despues en el ERP
-                        if Cbtcfg.objects.filter(codcfg=2, actpas="A", cliente=cliente).exists():
-                            conciliarErpFechaPosterior(idrenc)
-                        for aCbtcfgc in Cbtcfgc.objects.filter(idtcfg__cliente=cliente, idtcfg__actpas="A").order_by("ordencfg"):
-                            campoBco = aCbtcfgc.campobco
-                            campoErp = aCbtcfgc.campoerp
-                            #Si las referencias son iguales
-                            conciliarCamposIguales(idrenc,campoBco,campoErp)
-                            
-
+                        conciliacioAutoySemiAuto(request, idrenc, aCbrenc)
                         CbrencUpd = Cbrenc.objects.get(idrenc=idrenc)
                         CbrencUpd.fechacons = dt.datetime.now(tz=timezone.utc)
                         CbrencUpd.idusucons = request.user.username
@@ -651,32 +578,136 @@ def conciliarSaldos(request):
     else:
         return request
 
-# ******************************************************************************************************************** #
-# ******************************************************************************************************************** #
-
-
-
-def conciliarCamposIguales(idrenc,campoBco, CampoErp):
+def conciliacioAutoySemiAuto(request, idrenc, aCbrenc):
+    n = 0
+    primerRegistro = False
+    for aCbsres in Cbsres.objects.filter(idrenc=idrenc).order_by('idsres').all():
+        if n == 0:
+            if primerRegistro == False:
+                fecha = aCbsres.fechatrabco
+                if fecha == None:
+                    fecha = aCbsres.fechatraerp
+                if fecha.year == aCbrenc.ano and fecha.month == aCbrenc.mes:
+                    primerRegistro = True
+            if primerRegistro:
+                n = 1
+                saldoacumesbco = float(aCbsres.saldobco or 0)
+                saldoacumdiabco = float(
+                                        aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
+                saldoacumeserp = float(aCbsres.saldoerp or 0)
+                saldoacumdiaerp = float(
+                                        aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
+                saldodiferencia = saldoacumesbco - saldoacumeserp
+                diabcoant = aCbsres.fechatrabco
+                diaerpant = aCbsres.fechatraerp
+                aCbsres.saldodiferencia = saldodiferencia
+                aCbsres.saldoacumesbco = saldoacumesbco
+                aCbsres.saldoacumdiabco = saldoacumdiabco
+                aCbsres.saldoacumeserp = saldoacumeserp
+                aCbsres.saldoacumdiaerp = saldoacumdiaerp
+                aCbsres.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbsres.idusualt = request.user.username
+                aCbsres.save()
+        else:
+            diabco = aCbsres.fechatrabco
+            diaerp = aCbsres.fechatraerp
+            saldoacumesbco = saldoacumesbco + \
+                                    float(aCbsres.haberbco or 0) - \
+                                    float(aCbsres.debebco or 0)
+            if diabco == diabcoant or diaerp == diaerpant:
+                saldoacumdiabco = saldoacumdiabco + \
+                                        float(aCbsres.haberbco or 0) - \
+                                        float(aCbsres.debebco or 0)
+                saldoacumdiaerp = float(
+                                        saldoacumdiaerp or 0)+float(aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
+            else:
+                saldoacumdiabco = float(
+                                        aCbsres.haberbco or 0)-float(aCbsres.debebco or 0)
+                saldoacumdiaerp = float(
+                                        aCbsres.debeerp or 0)-float(aCbsres.habererp or 0)
+            saldoacumeserp = saldoacumeserp + \
+                                    float(aCbsres.debeerp or 0) - \
+                                    float(aCbsres.habererp or 0)
+            saldodiferencia = saldoacumesbco - saldoacumeserp
+            aCbsres.saldoacumesbco = saldoacumesbco
+            aCbsres.saldoacumdiabco = saldoacumdiabco
+            aCbsres.saldoacumeserp = saldoacumeserp
+            aCbsres.saldoacumdiaerp = saldoacumdiaerp
+            aCbsres.saldodiferencia = saldodiferencia
+            diabcoant = diabco
+            diaerpant = diaerp
+            aCbsres.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbsres.idusualt = request.user.username
+            aCbsres.save()
     n = 0
     listado = Cbsres.objects.filter(
-                            idrenc=idrenc).order_by('idsres')
+                                idrenc=idrenc).order_by('idsres')
     while n < Cbsres.objects.filter(idrenc=idrenc).count():
         aCbsres = listado[n]
-        if aCbsres.estadoerp == 0:
-
-            bCbsresraw = Cbsres.objects.raw("SELECT * FROM cbsres where idrenc= %s and "+campoBco+"=%s and estadobco = 0 LIMIT 1", [str(idrenc), str(aCbsres.toJSON()[CampoErp])])
-            bCbsres = None
-            for element in bCbsresraw:
-                bCbsres = element
-            if bCbsres is not None:
-                bCbsres.estadobco = 2
-                bCbsres.idrerpdl = aCbsres.idrerpd
-                aCbsres.idrbcodl = bCbsres.idrbcod
-                aCbsres.estadoerp = 2
+        if Cbsres.objects.filter(idrenc=idrenc, fechatrabco=aCbsres.fechatrabco, debebco=aCbsres.debebco, haberbco=aCbsres.haberbco).count() == 1:
+            if Cbsres.objects.filter(idrenc=idrenc, fechatraerp=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).count() == 1:
+                bCbsres = Cbsres.objects.filter(
+                                        idrenc=idrenc, fechatraerp=aCbsres.fechatrabco, debeerp=aCbsres.haberbco, habererp=aCbsres.debebco).first()
+                aCbsres.estadobco = 1
+                bCbsres.estadoerp = 1
+                aCbsres.idrerpdl = bCbsres.idrerpd
+                bCbsres.idrbcodl = aCbsres.idrbcod
                 aCbsres.save()
                 bCbsres.save()
-
+                if bCbsres.debeerp == bCbsres.haberbco and bCbsres.habererp == bCbsres.debebco:
+                    bCbsres.estadobco = 1
+                    bCbsres.idrerpdl = bCbsres.idrerpd
+                    bCbsres.save()
         n = n+1
+                        ### CONCILIACION SEMI AUTOMATICA
+                        
+                        #Si aparece despues en el banco
+    cliente = clienteYEmpresas(request)["cliente"]
+    if Cbtcfg.objects.filter(codcfg=1, actpas="A", cliente=cliente).exists():
+        conciliarBancoFechaPosterior(idrenc)
+                        #Si aparece despues en el ERP
+    if Cbtcfg.objects.filter(codcfg=2, actpas="A", cliente=cliente).exists():
+        conciliarErpFechaPosterior(idrenc)
+    for aCbtcfgc in Cbtcfgc.objects.filter(idtcfg__cliente=cliente, idtcfg__actpas="A").order_by("ordencfg"):
+        campoBco = aCbtcfgc.campobco
+        campoErp = aCbtcfgc.campoerp
+                            #Si las referencias son iguales
+        conciliarCamposIguales(idrenc,campoBco,campoErp)
+                        
+    tiposDeConciliacion = json.loads(getTiposDeConciliacion(request,idrenc).content)
+    aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
+    aCbrenc.saldobco = tiposDeConciliacion["saldobcototal"]
+    aCbrenc.saldoerp = tiposDeConciliacion["saldoerptotal"]
+    aCbrenc.difbcoerp = tiposDeConciliacion["saldodiferenciatotal"]
+    aCbrenc.save()
+
+# ******************************************************************************************************************** #
+# ******************************************************************************************************************** #
+
+
+
+def conciliarCamposIguales(idrenc,campoBco, campoErp):
+    if campoBco != "" and campoErp != "":
+        n = 0
+        listado = Cbsres.objects.filter(
+                                idrenc=idrenc).order_by('idsres')
+        while n < Cbsres.objects.filter(idrenc=idrenc).count():
+            aCbsres = listado[n]
+            if aCbsres.estadoerp == 0:
+
+                bCbsresraw = Cbsres.objects.raw("SELECT * FROM cbsres where idrenc= %s and "+campoBco+"=%s and estadobco = 0 LIMIT 1", [str(idrenc), str(aCbsres.toJSON()[campoErp])])
+                bCbsres = None
+                for element in bCbsresraw:
+                    bCbsres = element
+                if bCbsres is not None:
+                    bCbsres.estadobco = 2
+                    bCbsres.idrerpdl = aCbsres.idrerpd
+                    aCbsres.idrbcodl = bCbsres.idrbcod
+                    aCbsres.estadoerp = 2
+                    aCbsres.save()
+                    bCbsres.save()
+
+            n = n+1
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
 
@@ -766,7 +797,9 @@ def editCbwres(request):
     try:
         idrenc = None
         tabla = list(dict(request.POST).keys())[0][1:-1]
+        print(tabla[:200])
         while True:
+            
             fila = tabla[:tabla.find("}")+1]
             comienzo = tabla[10:].find("{")
 
@@ -845,10 +878,16 @@ def cerrarConciliacion(request):
             diccionario = clienteYEmpresas(request)
             if CbrencUpd.empresa in diccionario["empresas"] and CbrencUpd.cliente == diccionario["cliente"]:
                 guardado(idrenc,request)
+                CbrencUpd = Cbrenc.objects.get(idrenc=idrenc)
                 lista = Cbsres.objects.filter(idrenc=idrenc).all()
                 error = False
+                if CbrencUpd.difbcoerp != 0:
+                    data={}
+                    data["exito"] = False
+                    data["error"] = "El saldo no es 0, es " +str(CbrencUpd.difbcoerp)
+                    return JsonResponse(data)
                 for aCbsres in lista:
-                    if (aCbsres.estadobco == 0 and (aCbsres.codtcobco == "" or aCbsres.codtcobco == None) or (aCbsres.estadoerp == 0 and (aCbsres.codtcoerp == "" or aCbsres.codtcoerp == None))):
+                    if (aCbsres.estadobco == 0 and (aCbsres.codtcobco == "" or aCbsres.codtcobco == None) and aCbsres.fechatrabco is not None or (aCbsres.estadoerp == 0 and (aCbsres.codtcoerp == "" or aCbsres.codtcoerp == None) and aCbsres.fechatraerp is not None)):
                         error = True
                         data={}
                         data["exito"] = False
@@ -983,7 +1022,7 @@ def getTiposDeConciliacionpost(request):
 
 def getTiposDeConciliacion(request, idrenc):
     data = {"debebcototal": 0, "haberbcototal": 0, "saldobcototal": 0, "debeerptotal": 0,
-            "habererptotal": 0, "saldoerptotal": 0, "saldodiferenciatotal": 0}
+            "habererptotal": 0, "saldoerptotal": 0, "saldodiferenciatotal": 0, "puedeCerrar": 1}
     yaTomadas = []
     n = 0
     m = 0
@@ -992,6 +1031,8 @@ def getTiposDeConciliacion(request, idrenc):
     listadoSumaHaberBco = []
     listadoSumaDebeErp = []
     listadoSumaHaberErp = []
+    listadoRestaErp = []
+    listadoRestaBco = []
     for tipo in Cbttco.objects.all():
         if tipo.indsuma == 1:
             if tipo.erpbco == 1:
@@ -1004,6 +1045,13 @@ def getTiposDeConciliacion(request, idrenc):
                     listadoSumaDebeErp.append(tipo.codtco)
                 elif tipo.inddebhab == "D":
                     listadoSumaHaberErp.append(tipo.codtco)
+        else:
+            if tipo.erpbco == 1:
+                    listadoRestaErp.append(tipo.codtco)
+            elif tipo.erpbco == 2:
+                    listadoRestaBco.append(tipo.codtco)
+            
+
     
     saldoextrabco = 0
     saldoextraerp = 0
@@ -1013,6 +1061,8 @@ def getTiposDeConciliacion(request, idrenc):
     # calcula primero las del cbwres y si no existen las del cbsres
     primerRegistro = False
     aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+    sumaBco = 0
+    sumaErp = 0
     for registro in Cbsres.objects.filter(idrenc=idrenc).order_by("idsres").all():
         registroAnalizado = Cbwres.objects.filter(idsres=registro.idsres).first()
         if registroAnalizado is None:
@@ -1024,35 +1074,60 @@ def getTiposDeConciliacion(request, idrenc):
             if fecha.year == aCbrenc.ano and fecha.month == aCbrenc.mes:
                 primerRegistro = True
         if primerRegistro:
-            try:
-                data["debeerptotal"] = registroAnalizado.debeerp + \
-                    data["debeerptotal"]
-            except:
-                pass
-            try:
-                data["habererptotal"] = registroAnalizado.habererp + \
-                    data["habererptotal"]
-            except:
-                pass
-            try:
-                data["debebcototal"] = registroAnalizado.debebco + \
-                    data["debebcototal"]
-            except:
-                pass
-            try:
-
-                data["haberbcototal"] = registroAnalizado.haberbco + \
-                    data["haberbcototal"]
+            if data["puedeCerrar"] ==1:
+                if (registroAnalizado.estadoerp!=1 and registroAnalizado.fechatraerp is not None and registroAnalizado.codtcoerp == "")or(registroAnalizado.estadobco!=1 and registroAnalizado.fechatrabco is not None and registroAnalizado.codtcobco == ""):
+                    data["puedeCerrar"] = 0
+            if registroAnalizado.estadoerp==1 or (registroAnalizado.codtcoerp != "" and registroAnalizado.codtcoerp is not None and registroAnalizado.codtcoerp not in listadoRestaErp): 
                 
-            except Exception as e:
-                print(e)
+                try:
+                    data["debeerptotal"] = registroAnalizado.debeerp + \
+                        data["debeerptotal"]
+                except:
+                    pass
+                try:
+                    data["habererptotal"] = registroAnalizado.habererp + \
+                        data["habererptotal"]
+                except:
+                    pass
+            else:
+                try:
+                    sumaErp = sumaErp - registroAnalizado.debeerp
+                except:
+                    pass
+                try:
+                    sumaErp = sumaErp + registroAnalizado.habererp
+                except:
+                    pass
+            if registroAnalizado.estadobco==1 or (registroAnalizado.codtcobco != "" and registroAnalizado.codtcobco is not None and registroAnalizado.codtcobco not in listadoRestaBco): 
+                try:
+                    data["debebcototal"] = registroAnalizado.debebco + \
+                        data["debebcototal"]
+                except:
+                    pass
+                try:
+
+                    data["haberbcototal"] = registroAnalizado.haberbco + \
+                        data["haberbcototal"]
+                
+                except Exception as e:
+                    print(e)
+            else:
+                try:
+                    sumaBco = sumaBco + registroAnalizado.debebco
+                except Exception as e:
+                    pass
+                try:
+
+                    sumaBco = sumaBco  - registroAnalizado.haberbco 
+                except Exception as e:
+                    pass
             try:
-                data["saldobcototal"] = registroAnalizado.saldoacumesbco
+                data["saldobcototal"] = registroAnalizado.saldoacumesbco + sumaBco
             except:
                 pass
             try:
                 if data["saldoerptotal"] is not None:
-                    data["saldoerptotal"] = registroAnalizado.saldoacumeserp
+                    data["saldoerptotal"] = registroAnalizado.saldoacumeserp + sumaErp
             except:
                 pass
         if registroAnalizado.codtcobco in listadoSumaDebeErp:
@@ -1413,6 +1488,7 @@ def getContext(request, context, titulo, formulario):
     aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
     aCbtcli = Cbtcli.objects.filter(cliente=aCbtusu.cliente).first()
     context["cliente"] = aCbtcli.cliente + "-" + aCbtcli.descli
+    context["clientepuro"] = aCbtcli.cliente
     context['title'] = titulo
     context['codigo'] = formulario
     context['return_url'] = reverse_lazy('CBR:cbrenc-list')
@@ -1710,10 +1786,10 @@ def cbrencDesconciliar(request):
 
 def CbtcfgCreate(request):
     cliente = clienteYEmpresas(request)["cliente"]
-    ordencfg= Cbtcfg.objects.filter(cliente=cliente).count()+1
-    aCbtcfg = Cbtcfg(cliente=cliente, codcfg=3, ordencfg=ordencfg,actpas="P", fechact=dt.datetime.now(), idusu=request.user.username)
+    ordencfg= Cbtcfg.objects.filter(cliente=cliente).count()-1
+    aCbtcfg = Cbtcfg(cliente=cliente, codcfg=3,actpas="P", fechact=dt.datetime.now(), idusu=request.user.username)
     aCbtcfg.save()
-    Cbtcfgc(idtcfg=aCbtcfg, campobco="", campoerp="", fechact=dt.datetime.now(), idusu=request.user.username).save()
+    Cbtcfgc(idtcfg=aCbtcfg, campobco="", campoerp="", ordencfg=ordencfg, fechact=dt.datetime.now(), idusu=request.user.username).save()
     return HttpResponse("")
 
 
@@ -1768,3 +1844,300 @@ def updateCbtcfg(request):
         aCbtcfgc.save()
 
     return HttpResponse("")
+
+@csrf_exempt
+def conciliarSaldosExistentes(request):
+    chequearNoDobleConexion(request)
+    try:
+        idrenc = request.POST.get('idrenc')
+        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+        conciliacioAutoySemiAuto(request,idrenc, aCbrenc)
+    except Exception as e:
+        print(e)
+    return JsonResponse({})
+
+def enviarMailLadoBancoHtml(request):
+    data={}
+    try:
+        idrenc = request.POST.get("idrenc")
+        context = {}
+        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+        send_to = aCbtcta.diremail
+        context["descli"]=aCbtcli.descli
+        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+        context["desemp"] = aCbtemp.desemp
+        context["desbco"] = aCbmbco.desbco
+        context["descta"] = aCbtcta.descta
+        context["ano"] = aCbrenc.ano
+        context["mes"] = aCbrenc.mes
+        context["tabla"] = 'tableFixHead'
+        row = "odd"
+        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
+        context["pagina"] = 1
+        registros = []
+        for aCbsres in allCbsres:
+            datos = {}
+            datos["class"]=row
+            datos["fecha"]= aCbsres.fechatrabco.strftime('%d/%m/%Y')
+            datos["hora"]=aCbsres.horatrabco.strftime('%H:%M:%S')
+            datos["oficina"]=aCbsres.oficina
+            datos["descripcion"]=aCbsres.desctra
+            datos["referencia"] = aCbsres.reftra
+            datos["codigo"] = aCbsres.codtra
+            datos["debe"] = aCbsres.debebco
+            datos["haber"] = aCbsres.haberbco
+            registros.append(datos)
+            if row=="odd":
+                row="even"
+            else:
+                row="odd"
+        context["registros"] = registros
+        content = render_to_string('utils/paradescargarbanco.html', context)
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html", 'w') as f:
+            f.write(content)
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html"])
+        data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
+    except Exception as e:
+        data["info"]="Envio incorrecto. Código: " + str(e)
+
+    return JsonResponse(data)
+
+def enviarMailLadoBancoPdf(request):
+    data={}
+    try:
+        idrenc = request.POST.get("idrenc")
+        context = {}
+        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+        send_to = aCbtcta.diremail
+        context["descli"]=aCbtcli.descli
+        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+        context["desemp"] = aCbtemp.desemp
+        context["desbco"] = aCbmbco.desbco
+        context["descta"] = aCbtcta.descta
+        context["ano"] = aCbrenc.ano
+        context["mes"] = aCbrenc.mes
+        row = "odd"
+        pagina = 0
+        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
+        primerRegistro = 0
+        merger = PdfFileMerger()
+        while primerRegistro < len(allCbsres):
+            registros = []
+            pagina = pagina +1
+            context["pagina"] = pagina
+            if primerRegistro+16 < len(allCbsres):
+                ultimoRegistro = primerRegistro+16
+            else:
+                ultimoRegistro = len(allCbsres)
+            for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
+                datos = {}
+                datos["class"]=row
+                datos["fecha"]= aCbsres.fechatrabco.strftime('%d/%m/%Y')
+                datos["hora"]=aCbsres.horatrabco.strftime('%H:%M:%S')
+                datos["oficina"]=aCbsres.oficina
+                datos["descripcion"]=aCbsres.desctra
+                datos["referencia"] = aCbsres.reftra
+                datos["codigo"] = aCbsres.codtra
+                datos["debe"] = aCbsres.debebco
+                datos["haber"] = aCbsres.haberbco
+                registros.append(datos)
+                if row=="odd":
+                    row="even"
+                else:
+                    row="odd"
+            context["registros"] = registros
+            content = render_to_string('utils/paradescargarbanco.html', context)
+            pdf = htmltopydf.generate_pdf(content)
+            with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", 'wb') as f:
+                f.write(pdf)
+            merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", import_bookmarks=False )
+            print(ultimoRegistro)
+            primerRegistro = ultimoRegistro + 1
+            print(ultimoRegistro)
+        merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf")
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf"])
+        data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
+    except Exception as e:
+        data["info"]="Envio incorrecto. Código: " + str(e)
+
+    return JsonResponse(data)  
+
+def enviarMailLadoErpHtml(request):
+    data={}
+    try:
+        idrenc = request.POST.get("idrenc")
+        context = {}
+        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+        send_to = aCbtcta.diremail
+        context["descli"]=aCbtcli.descli
+        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+        context["desemp"] = aCbtemp.desemp
+        context["desbco"] = aCbmbco.desbco
+        context["descta"] = aCbtcta.descta
+        context["ano"] = aCbrenc.ano
+        context["mes"] = aCbrenc.mes
+        context["tabla"] = 'tableFixHead'
+        row = "odd"
+        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
+        context["pagina"] = 1
+        registros = []
+        for aCbsres in allCbsres:
+            datos = {}
+            datos["class"]=row
+            datos["fecha"]= aCbsres.fechatraerp.strftime('%d/%m/%Y')
+            datos["comprobante"]=aCbsres.nrocomperp
+            datos["auxiliar"]=aCbsres.auxerp
+            datos["referencia"]=aCbsres.referp
+            datos["glosa"] = aCbsres.glosaerp
+            datos["debe"] = aCbsres.debeerp
+            datos["haber"] = aCbsres.habererp
+            registros.append(datos)
+            if row=="odd":
+                row="even"
+            else:
+                row="odd"
+        context["registros"] = registros
+        content = render_to_string('utils/paradescargarerp.html', context)
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html", 'w') as f:
+            f.write(content)
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html"])
+        data["info"]="Lado Erp de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
+    except Exception as e:
+        data["info"]="Envio incorrecto. Código: " + str(e)
+
+    return JsonResponse(data)
+
+def enviarMailLadoErpPdf(request):
+    data={}
+    try:
+        idrenc = request.POST.get("idrenc")
+        context = {}
+        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+        send_to = aCbtcta.diremail
+        context["descli"]=aCbtcli.descli
+        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+        context["desemp"] = aCbtemp.desemp
+        context["desbco"] = aCbmbco.desbco
+        context["descta"] = aCbtcta.descta
+        context["ano"] = aCbrenc.ano
+        context["mes"] = aCbrenc.mes
+        row = "odd"
+        pagina = 0
+        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
+        primerRegistro = 0
+        merger = PdfFileMerger()
+        while primerRegistro < len(allCbsres):
+            registros = []
+            pagina = pagina +1
+            context["pagina"] = pagina
+            if primerRegistro+16 < len(allCbsres):
+                ultimoRegistro = primerRegistro+16
+            else:
+                ultimoRegistro = len(allCbsres)
+            for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
+                datos = {}
+                datos["class"]=row
+                datos["fecha"]= aCbsres.fechatraerp.strftime('%d/%m/%Y')
+                datos["comprobante"]=aCbsres.nrocomperp
+                datos["auxiliar"]=aCbsres.auxerp
+                datos["referencia"]=aCbsres.referp
+                datos["glosa"] = aCbsres.glosaerp
+                datos["debe"] = aCbsres.debeerp
+                datos["haber"] = aCbsres.habererp
+                registros.append(datos)
+                if row=="odd":
+                    row="even"
+                else:
+                    row="odd"
+            context["registros"] = registros
+            content = render_to_string('utils/paradescargarerp.html', context)
+            pdf = htmltopydf.generate_pdf(content)
+            with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", 'wb') as f:
+                f.write(pdf)
+            merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", import_bookmarks=False )
+            print(ultimoRegistro)
+            primerRegistro = ultimoRegistro + 1
+            print(ultimoRegistro)
+        merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf")
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf"])
+        data["info"]="Lado ERP de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
+    except Exception as e:
+        data["info"]="Envio incorrecto. Código: " + str(e)
+
+    return JsonResponse(data) 
+
+
+def send_mail(send_to,lado, files=None):
+    #assert isinstance(send_to, list)
+    text = "Se envía el listado de registros no conciliados del " + lado
+    msg = MIMEMultipart()
+    msg['From'] = config["MAIL_SENDER"]
+    msg['To'] = send_to
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = "Registros No Conciliados del " + lado
+
+    msg.attach(MIMEText(text))
+
+    for f in files or []:
+        with open(f, "rb") as fil:
+            part = MIMEApplication(
+                fil.read(),
+                Name=basename(f)
+            )
+         # After the file is closed
+        part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
+        msg.attach(part)
+        
+    smtp = smtplib.SMTP()
+    smtp.connect(config["SMTP_SERVER"])
+    print("aqui")
+    #smtp.starttls()
+    smtp.login(config["SMTP_USER"], config["SMTP_PASSWORD"])
+    print("b")
+    smtp.sendmail(config["MAIL_SENDER"], send_to, msg.as_string())
+    print("c")
+    smtp.quit()
+    smtp.close()
+    print("d")
+
+def getMailEmpresa(request):
+    data = {}
+    try:
+        cliente = request.GET.get("cliente")
+        print(cliente)
+        empresa = request.GET.get('empresa')
+        print(empresa)
+        aCbtemp = Cbtemp.objects.filter(empresa=empresa, cliente=cliente).first()
+        data["diremail"] = aCbtemp.diremail
+        return JsonResponse(data)
+    except Exception as e:
+        print(e)
+        data["diremail"] = "Error en mail"
+        return JsonResponse(data)
+
+
+

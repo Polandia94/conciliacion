@@ -20,7 +20,9 @@ urlpatterns = [
     path('getdesbco/', utils.getdesbco, name='getdesbco'),
     path('getcuenta', utils.getcuenta, name='getcuenta'),
     path('getGuardado/', utils.getguardado, name='getGuardado'),
-    path('getTiposDeConciliacionpost/', utils.getTiposDeConciliacionpost, name='getTiposDeConciliacion'),  path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
+    path('getTiposDeConciliacionpost/', utils.getTiposDeConciliacionpost, name='getTiposDeConciliacion'),  
+    path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
+    path('conciliarSaldosExistentes/', utils.conciliarSaldosExistentes, name='conciliarSaldosExistentes'),
     path('getColumnas/', utils.getColumnas, name='getColumnas'),
 
 
@@ -73,7 +75,15 @@ urlpatterns = [
     path('cbrbcod/<int:idrbcod>/<int:idrbcoe>/', views.CbrbcodDetailView.as_view(), name='cbrbcod-detail'),
     path('cbrerpd/<int:idrerpd>/<int:idrerpe>/', views.CbrerpdDetailView.as_view(), name='cbrerpd-detail'),
     path('noconciliados/<int:idrenc>/', views.CbsresNoConciliados.as_view(), name='noconciliados'),
+    
+    #*********** Enviar mails *******************
+    path('enviarmail/ladobancohtml', utils.enviarMailLadoBancoHtml, name='enviarMailLadoBancoHtml'),
+    path('enviarmail/ladobancopdf', utils.enviarMailLadoBancoPdf, name='enviarMailLadoBancoPdf'),
+    path('enviarmail/ladoerphtml', utils.enviarMailLadoErpHtml, name='enviarMailLadoErpHtml'),
+    path('enviarmail/ladoerppdf', utils.enviarMailLadoErpPdf, name='enviarMailLadoErpHtml'),
+    
     #* Otras Acciones
+    path('getMailEmpresa/', utils.getMailEmpresa, name='getMailEmpresa'),
     path('cbtusu/check/', utils.chequearUsuarioConectado, name='chequearUsuarioConectado'),
     path('reiniciarusuario/', views.reiniciarUsuario, name='reiniciarUsuario'),
     path('cerrarConciliacion/', views.cerrarConciliacion, name='cerrarConciliacion'),

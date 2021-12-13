@@ -88,12 +88,14 @@ class Cbtcta(models.Model):
     idtcta = models.IntegerField(verbose_name='ID', db_column='idtcta', primary_key=True)
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
+    diremail = models.CharField(verbose_name='Mail de la cuenta', db_column='diremail', max_length=60)
     codbco = models.CharField(verbose_name='Banco', db_column='codbco', max_length=5)
     nrocta = models.CharField(verbose_name='Numero de Cuenta', db_column='nrocta', max_length=30)
     descta = models.CharField(verbose_name='Descripcion de la cuenta', db_column='descta', max_length=50)
+    codctaconbco =  models.CharField(verbose_name='Codigo de cuenta asociado', db_column='codctaconbco', max_length=15)
     monbasebco = models.CharField(verbose_name='Moneda', db_column='monbasebco', max_length=3)
-    ano = models.SmallIntegerField(verbose_name='Año',db_column='ano', blank=True, null=True)
-    mes = models.SmallIntegerField(db_column='mes', blank=True, null=True)
+    ano = models.SmallIntegerField(verbose_name='Año',db_column='ano')
+    mes = models.SmallIntegerField(db_column='mes')
     saldoinibco = models.DecimalField(verbose_name='Saldo Inicial Banco', db_column='saldoinibco', max_digits=16, decimal_places=2)
     saldoinierp = models.DecimalField(verbose_name='Saldo Inicial ERP',db_column='saldoinierp', max_digits=16, decimal_places=2)
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
@@ -383,7 +385,7 @@ class Cbrerpd(models.Model):
     nrotra = models.TextField(db_column='nrotra', null=True)
     fechatra = models.DateField(db_column='fechatra', blank=True, null=True)
     nrocomp = models.TextField(db_column='nrocomp', null=True)
-    aux = models.SmallIntegerField(db_column='aux', blank=True, null=True)
+    aux = models.TextField(db_column='aux', blank=True, null=True)
     ref = models.TextField(db_column='ref')
     glosa = models.TextField(db_column='glosa')
     debe = models.DecimalField(db_column='debe', max_digits=16, decimal_places=2)
@@ -580,7 +582,7 @@ class Cbsres(models.Model):
     nrotraerp = models.TextField(db_column='nrotra', blank=True, null=True)
     fechatraerp = models.DateField(db_column='fechatraerp', blank=True, null=True)
     nrocomperp = models.TextField(db_column='nrocomp', blank=True, null=True)
-    auxerp = models.SmallIntegerField(db_column='auxerp', blank=True, null=True)
+    auxerp = models.TextField(db_column='auxerp', blank=True, null=True)
     referp = models.TextField(db_column='referp', blank=True, null=True)
     glosaerp = models.TextField(db_column='glosa', blank=True, null=True)
     debeerp = models.DecimalField(db_column='debeerp', max_digits=16, decimal_places=2, blank=True, null=True)
@@ -642,7 +644,7 @@ class Cbwres(models.Model):
     nrotraerp = models.TextField(db_column='nrotra', blank=True, null=True)
     fechatraerp = models.DateField(db_column='fechatraerp', blank=True, null=True)
     nrocomperp = models.TextField(db_column='nrocomp', blank=True, null=True)
-    auxerp = models.SmallIntegerField(db_column='auxerp', blank=True, null=True)
+    auxerp = models.TextField(db_column='auxerp', blank=True, null=True)
     referp = models.TextField(db_column='referp', blank=True, null=True)
     glosaerp = models.TextField(db_column='glosa', blank=True, null=True)
     debeerp = models.DecimalField(db_column='debeerp', max_digits=16, decimal_places=2, blank=True, null=True)
@@ -733,6 +735,7 @@ class Cbtemp(models.Model):
     idtemp = models.AutoField( verbose_name='ID', db_column='idtemp', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
+    diremail = models.CharField(verbose_name='Mail de la empresa', db_column='diremail', max_length=60)
     desemp = models.CharField(verbose_name='Descripcion de la empresa', db_column='desemp', max_length=60)
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
     codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, blank=True)
@@ -751,6 +754,8 @@ class Cbtcli(models.Model):
     idtcli = models.AutoField( verbose_name='ID', db_column='idtcli', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
     descli = models.CharField(verbose_name='Descripcion del cliente', db_column='descli', max_length=60)
+    diremail = models.CharField(verbose_name='Mail del cliente', db_column='diremail', max_length=60)
+    celsopo = models.CharField(verbose_name='Whatsapp del cliente', db_column='celsopo', max_length=15)
     codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, default="vegal")
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
@@ -937,3 +942,112 @@ class Cbtcfgc(models.Model):
     def toJSON(self):
         item = model_to_dict(self)
         return item
+
+class Cbtcam(models.Model):
+    idtcam = models.AutoField(db_column='idtcam', primary_key=True)
+    cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+    nrocol = models.SmallIntegerField(verbose_name='Numero de columna',db_column='nrocol')
+    descampo = models.CharField(verbose_name='Descripcion del campo', db_column='descampo', max_length=50)
+    indcampo = models.SmallIntegerField(verbose_name='Indicador de donde se leerá el dato',db_column='indcampo')
+    cbscampo = models.CharField(verbose_name='Campo en el cbsres donde se cargara en el erp', db_column='cbscampo', max_length=16)
+    cbdcampo = models.CharField(verbose_name='Campo en el cbf25 donde se cargara en el erp', db_column='cbfcampo', max_length=16)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcam'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcam, self ).save( *args, **kwargs )
+
+        # - - - - -
+
+class Cbtcon(models.Model):
+    idtcon = models.AutoField(db_column='idtcon', primary_key=True)
+    codcon = models.CharField(verbose_name='Codigo de cuenta contable', db_column='codcon', max_length=15)
+    descon = models.CharField(verbose_name='Descripcion de cuenta contable', db_column='descon', max_length=50)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcon'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcon, self ).save( *args, **kwargs )
+
+        # - - - - -
+
+class Cbtcoye(models.Model):
+    idtcoye = models.AutoField(db_column='idtcon', primary_key=True)
+    cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+    nrocol = models.SmallIntegerField(verbose_name='Numero de columna',db_column='nrocol')
+    codcampo = models.SmallIntegerField(verbose_name='Codigo del campo',db_column='codcampo')
+    descampo = models.CharField(verbose_name='Descripcion del campo', db_column='descampo', max_length=50)
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcoye'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcoye, self ).save( *args, **kwargs )
+
+        # - - - - -
+
+class Cbtcoyd(models.Model):
+    idtcoyd = models.AutoField(db_column='idtcon', primary_key=True)
+    idtcoye = models.ForeignKey( 'Cbtcoye', models.DO_NOTHING, db_column='idtcoye')
+    corridtcoy = models.SmallIntegerField(verbose_name='Correlativo',db_column='corridtcoy')
+    tipoval = models.CharField(verbose_name='Tipo de Valor', db_column='tipoval', max_length=1)
+    codval = models.TextField(verbose_name='Codigo de Valor', db_column='codval')
+    desval = models.TextField(verbose_name='Descripcion de Valor', db_column='desval')
+    actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
+    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbtcoyd'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbtcoyd, self ).save( *args, **kwargs )
+
+        # - - - - -

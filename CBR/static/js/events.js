@@ -55,6 +55,32 @@ function getAnoMes(){
     }
 }
 
+function getMailEmpresa(){
+    const csrftoken = getCookie('csrftoken');
+    var emp = '';
+    var cli = '';
+    emp = $("#id_empresa").val();
+    cli = $("#cliente").val();
+    $.ajax({
+        method: 'GET',
+        beforeSend: function (request) {
+            request.setRequestHeader("X-CSRFToken", csrftoken);
+        },
+        url: '/getMailEmpresa',
+        data: {'empresa': emp, 'cliente': cli},
+        success: function (respons) {
+            if (respons) {
+                $("#id_diremail").val(respons.diremail);
+            } else {
+                $("#id_diremail").val('');
+            }
+        },
+        error: function (data) {
+        }
+    });
+    
+}
+
 function getCuenta(){
     const csrftoken = getCookie('csrftoken');
     const urlParams = new URLSearchParams(window.location.search);
@@ -114,6 +140,73 @@ function getCuenta(){
             }
         })
     })
+    $("#id_empresa").on('change', function (e) {
+        getMailEmpresa()
+    })
+    
+    function enviarMail(idrenc, url){
+        var sigue = true
+        mailLadoBancoHTML.disabled = true;
+        mailLadoBancoPDF.disabled = true;
+        mailLadoErpHTML.disabled = true;
+        mailLadoErpPDF.disabled = true;
+        
+        function start(counter){
+            if(sigue){
+                setTimeout(function(){
+                counter++;
+                
+                cargando.innerHTML = "Cargando " + counter + " segundos. Puede cerrar la pagina"
+                start(counter);
+                }, 1000);
+            }else{
+                cargando.innerHTML = ""
+            }
+        }
+        start(0)
+        $.ajax({
+            method: 'POST',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: url,
+            data : {"idrenc":idrenc},
+            success: function (respons) {               
+                sigue=false
+                mailLadoBancoHTML.disabled = false;
+                mailLadoBancoPDF.disabled = false;
+                mailLadoErpHTML.disabled = false;
+                mailLadoErpPDF.disabled = false;
+                message_info(respons['info'], null, null)
+        }
+
+        });
+    }
+    $("#mailLadoBancoHTML").on('click', function (e) {
+        console.log("enviar")
+        const idrenc = document.getElementById('idrenc').innerHTML;
+        const url = '/enviarmail/ladobancohtml'
+        enviarMail(idrenc, url)
+    });
+    $("#mailLadoBancoPDF").on('click', function (e) {
+        console.log("enviar")
+        const idrenc = document.getElementById('idrenc').innerHTML;
+        const url = '/enviarmail/ladobancopdf'
+        enviarMail(idrenc, url)
+    });
+    $("#mailLadoErpHTML").on('click', function (e) {
+        console.log("enviar")
+        const idrenc = document.getElementById('idrenc').innerHTML;
+        const url = '/enviarmail/ladoerphtml'
+        enviarMail(idrenc, url)
+    });
+    $("#mailLadoErpPDF").on('click', function (e) {
+        console.log("enviar")
+        const idrenc = document.getElementById('idrenc').innerHTML;
+        const url = '/enviarmail/ladoerppdf'
+        enviarMail(idrenc, url)
+    });
+
     $("#nuevoConfiguracionAuto").on('click', function (e) {
 
                 $.ajax({
@@ -332,7 +425,7 @@ function getCuenta(){
         if(globalVariable.bloqueado){
             window.alert("Espere a que termine de guardar")
         }else{
-        if (globalVariable.SaldoDiferenciaTotal == 0 || globalVariable.SaldoDiferenciaTotal == globalVariableIndtco.moneda + 0){
+        
                 globalVariable.bloqueado = true;
                 $.ajax({
                     method: 'GET',
@@ -368,9 +461,7 @@ function getCuenta(){
         
                 
         
-        }else{
-            window.alert("El saldo no es 0. es" + globalVariable.SaldoDiferenciaTotal)
-        }
+        
     }
 
     });
@@ -407,6 +498,16 @@ function getCuenta(){
         if(globalVariable.bloqueado){
             window.alert("Espere a que termine de guardar")
         }else{
+            function start(counter){
+                if(counter < 300){
+                    setTimeout(function(){
+                    counter++;
+                    cargando.innerHTML = "Conciliando " + counter + " segundos"
+                    start(counter);
+                    }, 1000);
+                }
+            }
+            start(0)
         $.ajax({
             method: 'POST',
             beforeSend: function (request) {
@@ -415,6 +516,8 @@ function getCuenta(){
             url: '/cbtusuc/guardado/',
             data: {'cbtusuc': enviar},
             success: function (respons) {
+            console.log("PASO POR AQUI")
+             // Si se quiere que solo concilie los saldos exitentes, en vez de volver desde cero la url es ../conciliarSaldosExistentes/, no battle tested., solo mandar un post con los parameters ahi, y en done un reload
             $.ajax({
                 url: "../conciliarSaldos/", //window.location.pathname
                 type: 'POST',
@@ -426,6 +529,7 @@ function getCuenta(){
                 // processData: false,
                 // contentType: false,
             }).done(function (response) {
+                //location.reload()
                 if (response.hasOwnProperty('idrenc')) {
                     location.href = `../cbsres/?idrenc=${response['idrenc']}`;
                     return false;

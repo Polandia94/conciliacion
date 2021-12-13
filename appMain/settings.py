@@ -122,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 LANGUAGE_CODE = 'es'
-TIME_ZONE = 'America/Lima'
+TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_L10N = True

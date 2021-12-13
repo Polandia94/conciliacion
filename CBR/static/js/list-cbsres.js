@@ -375,6 +375,49 @@ if(columnasVisibles == null){
 }
 
 $.ajax({
+    method: 'GET',
+    beforeSend: function (request) {
+        request.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+    },
+    url: '/getTiposDeConciliacionpost',
+    data: { 'idrenc': idrenc },
+    success: function (respons) {
+        try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch { }
+        try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        catch {}
+        saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
+        globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
+        console.log(respons.saldodiferenciatotal)
+        console.log(respons.puedeCerrar)
+        if(respons.saldodiferenciatotal == 0 && respons.puedeCerrar == 1){
+            try{
+            document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
+            document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
+            document.getElementById("btnCerrarConciliacion").disabled = false
+        }catch{}
+        }else{
+            try{
+            document.getElementById("btnCerrarConciliacion").className = "btn btn-light btn-flat mb-3"
+            document.getElementById("btnCerrarConciliacion").title = "Los saldos no concilian"
+            document.getElementById("btnCerrarConciliacion").disabled = true
+            }catch{}
+        }
+        cargando.innerHTML = ""
+    }
+})
+
+$.ajax({
     type: "POST",
     url: '/getColumnas/',
     data: {},
@@ -477,7 +520,8 @@ $.ajax({
                             try { habererphtml.innerHTML = globalVariableIndtco.moneda +  Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
                             /*va llenando la informacion a enviar al back */
-                            datasend.push(rows.data());
+                            let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                            datasend.push(agregar);
                         }
                     }
                     if (row.data()["idrbcodl"] == -1) { row.data()["idrbcodl"] = 0 }
@@ -595,13 +639,20 @@ $.ajax({
                                     catch {}
                                     saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
                                     globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
-                                    if(respons.saldodiferenciatotal == 0){
+                                    console.log(respons.saldodiferenciatotal)
+                                    console.log(respons.puedeCerrar)
+                                    if(respons.saldodiferenciatotal == 0 && respons.puedeCerrar == 1){
+                                        try{
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
+                                        document.getElementById("btnCerrarConciliacion").disabled = false
+                                        }catch{}
                                     }else{
+                                        try{
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-light btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Los saldos no concilian"
-        
+                                        document.getElementById("btnCerrarConciliacion").disabled = true
+                                        }catch{}
                                     }
                                     cargando.innerHTML = ""
                                 }
@@ -1290,7 +1341,8 @@ $.ajax({
                                                 var datasend = []
                                                 for (let fila = 0; fila < table.rows().count(); fila++) {
                                                     var rows = table.row(fila)
-                                                    datasend.push(rows.data());
+                                                    let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                                                    datasend.push(agregar);
                                                 }
         
         
@@ -1622,7 +1674,8 @@ $.ajax({
                                                 var datasend = []
                                                 for (let fila = 0; fila < table.rows().count(); fila++) {
                                                     var rows = table.row(fila)
-                                                    datasend.push(rows.data());
+                                                    let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                                                    datasend.push(agregar);
                                                 }
         
                                                 if (estadooriginal == "2" || estadooriginal == "3" || estadooriginal == "4") {
@@ -1679,7 +1732,17 @@ $.ajax({
                                     if (row.data()["estadobco"]==2){
                                     ocultarEstadoBanco(idsres)
                                     }
+                                    desresaltarerp(e)
                                     }
+                                )
+                                cell.addEventListener('click', function (e) {
+                                    table.rows(function (idx, data, node) {
+                                        var rowe = table.row(idx)
+                                        $(table.cells(rowe, [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]).nodes()).css({ "background-color": "" });
+                                    })
+                                    //var row = table.row(e.target.parentElement)
+                                    
+                                }
                                 )
                                 cell.addEventListener('mouseenter', function (e) {
                                     var row = table.row(e.target.parentElement)
@@ -1687,6 +1750,7 @@ $.ajax({
                                     if (row.data()["estadobco"]==2){
                                     mostrarEstadoBanco(idsres)
                                     }
+                                    resaltarerp(e)
                                     }
                                 )
                             },
@@ -1731,13 +1795,14 @@ $.ajax({
                                             if (rowg.data()["idrbcodl"] == row["idrbcod"]) { 
                                                 if(rowg.data()["debeerp"] == row["haberbco"]&&rowg.data()["habererp"] == row["debebco"]){
                                                     disabled = ""
-                                                    clase = "sucess"
+                                                    clase = "success"
                                                 }
                                             }
                                         })
                                     $elDiv.append('<div id="estadobco-'+row['idsres']+`" style="display: none;">
                                     <script>
-                                    function cambioEstadoBanco(accion, id){
+                                    async function cambioEstadoBanco(accion, id){
+                                        globalVariable.editado=1
                                         var datasend = []
                                         let table = $('#data').DataTable();
                                         console.log(table.row(id))
@@ -1921,12 +1986,18 @@ $.ajax({
                                     for (let opcion = 0; opcion < globalVariableIndtco.indtco_bco.length; opcion++) {
                                         agregar = agregar + '<option value="' + globalVariableIndtco.indtco_bco[opcion] + '">' + globalVariableIndtco.indtco_bco[opcion] + '</option>'
                                     }
+                                let vacio = ""
+                                if(row['estadobco']==1 && globalVariableIndtco.codigosExcluidos.includes(data) == false){
+                                    vacio = '<option value="" selected> </option>'
+                                }else{
+                                    vacio = '<option value=""> </option>'
+                                }
                                     let texto = `
                                 <td><nobr>
                                 <select class="miniselect" name="tipo" id="optionbco-${row['idsres']}">
                                 <option value="${table.row(meta.row).data()['codtcobco']}">${table.row(meta.row).data()['codtcobco']}</option>
-                                <option value=" "> </option>
-                                `
+                                <option value=""> </option>
+                                `       + vacio
                                         + agregar +
                                         `</select>
                               <a onclick="alertab()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">
@@ -1962,7 +2033,17 @@ $.ajax({
                                     if (row.data()["estadoerp"]==2){
                                     ocultarEstadoErp(idsres)
                                     }
+                                    desresaltarbco(e)
                                     }
+                                )
+                                cell.addEventListener('click', function (e) {
+                                    table.rows(function(idx, data, node) {
+                                        var rowe = table.row(idx)
+                                        $(table.cells(rowe, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]).nodes()).css({ "background-color": "" });
+                                    })
+                                    //var row = table.row(e.target.parentElement)
+                                    
+                                }
                                 )
                                 cell.addEventListener('mouseenter', function (e) {
                                     var row = table.row(e.target.parentElement)
@@ -1970,6 +2051,7 @@ $.ajax({
                                     if (row.data()["estadoerp"]==2){
                                     mostrarEstadoErp(idsres)
                                     }
+                                    resaltarbco(e)
                                     }
                                 )
                             },
@@ -2023,6 +2105,7 @@ $.ajax({
                                     $elDiv.append('<div id="estadoerp-'+row['idsres']+`" style="display: none;">
                                     <script>
                                     function cambioEstadoErp(accion, id){
+                                        globalVariable.editado=1
                                         var datasend = []
                                         let table = $('#data').DataTable();
                                         console.log(table.row(id))
@@ -2105,12 +2188,18 @@ $.ajax({
                                     for (let opcion = 0; opcion < globalVariableIndtco.indtco_erp.length; opcion++) {
                                         agregar = agregar + '<option value="' + globalVariableIndtco.indtco_erp[opcion] + '">' + globalVariableIndtco.indtco_erp[opcion] + '</option>'
                                     }
+                                let vacio = ""
+                                if(row['estadoerp'] == 1 && globalVariableIndtco.codigosExcluidos.includes(data) == false){
+                                    vacio = '<option value="" selected> </option>'
+                                }else{
+                                    vacio = '<option value=""> </option>'
+                                }
                                     let texto = `
                                 <td><nobr>
                                 <select class="miniselect" name="tipo" id="optionerp-${row['idsres']}">
                                 <option value="${table.row(meta.row).data()['codtcoerp']}">${table.row(meta.row).data()['codtcoerp']}</option>
-                                <option value=" "> </option>
-                                `
+                                    
+                                `       +vacio
                                         + agregar +
                                         `</select>
                               <a onclick="alertaa()" id="masInfo"  data-toggle="tooltip" data-toggle="tooltip" data-placement="right" title="Más info">

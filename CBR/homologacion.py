@@ -301,12 +301,7 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             fechatra=dataErp.loc[i, dataErp.columns[0]]
                             errores.append(1)
                     aCbrgal.nrocomp = dataErp.loc[i, dataErp.columns[1]]
-                    if dataErp.loc[i, dataErp.columns[2]] == "":
-                        aux = 0
-                    else:
-                        aux = dataErp.loc[i, dataErp.columns[2]]
-                    aCbrgal.aux = aux
-                    
+                    aux=dataErp.loc[i, dataErp.columns[2]]  
                     ref=dataErp.loc[i, dataErp.columns[3]]
                     aCbrgal.ref = ref
                     aCbrgal.glosa = dataErp.loc[i, dataErp.columns[4]]

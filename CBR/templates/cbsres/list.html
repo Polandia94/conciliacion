@@ -22,9 +22,9 @@
         <i class="fas fa-info-circle"></i>
     </a>
     {% if editable == 'Editable' and indconc %} 
-    <a id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
+    <button id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
         <i class="fas fa-check-double"></i>
-    </a>
+    </button>
     {% endif %}
     {% if editable == 'Editable' %} 
     <a id="btnGuardar" class="btn btn-success btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Guardar conciliación {{ idrenc }}">
@@ -39,7 +39,13 @@
         Ejecutar el proceso de conciliación
     </a>
     {% endif %}
-    <label class="ml-2" id="cargando"></label>
+    <label class="mt-0" id="cargando"></label>
+
+
+    <label class="label-cbf02">Mes <input value="{{mes}}/{{ano}}" class="w-50" readonly></label>
+    <label class="label-cbf02">Cuenta <input value="{{nrocta}}" class="w-50" readonly></label>
+    <label class="label-cbf02">Banco <input value="{{codbco}}" class="w-50" readonly></label> 
+    <label class="label-cbf02">Empresa <input value="{{empresa}}" class="w-50" readonly></label> 
     <div hidden id="saldodiferenciatotaloculto">{{saldodiferenciatotal}}</div>
 
 
@@ -125,7 +131,8 @@
         var globalVariableIndtco={
             indtco_erp: "{{indtco_erp}}".split(","),
             indtco_bco: "{{indtco_bco}}".split(","),
-            moneda: "{{moneda}}"
+            moneda: "{{moneda}}",
+            codigosExcluidos: "{{codigosExcluidos}}"
         };
         window.onload= async function(){
         primeraCargaCbsres()
