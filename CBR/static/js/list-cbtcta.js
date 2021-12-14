@@ -63,7 +63,7 @@ $(function () {
                     switch (CodeStatus) {
                         case 0: {
 
-                            classEditar = 'disabled'; //OK
+                            //classEditar = 'disabled'; //OK
                             classEliminar = 'disabled'; 
                             break;
                         }

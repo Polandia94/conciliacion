@@ -18,8 +18,13 @@
     <a id="btnResetColumns" class="btn btn-secondary btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Reiniciar posición de las columnas al estado original">
         <i class="fas fa-columns"></i>
     </a>
+    {% if editable == 'Editable' %} 
     <a href="/noconciliados/{{idrenc}}?return=cbsres" data-idrenc="{{idrenc}}" class="btn btn-secondary btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Detalle de Movimientos No conciliados">
         <i class="fas fa-info-circle"></i>
+    {% else %}
+    <a href="/noconciliados/{{idrenc}}?return=cbsresview" data-idrenc="{{idrenc}}" class="btn btn-secondary btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Detalle de Movimientos No conciliados">
+        <i class="fas fa-info-circle"></i>
+    {% endif %}
     </a>
     {% if editable == 'Editable' and indconc %} 
     <button id="btnCerrarConciliacion" class="btn btn-light btn-flat mb-3 usercheck" data-toggle="tooltip" data-placement="bottom" title="Pasar la conciliación {{ idrenc }} al estado conciliado">
@@ -43,7 +48,7 @@
 
 
     <label class="label-cbf02">Mes <input value="{{mes}}/{{ano}}" class="w-50" readonly></label>
-    <label class="label-cbf02">Cuenta <input value="{{nrocta}}" class="w-50" readonly></label>
+    <label class="label-cbf02-cuenta">Cuenta <input value="{{nrocta}}" class="w-50" style="margin-right: 0%;" readonly></label>
     <label class="label-cbf02">Banco <input value="{{codbco}}" class="w-50" readonly></label> 
     <label class="label-cbf02">Empresa <input value="{{empresa}}" class="w-50" readonly></label> 
     <div hidden id="saldodiferenciatotaloculto">{{saldodiferenciatotal}}</div>

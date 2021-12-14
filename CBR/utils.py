@@ -1860,28 +1860,107 @@ def enviarMailLadoBancoHtml(request):
     data={}
     try:
         idrenc = request.POST.get("idrenc")
-        context = {}
-        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
-        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
-        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
-        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
-        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
-        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
-        send_to = aCbtcta.diremail
-        context["descli"]=aCbtcli.descli
-        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        send_to, context = CreateContextNoConciliadosBancoHtml(request, idrenc)
+        content = render_to_string('utils/paradescargarbanco.html', context)
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html", 'w') as f:
+            f.write(content)
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html"])
+        data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
+    except Exception as e:
+        print(e)
+        data["info"]="Envio Fallido"
+
+    return JsonResponse(data)
+
+def CreateContextNoConciliadosBancoHtml(request, idrenc):
+    aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+    aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+    send_to = aCbtcta.diremail
+    context = {}
+    aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+    aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
         
-        context["desemp"] = aCbtemp.desemp
-        context["desbco"] = aCbmbco.desbco
-        context["descta"] = aCbtcta.descta
-        context["ano"] = aCbrenc.ano
-        context["mes"] = aCbrenc.mes
-        context["tabla"] = 'tableFixHead'
-        row = "odd"
-        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
-        context["pagina"] = 1
+    aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+    aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+    context["descli"]=aCbtcli.descli
+    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+    context["desemp"] = aCbtemp.desemp
+    context["desbco"] = aCbmbco.desbco
+    context["descta"] = aCbtcta.descta
+    context["ano"] = aCbrenc.ano
+    context["mes"] = aCbrenc.mes
+    context["tabla"] = 'tableFixHead'
+    row = "odd"
+    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
+    context["pagina"] = 1
+    registros = []
+    for aCbsres in allCbsres:
+        datos = {}
+        datos["class"]=row
+        datos["fecha"]= aCbsres.fechatrabco.strftime('%d/%m/%Y')
+        datos["hora"]=aCbsres.horatrabco.strftime('%H:%M:%S')
+        datos["oficina"]=aCbsres.oficina
+        datos["descripcion"]=aCbsres.desctra
+        datos["referencia"] = aCbsres.reftra
+        datos["codigo"] = aCbsres.codtra
+        datos["debe"] = '{:,.2f}'.format(aCbsres.debebco)
+        datos["haber"] = '{:,.2f}'.format(aCbsres.haberbco)
+        registros.append(datos)
+        if row=="odd":
+            row="even"
+        else:
+            row="odd"
+    context["registros"] = registros
+    return send_to,context
+
+def enviarMailLadoBancoPdf(request):
+    
+    try:
+        data, idrenc, send_to = crearPdfBanco(request)
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf"])
+        data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
+    except Exception as e:
+        print(e)
+        data["info"]="Envio Fallido"
+
+    return JsonResponse(data) 
+
+def crearPdfBanco(request):
+    data={}
+    idrenc = request.POST.get("idrenc")
+    if idrenc == None:
+        idrenc = request.GET.get("idrenc")
+    context = {}
+    aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+    aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+    aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+    aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+    aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+    aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+    send_to = aCbtcta.diremail
+    context["descli"]=aCbtcli.descli
+    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+    context["desemp"] = aCbtemp.desemp
+    context["desbco"] = aCbmbco.desbco
+    context["descta"] = aCbtcta.descta
+    context["ano"] = aCbrenc.ano
+    context["mes"] = aCbrenc.mes
+    row = "odd"
+    pagina = 0
+    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
+    primerRegistro = 0
+    merger = PdfFileMerger()
+    while primerRegistro < len(allCbsres):
         registros = []
-        for aCbsres in allCbsres:
+        pagina = pagina +1
+        context["pagina"] = pagina
+        if primerRegistro+15 < len(allCbsres):
+            ultimoRegistro = primerRegistro+15
+        else:
+            ultimoRegistro = len(allCbsres)
+        for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
             datos = {}
             datos["class"]=row
             datos["fecha"]= aCbsres.fechatrabco.strftime('%d/%m/%Y')
@@ -1890,8 +1969,8 @@ def enviarMailLadoBancoHtml(request):
             datos["descripcion"]=aCbsres.desctra
             datos["referencia"] = aCbsres.reftra
             datos["codigo"] = aCbsres.codtra
-            datos["debe"] = aCbsres.debebco
-            datos["haber"] = aCbsres.haberbco
+            datos["debe"] = '{:,.2f}'.format(aCbsres.debebco)
+            datos["haber"] = '{:,.2f}'.format(aCbsres.haberbco)
             registros.append(datos)
             if row=="odd":
                 row="even"
@@ -1899,107 +1978,117 @@ def enviarMailLadoBancoHtml(request):
                 row="odd"
         context["registros"] = registros
         content = render_to_string('utils/paradescargarbanco.html', context)
-        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html", 'w') as f:
-            f.write(content)
-        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html"])
-        data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
-    except Exception as e:
-        data["info"]="Envio incorrecto. Código: " + str(e)
-
-    return JsonResponse(data)
-
-def enviarMailLadoBancoPdf(request):
-    data={}
-    try:
-        idrenc = request.POST.get("idrenc")
-        context = {}
-        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
-        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
-        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
-        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
-        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
-        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
-        send_to = aCbtcta.diremail
-        context["descli"]=aCbtcli.descli
-        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
-        
-        context["desemp"] = aCbtemp.desemp
-        context["desbco"] = aCbmbco.desbco
-        context["descta"] = aCbtcta.descta
-        context["ano"] = aCbrenc.ano
-        context["mes"] = aCbrenc.mes
-        row = "odd"
-        pagina = 0
-        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
-        primerRegistro = 0
-        merger = PdfFileMerger()
-        while primerRegistro < len(allCbsres):
-            registros = []
-            pagina = pagina +1
-            context["pagina"] = pagina
-            if primerRegistro+16 < len(allCbsres):
-                ultimoRegistro = primerRegistro+16
-            else:
-                ultimoRegistro = len(allCbsres)
-            for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
-                datos = {}
-                datos["class"]=row
-                datos["fecha"]= aCbsres.fechatrabco.strftime('%d/%m/%Y')
-                datos["hora"]=aCbsres.horatrabco.strftime('%H:%M:%S')
-                datos["oficina"]=aCbsres.oficina
-                datos["descripcion"]=aCbsres.desctra
-                datos["referencia"] = aCbsres.reftra
-                datos["codigo"] = aCbsres.codtra
-                datos["debe"] = aCbsres.debebco
-                datos["haber"] = aCbsres.haberbco
-                registros.append(datos)
-                if row=="odd":
-                    row="even"
-                else:
-                    row="odd"
-            context["registros"] = registros
-            content = render_to_string('utils/paradescargarbanco.html', context)
-            pdf = htmltopydf.generate_pdf(content)
-            with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", 'wb') as f:
-                f.write(pdf)
-            merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", import_bookmarks=False )
-            print(ultimoRegistro)
-            primerRegistro = ultimoRegistro + 1
-            print(ultimoRegistro)
-        merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf")
-        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf"])
-        data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
-    except Exception as e:
-        data["info"]="Envio incorrecto. Código: " + str(e)
-
-    return JsonResponse(data)  
+        pdf = htmltopydf.generate_pdf(content)
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", 'wb') as f:
+            f.write(pdf)
+        merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", import_bookmarks=False )
+        print(ultimoRegistro)
+        primerRegistro = ultimoRegistro + 1
+        print(ultimoRegistro)
+    merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf")
+    return data,idrenc,send_to 
 
 def enviarMailLadoErpHtml(request):
     data={}
     try:
         idrenc = request.POST.get("idrenc")
-        context = {}
-        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
-        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
-        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
-        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
-        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
-        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
-        send_to = aCbtcta.diremail
-        context["descli"]=aCbtcli.descli
-        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        send_to, context = CreateContextNoConciliadosErpHtml(request, idrenc)
+        content = render_to_string('utils/paradescargarerp.html', context)
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html", 'w') as f:
+            f.write(content)
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html"])
+        data["info"]="Lado Erp de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
+    except Exception as e:
+        print(e)
+        data["info"]="Envio Fallido"
+
+    return JsonResponse(data)
+
+def CreateContextNoConciliadosErpHtml(request, idrenc):
+    context = {}
+    aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+    aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+    aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+    aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+    aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+    aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+    send_to = aCbtcta.diremail
+    context["descli"]=aCbtcli.descli
+    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
         
-        context["desemp"] = aCbtemp.desemp
-        context["desbco"] = aCbmbco.desbco
-        context["descta"] = aCbtcta.descta
-        context["ano"] = aCbrenc.ano
-        context["mes"] = aCbrenc.mes
-        context["tabla"] = 'tableFixHead'
-        row = "odd"
-        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
-        context["pagina"] = 1
+    context["desemp"] = aCbtemp.desemp
+    context["desbco"] = aCbmbco.desbco
+    context["descta"] = aCbtcta.descta
+    context["ano"] = aCbrenc.ano
+    context["mes"] = aCbrenc.mes
+    context["tabla"] = 'tableFixHead'
+    row = "odd"
+    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
+    context["pagina"] = 1
+    registros = []
+    for aCbsres in allCbsres:
+        datos = {}
+        datos["class"]=row
+        datos["fecha"]= aCbsres.fechatraerp.strftime('%d/%m/%Y')
+        datos["comprobante"]=aCbsres.nrocomperp
+        datos["auxiliar"]=aCbsres.auxerp
+        datos["referencia"]=aCbsres.referp
+        datos["glosa"] = aCbsres.glosaerp
+        datos["debe"] = '{:,.2f}'.format(aCbsres.debeerp)
+        datos["haber"] = '{:,.2f}'.format(aCbsres.habererp)
+        registros.append(datos)
+        if row=="odd":
+            row="even"
+        else:
+            row="odd"
+    context["registros"] = registros
+    return send_to,context
+
+def enviarMailLadoErpPdf(request):
+    
+    try:
+        data, idrenc, send_to = crearPdferp(request)
+        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf"])
+        data["info"]="Lado ERP de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
+    except Exception as e:
+        print(e)
+        data["info"]="Envio Fallido."
+
+    return JsonResponse(data) 
+
+def crearPdferp(request):
+    data={}
+    idrenc = request.POST.get("idrenc")
+    context = {}
+    aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+    aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+    aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
+    aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
+    aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
+    aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
+    send_to = aCbtcta.diremail
+    context["descli"]=aCbtcli.descli
+    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        
+    context["desemp"] = aCbtemp.desemp
+    context["desbco"] = aCbmbco.desbco
+    context["descta"] = aCbtcta.descta
+    context["ano"] = aCbrenc.ano
+    context["mes"] = aCbrenc.mes
+    row = "odd"
+    pagina = 0
+    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
+    primerRegistro = 0
+    merger = PdfFileMerger()
+    while primerRegistro < len(allCbsres):
         registros = []
-        for aCbsres in allCbsres:
+        pagina = pagina +1
+        context["pagina"] = pagina
+        if primerRegistro+15 < len(allCbsres):
+            ultimoRegistro = primerRegistro+15
+        else:
+            ultimoRegistro = len(allCbsres)
+        for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
             datos = {}
             datos["class"]=row
             datos["fecha"]= aCbsres.fechatraerp.strftime('%d/%m/%Y')
@@ -2007,8 +2096,8 @@ def enviarMailLadoErpHtml(request):
             datos["auxiliar"]=aCbsres.auxerp
             datos["referencia"]=aCbsres.referp
             datos["glosa"] = aCbsres.glosaerp
-            datos["debe"] = aCbsres.debeerp
-            datos["haber"] = aCbsres.habererp
+            datos["debe"] = '{:,.2f}'.format(aCbsres.debeerp)
+            datos["haber"] = '{:,.2f}'.format(aCbsres.habererp)
             registros.append(datos)
             if row=="odd":
                 row="even"
@@ -2016,79 +2105,15 @@ def enviarMailLadoErpHtml(request):
                 row="odd"
         context["registros"] = registros
         content = render_to_string('utils/paradescargarerp.html', context)
-        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html", 'w') as f:
-            f.write(content)
-        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html"])
-        data["info"]="Lado Erp de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
-    except Exception as e:
-        data["info"]="Envio incorrecto. Código: " + str(e)
-
-    return JsonResponse(data)
-
-def enviarMailLadoErpPdf(request):
-    data={}
-    try:
-        idrenc = request.POST.get("idrenc")
-        context = {}
-        aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
-        aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
-        aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
-        aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
-        aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
-        aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
-        send_to = aCbtcta.diremail
-        context["descli"]=aCbtcli.descli
-        context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
-        
-        context["desemp"] = aCbtemp.desemp
-        context["desbco"] = aCbmbco.desbco
-        context["descta"] = aCbtcta.descta
-        context["ano"] = aCbrenc.ano
-        context["mes"] = aCbrenc.mes
-        row = "odd"
-        pagina = 0
-        allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
-        primerRegistro = 0
-        merger = PdfFileMerger()
-        while primerRegistro < len(allCbsres):
-            registros = []
-            pagina = pagina +1
-            context["pagina"] = pagina
-            if primerRegistro+16 < len(allCbsres):
-                ultimoRegistro = primerRegistro+16
-            else:
-                ultimoRegistro = len(allCbsres)
-            for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
-                datos = {}
-                datos["class"]=row
-                datos["fecha"]= aCbsres.fechatraerp.strftime('%d/%m/%Y')
-                datos["comprobante"]=aCbsres.nrocomperp
-                datos["auxiliar"]=aCbsres.auxerp
-                datos["referencia"]=aCbsres.referp
-                datos["glosa"] = aCbsres.glosaerp
-                datos["debe"] = aCbsres.debeerp
-                datos["haber"] = aCbsres.habererp
-                registros.append(datos)
-                if row=="odd":
-                    row="even"
-                else:
-                    row="odd"
-            context["registros"] = registros
-            content = render_to_string('utils/paradescargarerp.html', context)
-            pdf = htmltopydf.generate_pdf(content)
-            with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", 'wb') as f:
-                f.write(pdf)
-            merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", import_bookmarks=False )
-            print(ultimoRegistro)
-            primerRegistro = ultimoRegistro + 1
-            print(ultimoRegistro)
-        merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf")
-        send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf"])
-        data["info"]="Lado ERP de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
-    except Exception as e:
-        data["info"]="Envio incorrecto. Código: " + str(e)
-
-    return JsonResponse(data) 
+        pdf = htmltopydf.generate_pdf(content)
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", 'wb') as f:
+            f.write(pdf)
+        merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", import_bookmarks=False )
+        print(ultimoRegistro)
+        primerRegistro = ultimoRegistro + 1
+        print(ultimoRegistro)
+    merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf")
+    return data,idrenc,send_to
 
 
 def send_mail(send_to,lado, files=None):
@@ -2139,5 +2164,6 @@ def getMailEmpresa(request):
         data["diremail"] = "Error en mail"
         return JsonResponse(data)
 
+    
 
 

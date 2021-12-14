@@ -77,9 +77,13 @@ urlpatterns = [
     path('noconciliados/<int:idrenc>/', views.CbsresNoConciliados.as_view(), name='noconciliados'),
     
     #*********** Enviar mails *******************
+    path('verBancoHtml', views.verLadoBancoHtml, name='verLadoBancoHtml'),
     path('enviarmail/ladobancohtml', utils.enviarMailLadoBancoHtml, name='enviarMailLadoBancoHtml'),
+    path('verBancopdf', views.verLadoBancoPdf.as_view(), name='verLadoBancoPdf'),
     path('enviarmail/ladobancopdf', utils.enviarMailLadoBancoPdf, name='enviarMailLadoBancoPdf'),
+    path('verErpHtml', views.verLadoErpHtml, name='verLadoErpHtml'),
     path('enviarmail/ladoerphtml', utils.enviarMailLadoErpHtml, name='enviarMailLadoErpHtml'),
+    path('vererppdf', views.verLadoErpPdf.as_view(), name='verLadoBancoPdf'),
     path('enviarmail/ladoerppdf', utils.enviarMailLadoErpPdf, name='enviarMailLadoErpHtml'),
     
     #* Otras Acciones

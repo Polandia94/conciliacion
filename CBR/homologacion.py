@@ -69,7 +69,7 @@ def HomologacionBcoBOD(request, aCbrenc, data, saldobcoanterior):
 #2021-10-29 F.Salgado
                     if dia == "0":
                         continue # va al siguiente registro
-                    if dia == "Día":
+                    if dia == "Día" or dia == "Dia":
                         for wk_columna in range(0, 23):
                             if dataBco.loc[i, dataBco.columns[wk_columna]] == "Oficina":
                                  wk_coloficina = wk_columna

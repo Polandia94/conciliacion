@@ -35,7 +35,7 @@ from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc,
                         Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgale, Cbsres,
                         Cbsresc, Cbsusu, Cbtbco, Cbtcfg,Cbtcfgc, Cbtcli, Cbtcol, Cbtcon, Cbtcta,
                         Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
-                        Cbtusuc, Cbtusue, Cbwres, Cbrencibco, Cbthom)
+                        Cbtusuc, Cbtusue, Cbwres, Cbrenci, Cbthom)
 from .utils import *
 #endregion
 
@@ -478,9 +478,9 @@ class CbrencCreateView(CreateView):
                     try:
                         imgbco = base64.b64encode(open(str(Path(__file__).resolve(
                         ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
-                        aCbrencibco = Cbrencibco(
+                        aCbrenci = Cbrenci(
                             idrenc=self.CbrencNew.idrenc, imgbco=imgbco)
-                        aCbrencibco.save()
+                        aCbrenci.save()
                         time.sleep(2)
                         os.remove(str(Path(__file__).resolve().parent.parent) +
                                 "/media/" + str(self.CbrencNew.archivoimgbco))
@@ -627,10 +627,10 @@ class Uploadimage(CreateView):
             aCbrenc.save()
             imgbco = base64.b64encode(open(str(Path(__file__).resolve(
             ).parent.parent) + "/media/" + str(self.CbrencNew.archivoimgbco), 'rb').read())
-            Cbrencibco.objects.filter(idrenc=request.POST["idrenc"]).delete()
-            aCbrencibco = Cbrencibco(
+            Cbrenci.objects.filter(idrenc=request.POST["idrenc"]).delete()
+            aCbrenci = Cbrenci(
                 idrenc=request.POST["idrenc"], imgbco=imgbco)
-            aCbrencibco.save()
+            aCbrenci.save()
             time.sleep(2)
 
             os.remove(str(Path(__file__).resolve().parent.parent) +
@@ -910,8 +910,8 @@ class CbtctaListView(ListView):
                     item = i.toJSON()
                     if item["empresa"] in diccionario["empresas"] and item["cliente"] in diccionario["cliente"]:
                         item['position'] = position
-                        aCbmbco = Cbmbco.objects.filter(
-                            codbco=item["codbco"]).first()
+                        #aCbmbco = Cbmbco.objects.filter(
+                        #    codbco=item["codbco"]).first()
                         try:
                             item["codbco"] = item["codbco"]
                         except Exception as e:
@@ -1016,7 +1016,7 @@ class CbtctaCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Nueva Cuenta', 'CBF09')
-        context['action'] = 'edit'
+        context['action'] = 'nueva'
         aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
         banco = []
         empresa = []
@@ -1046,6 +1046,7 @@ class CbtctaEditView(CreateView):
         try:
             idtcta = self.request.GET.get('idtcta')
             aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
+            print(aCbtcta.nrocta)
             return {'empresa': aCbtcta.empresa, 'codbco': aCbtcta.codbco, 'idtcta': idtcta, 'nrocta': aCbtcta.nrocta, 'descta': aCbtcta.descta, 'diremail' : aCbtcta.diremail, 'monbasebco': aCbtcta.monbasebco, 'codctaconbco':aCbtcta.codctaconbco, 'ano': aCbtcta.ano, 'mes': aCbtcta.mes, 'saldoinibco': aCbtcta.saldoinibco, 'saldoinierp': aCbtcta.saldoinierp}
         except:
             pass
@@ -1074,7 +1075,9 @@ class CbtctaEditView(CreateView):
             diccionario = clienteYEmpresas(request)
             cliente = diccionario["cliente"]
             idtcta = request.POST['idtcta']
-            empresa = request.POST["empresa"]
+            aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
+            empresa = aCbtcta.empresa
+            codbco = aCbtcta.codbco
             if empresa not in diccionario["empresas"]:
                 data = {}
                 data['error'] = "Empresa no habilitada"
@@ -1092,14 +1095,14 @@ class CbtctaEditView(CreateView):
                     data['error'] = "La empresa debe tener al menos dos dígitos."
                     return JsonResponse(data)
 
-            codbco = request.POST['codbco']
-            nrocta = request.POST['nrocta']
-            descta = request.POST['descta']
-            monbasebco = request.POST['monbasebco']
-            ano = request.POST['ano']
-            mes = request.POST['mes']
-            saldoinibco = request.POST['saldoinibco']
-            saldoinierp = request.POST['saldoinierp']
+            #codbco = request.POST['codbco']
+            #nrocta = request.POST['nrocta']
+            #descta = request.POST['descta']
+            #monbasebco = request.POST['monbasebco']
+            #ano = request.POST['ano']
+            #mes = request.POST['mes']
+            #saldoinibco = request.POST['saldoinibco']
+            #saldoinierp = request.POST['saldoinierp']
             aCbtbco = Cbtbco.objects.filter(
                 cliente=diccionario["cliente"], codbco=codbco).first()
             if aCbtbco == None:
@@ -1117,29 +1120,39 @@ class CbtctaEditView(CreateView):
                 return JsonResponse(data, safe=False)
 
             # CREATE
-            aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
+            
             form = self.get_form()
-            nuevoCbtcon = False
-            if aCbtcta.codctaconbco != request.POST["codctaconbco"] or aCbtcta.descta != request.POST["descta"]:
-                nuevoCbtcon = True
-            aCbtcta.codctaconbco = request.POST["codctaconbco"]
-            aCbtcta.empresa = request.POST["empresa"]
-            aCbtcta.nrocta = request.POST["nrocta"]
-            aCbtcta.codbco = request.POST["codbco"]
+            aCbtcta.diremail = request.POST["diremail"]
             aCbtcta.descta = request.POST["descta"]
-            aCbtcta.monbasebco = request.POST["monbasebco"]
-            aCbtcta.ano = request.POST["ano"]
-            aCbtcta.mes = request.POST["mes"]
-            aCbtcta.saldoinibco = request.POST["saldoinibco"]
-            aCbtcta.saldoinierp = request.POST["saldoinierp"]
-            aCbtcta.fechalt = dt.datetime.now(tz=timezone.utc)
-            aCbtcta.idusualt = request.user.username
-            aCbtcta.save()
-            if nuevoCbtcon:
-                aCbtcon = Cbtcon(codcon=aCbtcta.codctaconbco, descon=aCbtcta.descta, actpas="A")
-                aCbtcon.fechact = dt.datetime.now(tz=timezone.utc)
-                aCbtcon.idusu = request.user.username
-                aCbtcon.save()
+            print("a")
+            if Cbrenc.objects.exclude(estado="3").filter(codbco=aCbtcta.codbco,
+            nrocta=aCbtcta.nrocta,
+            empresa=aCbtcta.empresa,
+            ).exists():
+                print("B")
+                aCbtcta.save()
+            else:
+                print("C")           
+                nuevoCbtcon = False
+                if aCbtcta.codctaconbco != request.POST["codctaconbco"] or aCbtcta.descta != request.POST["descta"]:
+                    nuevoCbtcon = True
+                aCbtcta.codctaconbco = request.POST["codctaconbco"]
+                aCbtcta.empresa = request.POST["empresa"]
+                aCbtcta.nrocta = request.POST["nrocta"]
+                aCbtcta.codbco = request.POST["codbco"]
+                aCbtcta.monbasebco = request.POST["monbasebco"]
+                aCbtcta.ano = request.POST["ano"]
+                aCbtcta.mes = request.POST["mes"]
+                aCbtcta.saldoinibco = request.POST["saldoinibco"]
+                aCbtcta.saldoinierp = request.POST["saldoinierp"]
+                aCbtcta.fechalt = dt.datetime.now(tz=timezone.utc)
+                aCbtcta.idusualt = request.user.username
+                aCbtcta.save()
+                if nuevoCbtcon:
+                    aCbtcon = Cbtcon(codcon=aCbtcta.codctaconbco, descon=aCbtcta.descta, actpas="A")
+                    aCbtcon.fechact = dt.datetime.now(tz=timezone.utc)
+                    aCbtcon.idusu = request.user.username
+                    aCbtcon.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
@@ -1175,6 +1188,21 @@ class CbtctaEditView(CreateView):
         aCbtcta = Cbtcta.objects.get(idtcta=self.request.GET.get('idtcta'))
         context["empresa"] = aCbtcta.empresa
         context["banco"] = aCbtcta.codbco
+        context["nrocta"] = aCbtcta.nrocta
+        context["monbasebco"] = aCbtcta.monbasebco
+        print(aCbtcta.codctaconbco)
+        context["codctaconbco"] = aCbtcta.codctaconbco
+        context["ano"] = aCbtcta.ano
+        context["mes"] = aCbtcta.mes
+        context["saldoinierp"] = aCbtcta.saldoinierp
+        context["saldoinibco"] = aCbtcta.saldoinibco
+        if Cbrenc.objects.exclude(estado="3").filter(codbco=aCbtcta.codbco,
+            nrocta=aCbtcta.nrocta,
+            empresa=aCbtcta.empresa,
+            ).exists():
+            context['modificable'] = False
+        else:
+            context['modificable'] = True
         return context
 
 
@@ -2537,8 +2565,22 @@ class CbsresNoConciliados(ListView):
             context['return_url'] =  "/cbttco/?idrenc=" + str(idrenca)
         elif self.request.GET["return"] == 'cbsres':
             context['return_url'] =  "/cbsres/?idrenc=" + str(idrenca)
+        elif self.request.GET["return"] == 'cbsresview':
+            context['return_url'] =  "/cbsresview/?idrenc=" + str(idrenca)
         # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         return context
+
+def verLadoBancoHtml(request):
+    idrenc = request.GET.get("idrenc")
+    send_to, context = CreateContextNoConciliadosBancoHtml(request, idrenc)
+    return render(request,'utils/paradescargarbanco.html', context)
+
+def verLadoErpHtml(request):
+    idrenc = request.GET.get("idrenc")
+    
+    send_to, context = CreateContextNoConciliadosErpHtml(request, idrenc)
+    print(context)
+    return render(request,'utils/paradescargarerp.html', context)
 #************************* DETALLES *************************#
 
 class CbrerpdDetailView(UpdateView):
@@ -2602,7 +2644,7 @@ class DescargarArchivoView(View):
             idrbcoe = request.GET.get('idrbcoe')
             if idrbcoe is not None:
                 aCbrbcoe = Cbrbcoe.objects.get(idrbcoe=idrbcoe)
-                imgbco = Cbrencibco.objects.filter(idrenc=aCbrbcoe.idrenc.idrenc).first().imgbco
+                imgbco = Cbrenci.objects.filter(idrenc=aCbrbcoe.idrenc.idrenc).first().imgbco
                 try:
                     os.remove(str(Path(__file__).resolve().parent.parent) +
                             "/media/" + 'temp/imagen.pdf')
@@ -2641,6 +2683,28 @@ class DescargarArchivoView(View):
         #    response['Content-Disposition'] = 'inline; filename=' + \
         #        'imagenerp.pdf'
         #    return response
+
+class verLadoBancoPdf(View):
+    def get(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            crearPdfBanco(self.request)
+            wrapper = FileWrapper(open(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf", 'rb'))
+            response = HttpResponse(wrapper, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename=' + \
+                'imagenbanco.pdf'
+            return response
+
+
+class verLadoErpPdf(View):
+    def get(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            crearPdferp(self.request)
+            wrapper = FileWrapper(open(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf", 'rb'))
+            response = HttpResponse(wrapper, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename=' + \
+                'imagenbanco.pdf'
+            return response
+
 
 #************************* CERRAR PESTAÑA *************************#
 

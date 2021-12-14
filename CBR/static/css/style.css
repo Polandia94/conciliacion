@@ -249,6 +249,14 @@ input {
 
 
 .label-cbf02 {
+    margin-right: 0%;
+    margin-left: 0%;
     width:160px;
+    float:right;
+  }
+.label-cbf02-cuenta {
+    margin-right: 0%;
+    margin-left: 0%;
+    width:280px;
     float:right;
   }

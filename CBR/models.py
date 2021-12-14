@@ -484,14 +484,14 @@ class Cbrenc(models.Model):
 #        db_table = 'cbrencierp'
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
-class Cbrencibco(models.Model):
-    idrencibco = models.AutoField(verbose_name='id', db_column='idrencibco', primary_key=True)
+class Cbrenci(models.Model):
+    idrenci = models.AutoField(verbose_name='id', db_column='idrenci', primary_key=True)
     idrenc = models.IntegerField(verbose_name='idrenc', db_column='idrenc')
     imgbco = models.BinaryField( verbose_name='Imagen de banco', db_column = "imgbco", editable=True, null=True)
     archivotipo = models.CharField(verbose_name='Tipo de Archivo', db_column = "archivotipo", default="PDF", max_length=4)
     class Meta:
         managed = True
-        db_table = 'cbrencibco'
+        db_table = 'cbrenci'
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
 
@@ -949,11 +949,11 @@ class Cbtcam(models.Model):
     nrocol = models.SmallIntegerField(verbose_name='Numero de columna',db_column='nrocol')
     descampo = models.CharField(verbose_name='Descripcion del campo', db_column='descampo', max_length=50)
     indcampo = models.SmallIntegerField(verbose_name='Indicador de donde se leerá el dato',db_column='indcampo')
-    cbscampo = models.CharField(verbose_name='Campo en el cbsres donde se cargara en el erp', db_column='cbscampo', max_length=16)
+    cbscampo = models.CharField(verbose_name='Campo en el cbsres de donde se cargara en el erp', db_column='cbscampo', max_length=16)
     cbdcampo = models.CharField(verbose_name='Campo en el cbf25 donde se cargara en el erp', db_column='cbfcampo', max_length=16)
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
-    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
-    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de archivo', db_column='idusu', max_length=16 )
     
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs )
@@ -977,8 +977,8 @@ class Cbtcon(models.Model):
     codcon = models.CharField(verbose_name='Codigo de cuenta contable', db_column='codcon', max_length=15)
     descon = models.CharField(verbose_name='Descripcion de cuenta contable', db_column='descon', max_length=50)
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
-    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
-    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    fechact = models.DateTimeField(verbose_name='Fecha y Hora de Actualizacion', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de Actualizacion', db_column='idusu', max_length=16 )
     
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs )
@@ -1000,12 +1000,13 @@ class Cbtcon(models.Model):
 class Cbtcoye(models.Model):
     idtcoye = models.AutoField(db_column='idtcon', primary_key=True)
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+    # Es el numero de columna de cbtcam
     nrocol = models.SmallIntegerField(verbose_name='Numero de columna',db_column='nrocol')
     codcampo = models.SmallIntegerField(verbose_name='Codigo del campo',db_column='codcampo')
     descampo = models.CharField(verbose_name='Descripcion del campo', db_column='descampo', max_length=50)
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
-    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
-    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    fechact = models.DateTimeField(verbose_name='Fecha y Hora de Actualizacion', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de actualizacion', db_column='idusu', max_length=16 )
     
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs )
@@ -1032,8 +1033,8 @@ class Cbtcoyd(models.Model):
     codval = models.TextField(verbose_name='Codigo de Valor', db_column='codval')
     desval = models.TextField(verbose_name='Descripcion de Valor', db_column='desval')
     actpas = models.CharField(verbose_name='Activo o Pasivo', db_column='actpas', max_length=1)
-    fechact = models.DateTimeField(verbose_name='Fecha de carga Banco', db_column='fechact')
-    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16 )
+    fechact = models.DateTimeField(verbose_name='Fecha y Hora de Actualizacion', db_column='fechact')
+    idusu = models.CharField( verbose_name='Usuario de Actualizacion', db_column='idusu', max_length=16 )
     
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs )
