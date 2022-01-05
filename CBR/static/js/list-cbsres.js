@@ -467,7 +467,15 @@ $.ajax({
                     for (let fila = 0; fila < table.rows().count(); fila++) {
                         if(table.row(fila).data()["primerRegistro"] == true){
                             primerRegistro = true
+                            console.log(table.row(fila).data()["idsres"])
                         }
+                        if(primerRegistro == false){
+                            var rows = table.row(fila)
+                            let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
+                            datasend.push(agregar)
+                        }
+
+                        
                         if(primerRegistro == true ){
                             let totalmasdebe = parseFloat(0)
                             let totalmashaber = parseFloat(0)

@@ -394,7 +394,7 @@ def conciliarSaldos(request):
                         print("POR ACA NO")
                         
                         for element in bcoDataSetAnterior:
-                            if Cbttco.objects.filter(codtco=element.codtcobco, erpbco=2, indpend=0).exists() == False:
+                            if Cbttco.objects.filter(codtco=element.codtcobco,indtco=2, indpend=0).exists() == False:
                                 aUnir = Object()
                                 aUnir.idrbcod= element.idrbcod
                                 aUnir.fechatra=element.fechatrabco
@@ -421,7 +421,7 @@ def conciliarSaldos(request):
                         erpDataSet = list(Cbrerpd.objects.filter(
                             idrerpe=aCbrerpe.idrerpe).order_by('fechatra','idrerpd'))
                         for element in erpDataSetAnterior:
-                            if Cbttco.objects.filter(codtco=element.codtcoerp, erpbco=1, indpend=0).exists()==False:
+                            if Cbttco.objects.filter(codtco=element.codtcoerp, indtco=1, indpend=0).exists()==False:
                                 aUnir = Object()
                                 aUnir.idrerpd = element.idrerpd
                                 aUnir.nrotra = element.nrotraerp
@@ -756,7 +756,9 @@ def conciliarBancoFechaPosterior(idrenc):
 
 def Unir(vwRow, insCbsres, idrenc, color):
     # sistema que une el cbsres con banco cargado con un registro del cbrerpd
-
+    insCbsres.idrenc=Cbrenc.objects.get(idrenc=idrenc)
+    insCbsres.cliente=Cbrenc.objects.get(idrenc=idrenc).cliente
+    insCbsres.empresa=Cbrenc.objects.get(idrenc=idrenc).empresa
     insCbsres.idrerpd = vwRow.idrerpd
 
     insCbsres.saldoerp = vwRow.saldo
@@ -842,7 +844,8 @@ def editCbwres(request):
                 aCbwsres.idrerpdl = int(0)
             try:
                 aCbwsres.codtcobco = fila["codtcobco"]
-            except:
+            except Exception as e:
+                print(e)
                 aCbwsres.codtcobco = ""
             try:
                 aCbwsres.codtcoerp = fila["codtcoerp"]
@@ -850,7 +853,8 @@ def editCbwres(request):
                 aCbwsres.codtcoerp = ""
                 
 
-
+            print("A")
+            #print(fila["codtcobco"])
             aCbwsres.estadobco = fila["estadobco"]
             aCbwsres.estadoerp = fila["estadoerp"]
             
@@ -863,6 +867,7 @@ def editCbwres(request):
             tabla = tabla[comienzo+10:]
         return HttpResponse("")
     except Exception as e:
+        print("ACA")
         print(e)
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
@@ -928,13 +933,14 @@ def getanomes(request):
     empresa = request.GET.get('empresa')
     codbco = request.GET.get('banco')
     nrocta = request.GET.get('cuenta')
+    cliente = clienteYEmpresas(request)["cliente"]
     try:
         maxAno = Cbrenc.objects.exclude(estado="3").filter(empresa=empresa,
-            codbco=codbco, nrocta=nrocta).aggregate(Max('ano'))
+            codbco=codbco, nrocta=nrocta, cliente=cliente).aggregate(Max('ano'))
         maxAno = maxAno['ano__max']
         if maxAno is None:
             aCbtcta = Cbtcta.objects.filter(empresa=empresa,
-                codbco=codbco, nrocta=nrocta).first()
+                codbco=codbco, nrocta=nrocta, cliente=cliente).first()
             if aCbtcta is None:
                 data = {'ano': 0, 'mes': 0}
             maxAno = aCbtcta.ano
@@ -944,7 +950,7 @@ def getanomes(request):
             else:
                 data = {'ano': maxAno + 1, 'mes': 1}
         else:
-            maxMes = Cbrenc.objects.exclude(estado="3").filter(empresa=empresa, codbco=codbco, nrocta=nrocta, ano=maxAno).aggregate(
+            maxMes = Cbrenc.objects.exclude(estado="3").filter(empresa=empresa, codbco=codbco, nrocta=nrocta, ano=maxAno, cliente=cliente).aggregate(
                 Max('mes'))
             maxMes = maxMes['mes__max']
             if maxMes < 12:
@@ -1026,30 +1032,17 @@ def getTiposDeConciliacion(request, idrenc):
     yaTomadas = []
     n = 0
     m = 0
-    # calcula que codigos suman a cada lado
-    listadoSumaDebeBco = []
-    listadoSumaHaberBco = []
-    listadoSumaDebeErp = []
-    listadoSumaHaberErp = []
-    listadoRestaErp = []
-    listadoRestaBco = []
+    # calcula
+    listadoSumaDebe = []
+    listadoSumaHaber = []
     for tipo in Cbttco.objects.all():
         if tipo.indsuma == 1:
-            if tipo.erpbco == 1:
-                if tipo.inddebhab == "H":
-                    listadoSumaDebeBco.append(tipo.codtco)
-                elif tipo.inddebhab == "D":
-                    listadoSumaHaberBco.append(tipo.codtco)
-            elif tipo.erpbco == 2:
-                if tipo.inddebhab == "H":
-                    listadoSumaDebeErp.append(tipo.codtco)
-                elif tipo.inddebhab == "D":
-                    listadoSumaHaberErp.append(tipo.codtco)
-        else:
-            if tipo.erpbco == 1:
-                    listadoRestaErp.append(tipo.codtco)
-            elif tipo.erpbco == 2:
-                    listadoRestaBco.append(tipo.codtco)
+            if tipo.inddebhab == "H":
+                listadoSumaDebe.append(tipo.codtco)
+            elif tipo.inddebhab == "D":
+                listadoSumaHaber.append(tipo.codtco)
+
+
             
 
     
@@ -1059,6 +1052,8 @@ def getTiposDeConciliacion(request, idrenc):
     data["listado"] = []
 
     # calcula primero las del cbwres y si no existen las del cbsres
+    primerRegistroBanco = False
+    primerRegistroErp =False
     primerRegistro = False
     aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
     sumaBco = 0
@@ -1067,134 +1062,84 @@ def getTiposDeConciliacion(request, idrenc):
         registroAnalizado = Cbwres.objects.filter(idsres=registro.idsres).first()
         if registroAnalizado is None:
             registroAnalizado = registro
+        if data["puedeCerrar"]==1:
+            if registroAnalizado.estadobco == 0 and registroAnalizado.fechatrabco is not None and registroAnalizado.codtcobco == "":
+                data["puedeCerrar"]=0
+            if registroAnalizado.estadoerp == 0  and registroAnalizado.fechatraerp is not None and registroAnalizado.codtcoerp =="":
+                data["puedeCerrar"]=0
+            if (registroAnalizado.historial == 2 or registroAnalizado.historial ==4) and registroAnalizado.codtcoerp =="":
+                data["puedeCerrar"]=0
+        if primerRegistroBanco == False:
+            try:
+                fecha = registroAnalizado.fechatrabco
+                saldoinicialbco=registroAnalizado.saldoacumesbco+registroAnalizado.debebco-registroAnalizado.haberbco
+                primerRegistroBanco = True
+            except:
+                pass
+        if primerRegistroErp ==False:
+            try:
+                saldoinicialerp=registroAnalizado.saldoacumeserp+registroAnalizado.habererp-registroAnalizado.debeerp
+                primerRegistroErp = True
+            except:
+                pass
         if primerRegistro == False:
-            fecha = registroAnalizado.fechatrabco
             if fecha == None:
                 fecha = registroAnalizado.fechatraerp
             if fecha.year == aCbrenc.ano and fecha.month == aCbrenc.mes:
                 primerRegistro = True
         if primerRegistro:
-            if data["puedeCerrar"] ==1:
-                if (registroAnalizado.estadoerp!=1 and registroAnalizado.fechatraerp is not None and registroAnalizado.codtcoerp == "")or(registroAnalizado.estadobco!=1 and registroAnalizado.fechatrabco is not None and registroAnalizado.codtcobco == ""):
-                    data["puedeCerrar"] = 0
-            if registroAnalizado.estadoerp==1 or (registroAnalizado.codtcoerp != "" and registroAnalizado.codtcoerp is not None and registroAnalizado.codtcoerp not in listadoRestaErp): 
-                
+            try:
+                data["debeerptotal"] = registroAnalizado.debeerp + \
+                    data["debeerptotal"]
+            except:
+                pass
+            try:
+                data["habererptotal"] = registroAnalizado.habererp + \
+                    data["habererptotal"]
+            except:
+                pass
+            if registroAnalizado.codtcoerp in listadoSumaDebe:
                 try:
-                    data["debeerptotal"] = registroAnalizado.debeerp + \
-                        data["debeerptotal"]
-                except:
-                    pass
-                try:
-                    data["habererptotal"] = registroAnalizado.habererp + \
-                        data["habererptotal"]
-                except:
-                    pass
-            else:
-                try:
-                    sumaErp = sumaErp - registroAnalizado.debeerp
-                except:
-                    pass
-                try:
-                    sumaErp = sumaErp + registroAnalizado.habererp
-                except:
-                    pass
-            if registroAnalizado.estadobco==1 or (registroAnalizado.codtcobco != "" and registroAnalizado.codtcobco is not None and registroAnalizado.codtcobco not in listadoRestaBco): 
-                try:
-                    data["debebcototal"] = registroAnalizado.debebco + \
+                    data["debebcototal"] = registroAnalizado.habererp + \
                         data["debebcototal"]
                 except:
                     pass
+            elif registroAnalizado.codtcoerp in listadoSumaHaber:
                 try:
-
-                    data["haberbcototal"] = registroAnalizado.haberbco + \
+                    data["haberbcototal"] = registroAnalizado.debeerp + \
                         data["haberbcototal"]
-                
-                except Exception as e:
-                    print(e)
-            else:
-                try:
-                    sumaBco = sumaBco + registroAnalizado.debebco
-                except Exception as e:
-                    pass
-                try:
-
-                    sumaBco = sumaBco  - registroAnalizado.haberbco 
-                except Exception as e:
+                except:
                     pass
             try:
-                data["saldobcototal"] = registroAnalizado.saldoacumesbco + sumaBco
-            except:
-                pass
-            try:
-                if data["saldoerptotal"] is not None:
-                    data["saldoerptotal"] = registroAnalizado.saldoacumeserp + sumaErp
-            except:
-                pass
-        if registroAnalizado.codtcobco in listadoSumaDebeErp:
-            try:
-                data["debeerptotal"] = registroAnalizado.haberbco + \
-                    data["debeerptotal"]
-                data[str(registroAnalizado.idsres)] = [registroAnalizado.codtcobco, "", 0, 0,
-                                                       registroAnalizado.haberbco, 0, registroAnalizado.saldoacumesbco, registroAnalizado.saldoacumeserp]
-                data["listado"].append(registroAnalizado.idsres)
-                saldoextraerp = saldoextraerp + registroAnalizado.haberbco
-            except Exception as e:
-                pass
-        elif registroAnalizado.codtcobco in listadoSumaHaberErp:
-            try:
-                data["habererptotal"] = registroAnalizado.debebco + \
-                    data["habererptotal"]
-                data["listado"].append(registroAnalizado.idsres)
-                data[str(registroAnalizado.idsres)] = [registroAnalizado.codtcobco, "", 0, 0, 0,
-                                                       registroAnalizado.debebco, registroAnalizado.saldoacumesbco, registroAnalizado.saldoacumeserp]
-                saldoextraerp = saldoextraerp - registroAnalizado.debebco
-            except Exception as e:
-                pass
-        if registroAnalizado.codtcoerp in listadoSumaDebeBco:
-            try:
-                data["debebcototal"] = registroAnalizado.habererp + \
+                data["debebcototal"] = registroAnalizado.debebco + \
                     data["debebcototal"]
-                data["listado"].append(registroAnalizado.idsres)
-                try:
-                    data[str(registroAnalizado.idsres)
-                         ][1] = registroAnalizado.codtcoerp
-                    data[str(registroAnalizado.idsres)
-                         ][2] = registroAnalizado.habererp
-                    data[str(registroAnalizado.idsres)
-                         ][6] = registroAnalizado.saldoacumesbco
-                    data[str(registroAnalizado.idsres)
-                         ][7] = registroAnalizado.saldoacumeserp
-                except:
-                    data[str(registroAnalizado.idsres)] = ["", registroAnalizado.codtcoerp, registroAnalizado.habererp,
-                                                           0, 0, 0, registroAnalizado.saldoacumesbco, registroAnalizado.saldoacumeserp]
-                saldoextrabco = saldoextrabco + registroAnalizado.habererp
             except:
                 pass
-        elif registroAnalizado.codtcoerp in listadoSumaHaberBco:
             try:
-                data["haberbcototal"] = registroAnalizado.debeerp + \
+                data["haberbcototal"] = registroAnalizado.haberbco + \
                     data["haberbcototal"]
-                data["listado"].append(registroAnalizado.idsres)
-                try:
-                    data[str(registroAnalizado.idsres)
-                         ][1] = registroAnalizado.codtcoerp
-                    data[str(registroAnalizado.idsres)
-                         ][3] = registroAnalizado.debeerp
-                    data[str(registroAnalizado.idsres)
-                         ][6] = registroAnalizado.saldoacumesbco
-                    data[str(registroAnalizado.idsres)
-                         ][7] = registroAnalizado.saldoacumeserp
-                except:
-                    data[str(registroAnalizado.idsres)] = ["", registroAnalizado.codtcoerp, 0, registroAnalizado.debeerp,
-                                                           0, 0, registroAnalizado.saldoacumesbco, registroAnalizado.saldoacumeserp]
-                saldoextrabco = saldoextrabco + registroAnalizado.debeerp
-            except Exception as e:
+            except:
                 pass
+            if registroAnalizado.codtcobco in listadoSumaDebe:
+                try:
+                    data["debeerptotal"] = registroAnalizado.haberbco + \
+                        data["debeerptotal"]
+                except:
+                    pass
+            elif registroAnalizado.codtcobco in listadoSumaHaber:
+                try:
+                    data["habererptotal"] = registroAnalizado.debebco + \
+                        data["habererptotal"]
+                except:
+                    pass
     try:
-        data["saldobcototal"] = data["saldobcototal"] + saldoextrabco
+        data["saldobcototal"] = data["haberbcototal"] - data["debebcototal"] + saldoinicialbco
     except:
-        data["saldobcototal"] = saldoextrabco
-    data["saldoerptotal"] = data["saldoerptotal"] + saldoextraerp
+        data["saldobcototal"] = data["haberbcototal"] - data["debebcototal"]
+    try:
+        data["saldoerptotal"] = data["debeerptotal"] - data["habererptotal"] + saldoinicialerp
+    except:
+        data["saldoerptotal"] = data["debeerptotal"] - data["habererptotal"]
     data["saldodiferenciatotal"] = data["saldobcototal"] - data["saldoerptotal"]
 
 
@@ -1413,7 +1358,7 @@ def verificarCarga(request):
     nrocta = aCbrenc.nrocta
     empresa = aCbrenc.empresa
     codbco = aCbrenc.codbco
-    # verifica que el registro anterior sea del mes y año correspondiente(o del siguiente a cbttca)
+    # verifica que el registro anterior sea del mes y ao correspondiente(o del siguiente a cbttca)
     if mes == 1:
         mesanterior = 12
         anoanterior = int(ano)-1
@@ -1519,7 +1464,7 @@ def calcularTotales(request, context):
         n = 0
         indtco_erp = ""
         moneda = context["moneda"]
-        for i in Cbttco.objects.filter(indtco="1").all():
+        for i in Cbttco.objects.filter(indtco="1").order_by('codtco'):
             if n > 0:
                 indtco_erp = indtco_erp + ","
             indtco_erp = indtco_erp + i.codtco
@@ -1528,14 +1473,14 @@ def calcularTotales(request, context):
         indtco_bco = ""
         n = 0
         n = 0
-        for i in Cbttco.objects.filter(indtco="2").all():
+        for i in Cbttco.objects.filter(indtco="2").order_by('codtco'):
             if n > 0:
                 indtco_bco = indtco_bco + ","
             indtco_bco = indtco_bco + i.codtco
             n = n+1
         alertaa = ""
         n = 0
-        for i in Cbttco.objects.filter(indtco="1").all():
+        for i in Cbttco.objects.filter(indtco="1").order_by('codtco'):
             if n > 0:
                 alertaa = alertaa + "\\n"
             alertaa = alertaa + i.codtco + " : " + i.destco
@@ -1543,7 +1488,7 @@ def calcularTotales(request, context):
         context['alertaa'] = alertaa
         alertab = ""
         n = 0
-        for i in Cbttco.objects.filter(indtco="2").all():
+        for i in Cbttco.objects.filter(indtco="2").order_by('codtco'):
             if n > 0:
                 alertab = alertab + "\\n"
             alertab = alertab + i.codtco + " : " + i.destco
@@ -1551,7 +1496,7 @@ def calcularTotales(request, context):
         context['alertab'] = alertab
         alertac = ""
         n = 0
-        for i in Cbttco.objects.filter().all():
+        for i in Cbttco.objects.filter().order_by('codtco'):
             if n > 0:
                 alertac = alertac + "\\n"
             alertac = alertac + i.codtco + " : " + i.destco
@@ -1862,7 +1807,7 @@ def enviarMailLadoBancoHtml(request):
         idrenc = request.POST.get("idrenc")
         send_to, context = CreateContextNoConciliadosBancoHtml(request, idrenc)
         content = render_to_string('utils/paradescargarbanco.html', context)
-        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html", 'w') as f:
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html", 'w', encoding='utf-8') as f:
             f.write(content)
         send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html"])
         data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
@@ -1887,6 +1832,7 @@ def CreateContextNoConciliadosBancoHtml(request, idrenc):
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
+    context["cuenta"] = aCbtcta.nrocta
     context["descta"] = aCbtcta.descta
     context["ano"] = aCbrenc.ano
     context["mes"] = aCbrenc.mes
@@ -1944,6 +1890,7 @@ def crearPdfBanco(request):
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
+    context["cuenta"] = aCbtcta.nrocta
     context["descta"] = aCbtcta.descta
     context["ano"] = aCbrenc.ano
     context["mes"] = aCbrenc.mes
@@ -1994,7 +1941,7 @@ def enviarMailLadoErpHtml(request):
         idrenc = request.POST.get("idrenc")
         send_to, context = CreateContextNoConciliadosErpHtml(request, idrenc)
         content = render_to_string('utils/paradescargarerp.html', context)
-        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html", 'w') as f:
+        with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html", 'w', encoding='utf-8') as f:
             f.write(content)
         send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html"])
         data["info"]="Lado Erp de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
@@ -2018,6 +1965,7 @@ def CreateContextNoConciliadosErpHtml(request, idrenc):
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
+    context["cuenta"] = aCbtcta.nrocta
     context["descta"] = aCbtcta.descta
     context["ano"] = aCbrenc.ano
     context["mes"] = aCbrenc.mes
@@ -2059,6 +2007,9 @@ def enviarMailLadoErpPdf(request):
 def crearPdferp(request):
     data={}
     idrenc = request.POST.get("idrenc")
+    if idrenc == None:
+        idrenc = request.GET.get("idrenc")
+
     context = {}
     aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
     aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
@@ -2072,6 +2023,7 @@ def crearPdferp(request):
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
+    context["cuenta"] = aCbtcta.nrocta
     context["descta"] = aCbtcta.descta
     context["ano"] = aCbrenc.ano
     context["mes"] = aCbrenc.mes
@@ -2118,36 +2070,41 @@ def crearPdferp(request):
 
 def send_mail(send_to,lado, files=None):
     #assert isinstance(send_to, list)
-    text = "Se envía el listado de registros no conciliados del " + lado
-    msg = MIMEMultipart()
-    msg['From'] = config["MAIL_SENDER"]
-    msg['To'] = send_to
-    msg['Date'] = formatdate(localtime=True)
-    msg['Subject'] = "Registros No Conciliados del " + lado
+    try:
+        text = "Se envía el listado de registros no conciliados del " + lado
+        msg = MIMEMultipart()
+        print(config)
+        msg['From'] = 'vadiasys.cb.noreply@gmail.com'
+        msg['To'] = send_to
+        msg['Date'] = formatdate(localtime=True)
+        msg['Subject'] = "Registros No Conciliados del " + lado
 
-    msg.attach(MIMEText(text))
+        msg.attach(MIMEText(text))
 
-    for f in files or []:
-        with open(f, "rb") as fil:
-            part = MIMEApplication(
-                fil.read(),
-                Name=basename(f)
-            )
+        for f in files or []:
+            with open(f, "rb") as fil:
+                part = MIMEApplication(
+                    fil.read(),
+                    Name=basename(f)
+                )
          # After the file is closed
-        part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
-        msg.attach(part)
-        
-    smtp = smtplib.SMTP()
-    smtp.connect(config["SMTP_SERVER"])
-    print("aqui")
-    #smtp.starttls()
-    smtp.login(config["SMTP_USER"], config["SMTP_PASSWORD"])
-    print("b")
-    smtp.sendmail(config["MAIL_SENDER"], send_to, msg.as_string())
-    print("c")
-    smtp.quit()
-    smtp.close()
-    print("d")
+            part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
+            msg.attach(part)  
+        smtp = smtplib.SMTP()
+        smtp.connect('127.0.0.1')
+        print("aqui")
+        #smtp.starttls()
+        #smtp.login(config["SMTP_USER"], config["SMTP_PASSWORD"])
+        print("b")
+        smtp.sendmail('vadiasys.cb.noreply@gmail.com', send_to, msg.as_string())
+        print("c")
+        smtp.quit()
+        smtp.close()
+        print("d")
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        print(e)
 
 def getMailEmpresa(request):
     data = {}

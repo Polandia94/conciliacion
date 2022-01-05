@@ -394,7 +394,7 @@ class CbrencCreateView(CreateView):
                     if Cbtcta.objects.filter(codbco=codbco, nrocta=nrocta, empresa=empresa).exists():
                         aCbtcta = Cbtcta.objects.filter(
                             codbco=codbco, nrocta=nrocta, empresa=empresa).first()
-                        if (int(aCbtcta.ano) == int(ano) and int(aCbtcta.mes) == int(mes)-1) or (int(aCbtcta.ano) == int(ano)-1 and int(aCbtcta.mes) == 12 and int(mes == 1)):
+                        if (int(aCbtcta.ano) == int(ano) and int(aCbtcta.mes) == int(mes)-1) or (int(aCbtcta.ano) == int(ano)-1 and int(aCbtcta.mes) == 12 and int(mes) == 1):
                             saldobcoanterior = aCbtcta.saldoinibco
                             saldoerpanterior = aCbtcta.saldoinierp
                         else:
@@ -1999,6 +1999,11 @@ class CbtempCreateView(CreateView):
     success_url = reverse_lazy('CBR:cbtemp-list')
     url_redirect = success_url
 
+    def get_initial(self):
+        cliente = clienteYEmpresas(self.request)["cliente"]
+        aCbtcli = Cbtcli.objects.get(cliente=cliente)
+        return{"diremail":aCbtcli.diremail}
+
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if chequearNoDobleConexion(request):
@@ -2016,6 +2021,7 @@ class CbtempCreateView(CreateView):
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
                 codhomerp = request.POST["codhomerp"]
+                diremail = request.POST["diremail"]
                 if codhomerp == Cbtcli.objects.get(cliente=diccionario["cliente"]).codhomerp:
                     codhomerp = ""
                 try:
@@ -2056,7 +2062,7 @@ class CbtempCreateView(CreateView):
                 aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtusue.save()
                 # CREATE
-                aCbtemp = Cbtemp(empresa=empresa, desemp=desemp, actpas=actpas, codhomerp=codhomerp)
+                aCbtemp = Cbtemp(empresa=empresa, desemp=desemp, actpas=actpas, codhomerp=codhomerp, diremail=diremail)
                 aCbtemp.fechact = dt.datetime.now(tz=timezone.utc)
                 aCbtemp.idusu = request.user.username
                 aCbtemp.cliente = diccionario["cliente"]
@@ -2096,7 +2102,7 @@ class CbtempEditView(CreateView):
             idtemp = self.request.GET.get('idtemp')
             aCbtemp = Cbtemp.objects.filter(idtemp=idtemp).first()
             actpas = aCbtemp.actpas == "A"
-            return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas, 'codhomerp' : aCbtemp.codhomerp}
+            return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas, 'codhomerp' : aCbtemp.codhomerp, 'diremail' : aCbtemp.diremail}
         except Exception as e:
             print(e)
 
@@ -2125,6 +2131,8 @@ class CbtempEditView(CreateView):
                 empresa = request.POST["empresa"]
                 desemp = request.POST["desemp"]
                 codhomerp = request.POST["codhomerp"]
+                diremail = request.POST["diremail"]
+
                 if codhomerp == Cbtcli.objects.get(cliente=diccionario["cliente"]).codhomerp:
                     codhomerp = ""
                 try:
@@ -2168,7 +2176,7 @@ class CbtempEditView(CreateView):
                 aCbtusue.save()
                 # CREATE
                 
-                
+                aCbtemp.diremail = diremail
                 aCbtemp.empresa = empresa
                 aCbtemp.desemp = desemp
                 aCbtemp.actpas = actpas

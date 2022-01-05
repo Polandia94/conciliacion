@@ -478,7 +478,7 @@ table.dataTable tbody>tr.selected,table.dataTable tbody>tr>.selected{background-
             <nav class="navbar navbar-expand navbar-secondary navbar-light">
                 <!-- Left navbar links -->
                 <ul class="navbar-nav">
-                    <img src="http://127.0.0.1:8000/static/img/logo.ico" class="imgMenu">
+                    
                     
                     <li class="nav-item mr-4">
                         {{descli}}
@@ -490,7 +490,8 @@ table.dataTable tbody>tr.selected,table.dataTable tbody>tr>.selected{background-
 
                     <li class="nav-item">
                         <li class="nav-item mr-4">
-                            Movimiento de Banco no conciliado  Emitido el {{fechaDeEmision}}
+                            
+                           
                         </li>
                         <li>
                             
@@ -511,23 +512,21 @@ table.dataTable tbody>tr.selected,table.dataTable tbody>tr>.selected{background-
         
                             <div class="card card-primary m-3">
                                 <div class="card-header">
-                                    <h3 class="card-title">
+                                    <h3 class="card-title ">
                                         <i class="fas fa-search"></i>
-                                        Movimientos Banco No Conciliados
+                                        Movimientos de Banco No Conciliados
                                         
                                     </h3>
                                    
-                                    <small class="card-title float-md-right">CBF24l1</small>
+                                    <small class="card-title float-md-right">CBF24l1 Pg : {{pagina}}</small>
                                 </div>
                                 <div id="botones" class="card-body ml-1 mr-1">
+                                    <div style="float:right;">Emitido el {{fechaDeEmision}}</div>
                                     <div>Empresa : {{desemp}}</div>
-                                    <div style="z-index: 10;  
-                                    position: absolute;  
-                                    right: 1%;  
-                                    top: 2%;">Pagina : {{pagina}}</div>
+                                    
                                     <div>Banco: {{desbco}}</div>
-                                    <div>Cuenta: {{descta}}</div>
-                                    <div>Mes-Año: {{mes}}/{{ano}}</div>
+                                    <div>Cuenta: {{cuenta}}-{{descta}}</div>
+                                    <div>Mes/Año: {{mes}}/{{ano}}</div>
                                 </div>
                                     <table class="stripe nowrap table table-responsive-lg table-bordered table-hover dataTable no-footer dtr-inline  {{tabla}}" id="data" role="grid">
                                         <thead>

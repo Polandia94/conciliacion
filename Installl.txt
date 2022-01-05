@@ -34,6 +34,10 @@ crear archivo .env con:
     USUARIO_POSTGRES = 
     PASSWORD_POSTGRES = 
 
+sudo apt install exim4-daemon-light
+dpkg-reconfigure exim4-config
+Seleccionar enviar desde smarthost, 
+
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser

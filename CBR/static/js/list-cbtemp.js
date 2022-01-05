@@ -34,6 +34,7 @@ $(function () {
                     return data
                 }
             }},
+            {"data": "diremail"},
             {"data": "actpas", "render": function (data, type, full, meta) {
                 if (data == "A"){
                     return "Activo"
@@ -53,11 +54,11 @@ $(function () {
                 visible: false
             },
             {
-                targets: [2,3,4,5,6],
+                targets: [2,3,4,5,6,7],
                 class: 'text-center pt-4',
             },
             {
-                targets : [7],
+                targets : [8],
                 render: function (data, type, row) {
                     var $elDiv = $('<div></div>');
                     $elDiv.append('<div></div>');

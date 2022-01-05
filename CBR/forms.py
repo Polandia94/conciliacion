@@ -323,7 +323,7 @@ class CbtempForm( ModelForm ):
 
     class Meta:
         model = Cbtemp
-        fields = ['empresa', 'desemp','actpas', 'codhomerp']
+        fields = ['empresa', 'desemp','actpas', 'codhomerp', 'diremail']
         # fields = '__all__'
         widgets = {
             'empresa': TextInput(
@@ -336,6 +336,10 @@ class CbtempForm( ModelForm ):
             ),
             'codhomerp': TextInput(
                 attrs = { 'placeholder': 'Código',
+                          'class': 'form-control'}
+            ),
+            'diremail': EmailInput(
+                attrs = { 'placeholder': 'Direccion de Mail',
                           'class': 'form-control'}
             ),
             'actpas': CheckboxInput(

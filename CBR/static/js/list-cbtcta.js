@@ -45,7 +45,7 @@ $(function () {
                 targets: [10, 11],
                 class: 'text-center pt-4',
                 render: function (data, type, row) {
-                    return row['monbasebco'] + data.toLocaleString('en-US')
+                    return row['monbasebco'] + parseFloat(data).toLocaleString('en-US')
                 }
             },
             {
