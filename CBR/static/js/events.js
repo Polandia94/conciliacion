@@ -140,6 +140,7 @@ function getCuenta(){
             }
         })
     })
+
     $("#id_empresa").on('change', function (e) {
         getMailEmpresa()
     })

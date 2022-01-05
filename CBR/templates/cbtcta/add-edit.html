@@ -33,13 +33,18 @@
                         <div class="form-group col-6">
                             <label for="empresa" class="col-form-label">{{ form.empresa.label }}</label>
                             {% if action == 'edit' %}
-                            <select class="form-control getcuenta" name="empresa" id="id_empresa">
-                                {% for i in empresas %}
-                                    <option value={{i.nombre}} {% if i.nombre == empresa %}selected{% endif %}>{{i.nombre}} : {{i.descripcion}}</option>
-                                {% endfor %}
-                                </select>
+                                {% if modificable %}
+                                <select class="form-control" name="empresa" id="id_empresa">
+                                    {% for i in empresas %}
+                                        <option value={{i.nombre}} {% if i.nombre == empresa %}selected{% endif %}>{{i.nombre}} : {{i.descripcion}}</option>
+                                    {% endfor %}
+                                    </select>
+                                {% else %}
+                                <input disabled class="form-control" name="empresa" id="id_empresa" value="{{empresa}}"></input>
+                                {% endif %}
+
                             {% else %}
-                            <select class="form-control getcuenta" name="empresa" id="id_empresa">
+                            <select class="form-control" name="empresa" id="id_empresa">
                                 {% for i in empresas %}
                                     <option value={{i.nombre}}>{{i.nombre}} : {{i.descripcion}}</option>
                                 {% endfor %}
@@ -49,13 +54,17 @@
                             <div class="form-group col-6">
                             <label for="banco-name" class="col-form-label">{{ form.codbco.label }}</label>
                             {% if action == 'edit' %}
-                            <select class="form-control getcuenta" name="codbco" id="id_codbco">
-                                {% for i in bancos %}
-                                    <option value={{i.nombre}} {% if i.nombre == banco %}selected{% endif %}>{{i.nombre}} : {{i.descripcion}}</option>
-                                {% endfor %}
-                            </select>
+                                {% if modificable %}
+                                <select class="form-control" name="codbco" id="id_codbco">
+                                    {% for i in bancos %}
+                                        <option value={{i.nombre}} {% if i.nombre == banco %}selected{% endif %}>{{i.nombre}} : {{i.descripcion}}</option>
+                                    {% endfor %}
+                                </select>
+                                {% else %}
+                                <input disabled class="form-control" name="codbco" id="id_codbco" value="{{banco}}"></input>
+                                {% endif %}
                             {% else %}
-                            <select class="form-control getcuenta" name="codbco" id="id_codbco">
+                            <select class="form-control" name="codbco" id="id_codbco">
                                 {% for i in bancos %}
                                     <option value={{i.nombre}}>{{i.nombre}} : {{i.descripcion}}</option>
                                 {% endfor %}
@@ -67,7 +76,11 @@
                         <div class="form-group col-6">
                             <label for="cuenta-text" class="col-form-label">{{ form.nrocta.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.nrocta}}
+                                {% if modificable %}
+                                    {{ form.nrocta}}
+                                {% else %}
+                                    <input disabled type="text" name="nrocta" value="{{nrocta}}"  class="form-control" id="id_nrocta">
+                                {% endif %}    
                             {% else %}
                                 {{ form.nrocta }}
                             {% endif %}
@@ -88,14 +101,23 @@
                         </div>
                         <div class="form-group col-6">
                             <label for="codctaconbco-text" class="col-form-label">{{ form.codctaconbco.label }}</label>
+                            
+                            {% if modificable or action != 'edit'%}
                                 {{ form.codctaconbco}}
+                            {% else %}
+                                <input disabled type="text" value="{{codctaconbco}}" name="codctaconbco"  class="form-control"  id="id_codctaconbco">
+                            {% endif %}
                         </div>
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
                             <label for="monbasebco-text" class="col-form-label">{{ form.monbasebco.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.monbasebco}}
+                                {% if modificable%}
+                                    {{ form.monbasebco}}
+                                {% else %}
+                                <input disabled type="text" name="monbasebco" value="{{monbasebco}}" class="form-control" id="id_monbasebco">
+                                {% endif %}
                             {% else %}
                                 {{ form.monbasebco }}
                             {% endif %}
@@ -106,7 +128,11 @@
                         <div class="form-group col-6">
                             <label for="ano-text" class="col-form-label">{{ form.ano.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.ano}}
+                                {% if modificable %}
+                                    {{ form.ano}}
+                                {% else %}
+                                    <input disabled type="number" name="ano" value="{{ano}}" placeholder="Año" class="form-control"  id="id_ano">
+                                {% endif %}
                             {% else %}
                                 {{ form.ano }}
                             {% endif %}
@@ -114,7 +140,11 @@
                         <div class="form-group col-6">
                             <label for="mes-text" class="col-form-label">{{ form.mes.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.mes}}
+                                {% if modificable %}
+                                    {{ form.mes}}
+                                {% else %}
+                                    <input disabled type="number" name="mes" value="{{mes}}" placeholder="Mes" class="form-control" id="id_mes">
+                                {% endif %}
                             {% else %}
                                 {{ form.mes }}
                             {% endif %}
@@ -124,7 +154,11 @@
                         <div class="form-group col-6">
                             <label for="saldoinibco-text" class="col-form-label">{{ form.saldoinibco.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.saldoinibco}}
+                                {% if modificable %}
+                                    {{ form.saldoinibco}}
+                                {% else %}
+                                    <input disabled name="saldoinibco" value="{{saldoinibco}}"  class="form-control"  id="id_saldoinibco">
+                                {% endif %}
                             {% else %}
                                 {{ form.saldoinibco }}
                             {% endif %}
@@ -132,7 +166,11 @@
                         <div class="form-group col-6">
                             <label for="saldoinierp-text" class="col-form-label">{{ form.saldoinierp.label }}</label>
                             {% if action == 'edit' %}
-                                {{ form.saldoinierp}}
+                                {% if modificable %}
+                                    {{ form.saldoinierp}}
+                                {% else %}
+                                    <input disabled  name="saldoinierp" value="{{saldoinierp}}" placeholder="Saldo Inicial ERP" class="form-control" id="id_saldoinierp">
+                                {% endif %}
                             {% else %}
                                 {{ form.saldoinierp }}
                             {% endif %}

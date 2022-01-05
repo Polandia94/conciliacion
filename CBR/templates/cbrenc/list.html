@@ -99,4 +99,22 @@
         classDesconciliador: "{{desconciliador}}"
     };
 </script>
+<script>
+    window.onload = function(){
+        var str = sessionStorage.getItem('checkboxConciliado');
+        if(str=='true'){
+            cbox_conciliados.checked = true;
+        }else{
+            cbox_conciliados.checked = false;
+        }
+    }
+    cbox_conciliados.addEventListener('click', function(){
+        if(cbox_conciliados.checked) {
+            sessionStorage.setItem('checkboxConciliado', 'true');
+        }else{
+            sessionStorage.setItem('checkboxConciliado', 'false');
+        }
+        
+    })
+</script>
 {% endblock %}
