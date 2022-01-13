@@ -1,7 +1,7 @@
-
 #region imports
 import base64
 import datetime as dt
+
 import json
 import os
 from pathlib import Path
@@ -2571,10 +2571,8 @@ class CbsresNoConciliados(ListView):
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
         if self.request.GET["return"] == 'cbttco':
             context['return_url'] =  "/cbttco/?idrenc=" + str(idrenca)
-        elif self.request.GET["return"] == 'cbsres':
-            context['return_url'] =  "/cbsres/?idrenc=" + str(idrenca)
-        elif self.request.GET["return"] == 'cbsresview':
-            context['return_url'] =  "/cbsresview/?idrenc=" + str(idrenca)
+        else:
+            context['return_url'] =  "false"
         # Lee todo la tabla Cbttco y pasa la informacion al renderizaco de la tabla
         return context
 

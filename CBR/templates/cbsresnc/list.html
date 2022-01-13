@@ -9,11 +9,12 @@
 {% block botones %}
     <div hidden id="idrenc">{{idrenc}}</div>
     <div class="row">
-    
+        {% if return_url != "false" %}
         <a href="{{return_url}}" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
            title="Atras">
             <i class="fas fa-arrow-left"> </i>
         </a> 
+        {% endif %}
          Banco Html: 
         <a href="/verBancoHtml?idrenc={{idrenc}}" target="_blank_" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
         title="Ver HTML del Lado del banco">

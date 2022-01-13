@@ -369,20 +369,23 @@ def HomologacionErpGAL(request, aCbrenc, data, saldoerpanterior):
                             print(e)
                         aCbrgale = Cbrgale(idrgal=aCbrgal ,coderr = error)
                         aCbrgale.save()
+
+                else:
+                    if dataErp.loc[i, dataErp.columns[4]] != " Van:" and dataErp.loc[i, dataErp.columns[4]] != "TOTALES . . . . . . . " and pausa == False and iniciado:
+                        aCbrgal.glosa = str(aCbrgal.glosa) + " " +str(dataErp.loc[i, dataErp.columns[4]])
+                        aCbrgal.actualizar(aCbrgal)
+                        pausa = True
+                    if dataErp.loc[i, dataErp.columns[5]] != "Vienen:":
+                        pausa = False
+                    if dataErp.loc[i, dataErp.columns[5]] == "TOTALES . . . . . . . ":
+                        if(math.isclose(float(dataErp.loc[i, dataErp.columns[7]].replace(",","")),debeTotal) and math.isclose(float(dataErp.loc[i, dataErp.columns[9]].replace(",","")) , haberTotal)) == False:
+                            try:
+                                data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>" + data["error"]
+                            except:
+                                data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>"
             except Exception as e:
                 print(e)
-                if dataErp.loc[i, dataErp.columns[4]] != " Van:" and dataErp.loc[i, dataErp.columns[4]] != "TOTALES . . . . . . . " and pausa == False and iniciado:
-                    aCbrgal.glosa = str(aCbrgal.glosa) + " " +str(dataErp.loc[i, dataErp.columns[4]])
-                    aCbrgal.actualizar(aCbrgal)
-                    pausa = True
-                if dataErp.loc[i, dataErp.columns[5]] != "Vienen:":
-                    pausa = False
-                if dataErp.loc[i, dataErp.columns[5]] == "TOTALES . . . . . . . ":
-                    if(math.isclose(float(dataErp.loc[i, dataErp.columns[7]].replace(",","")),debeTotal) and math.isclose(float(dataErp.loc[i, dataErp.columns[9]].replace(",","")) , haberTotal)) == False:
-                        try:
-                            data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>" + data["error"]
-                        except:
-                            data["error"] = "<p>La suma de debes y la suma de haberes del ERP no coincide con los totales(se esperaba" + str(dataErp.loc[i, dataErp.columns[7]].replace(',','')) + " y " + str(dataErp.loc[i, dataErp.columns[9]].replace(",","")) + "se obtuvo" + str(debeTotal) + " y " + str(haberTotal) + "</p>"
+                data["error"] = "Error desconocido en el archivo del ERP"
         if fallo:
             try:
                 data["error"] = '''<p>Verifique errores de ERP en <a  href="javascript:void(0)" onClick="window.open('../../cbrgale', '_blank')"> Formulario CBF11</a></p>'''+ data["error"] 

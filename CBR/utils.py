@@ -2,6 +2,7 @@
 
 
 #region imports
+import math
 import datetime as dt
 import json
 from json.decoder import JSONDecodeError
@@ -1896,15 +1897,25 @@ def crearPdfBanco(request):
     context["mes"] = aCbrenc.mes
     row = "odd"
     pagina = 0
-    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).all()
+    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadobco=0, fechatrabco__isnull=False).order_by("idsres")
     primerRegistro = 0
     merger = PdfFileMerger()
+    if allCbsres is None:
+        allCbsres = []
     while primerRegistro < len(allCbsres):
         registros = []
         pagina = pagina +1
         context["pagina"] = pagina
-        if primerRegistro+15 < len(allCbsres):
-            ultimoRegistro = primerRegistro+15
+        alto = 0
+        cantidadDeFilas = 0
+        for aCbsres in allCbsres[primerRegistro:]:
+            alto += math.ceil(max(len(aCbsres.oficina), len(aCbsres.desctra), len(aCbsres.reftra), len(aCbsres.codtra))/12)
+            if alto > 34:
+                break
+            else:
+                cantidadDeFilas += 1
+        if primerRegistro+cantidadDeFilas < len(allCbsres):
+            ultimoRegistro = primerRegistro+cantidadDeFilas
         else:
             ultimoRegistro = len(allCbsres)
         for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
@@ -1912,10 +1923,10 @@ def crearPdfBanco(request):
             datos["class"]=row
             datos["fecha"]= aCbsres.fechatrabco.strftime('%d/%m/%Y')
             datos["hora"]=aCbsres.horatrabco.strftime('%H:%M:%S')
-            datos["oficina"]=aCbsres.oficina
-            datos["descripcion"]=aCbsres.desctra
-            datos["referencia"] = aCbsres.reftra
-            datos["codigo"] = aCbsres.codtra
+            datos["oficina"]=cortarPalabras(aCbsres.oficina)
+            datos["descripcion"]=cortarPalabras(aCbsres.desctra)
+            datos["referencia"] = cortarPalabras(aCbsres.reftra)
+            datos["codigo"] = cortarPalabras(aCbsres.codtra)
             datos["debe"] = '{:,.2f}'.format(aCbsres.debebco)
             datos["haber"] = '{:,.2f}'.format(aCbsres.haberbco)
             registros.append(datos)
@@ -1925,7 +1936,7 @@ def crearPdfBanco(request):
                 row="odd"
         context["registros"] = registros
         content = render_to_string('utils/paradescargarbanco.html', context)
-        pdf = htmltopydf.generate_pdf(content)
+        pdf = htmltopydf.generate_pdf(content, margin_bottom="0mm")
         with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", 'wb') as f:
             f.write(pdf)
         merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", import_bookmarks=False )
@@ -2029,25 +2040,35 @@ def crearPdferp(request):
     context["mes"] = aCbrenc.mes
     row = "odd"
     pagina = 0
-    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).all()
+    allCbsres = Cbsres.objects.filter(idrenc=idrenc, estadoerp=0, fechatraerp__isnull=False).order_by("idsres")
     primerRegistro = 0
     merger = PdfFileMerger()
+    if allCbsres is None:
+        allCbsres = []
     while primerRegistro < len(allCbsres):
         registros = []
         pagina = pagina +1
         context["pagina"] = pagina
-        if primerRegistro+15 < len(allCbsres):
-            ultimoRegistro = primerRegistro+15
+        alto = 0
+        cantidadDeFilas = 0
+        for aCbsres in allCbsres[primerRegistro:]:
+            alto += math.ceil(max(len(aCbsres.nrocomperp), len(aCbsres.auxerp), len(aCbsres.referp), len(aCbsres.glosaerp))/9)
+            if alto > 30:
+                break
+            else:
+                cantidadDeFilas += 1
+        if primerRegistro+cantidadDeFilas < len(allCbsres):
+            ultimoRegistro = primerRegistro+cantidadDeFilas
         else:
             ultimoRegistro = len(allCbsres)
         for aCbsres in allCbsres[primerRegistro:ultimoRegistro]:
             datos = {}
             datos["class"]=row
             datos["fecha"]= aCbsres.fechatraerp.strftime('%d/%m/%Y')
-            datos["comprobante"]=aCbsres.nrocomperp
-            datos["auxiliar"]=aCbsres.auxerp
-            datos["referencia"]=aCbsres.referp
-            datos["glosa"] = aCbsres.glosaerp
+            datos["comprobante"]=cortarPalabras(aCbsres.nrocomperp)
+            datos["auxiliar"]=cortarPalabras(aCbsres.auxerp)
+            datos["referencia"]=cortarPalabras(aCbsres.referp)
+            datos["glosa"] = cortarPalabras(aCbsres.glosaerp)
             datos["debe"] = '{:,.2f}'.format(aCbsres.debeerp)
             datos["haber"] = '{:,.2f}'.format(aCbsres.habererp)
             registros.append(datos)
@@ -2057,7 +2078,7 @@ def crearPdferp(request):
                 row="odd"
         context["registros"] = registros
         content = render_to_string('utils/paradescargarerp.html', context)
-        pdf = htmltopydf.generate_pdf(content)
+        pdf = htmltopydf.generate_pdf(content , margin_bottom="0mm")
         with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", 'wb') as f:
             f.write(pdf)
         merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", import_bookmarks=False )
@@ -2122,5 +2143,16 @@ def getMailEmpresa(request):
         return JsonResponse(data)
 
     
-
-
+def cortarPalabras(frase):
+    n = 0
+    resultado = ""
+    for i in frase:
+        if i == " ":
+            n = 0
+        else:
+            n += 1
+        if n > 11:
+            resultado = resultado + " "
+            n = 0
+        resultado = resultado + i
+    return resultado
