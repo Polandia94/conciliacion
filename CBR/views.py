@@ -1,7 +1,7 @@
 #region imports
 import base64
 import datetime as dt
-
+import pytz
 import json
 import os
 from pathlib import Path
@@ -94,6 +94,7 @@ class CbrencListView(ListView):
                 data['error'] = 'Ha ocurrido un error'
         except Exception as e:
             data = {}
+            print("error en views 1")
             print(e)
             data['error'] = str(e)
         return JsonResponse(data, safe=False)
@@ -106,10 +107,11 @@ class CbrencListView(ListView):
             if self.request.GET.get("accesoinvalido") == "true":
                 context['accesoinvalido'] = True
         except Exception as e:
+            print("error en views 2")
             print(e)
             pass
         aCbtlic = Cbtlic.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"]).first()
-        if aCbtlic.fechalic < dt.datetime.now(tz=timezone.utc) + dt.timedelta(days=7):
+        if aCbtlic.fechalic < ahora(self.request) + dt.timedelta(days=7):
             context["proximoavencimiento"] = True
             context["fechalic"] = aCbtlic.fechalic
         context["desconciliador"] = False
@@ -148,6 +150,7 @@ class CbsresListView(ListView):
                         try:
                             conciliarSaldos(request)
                         except Exception as e:
+                            print("error en views 3")
                             print(e)
                     aCbsres = Cbsres.objects.filter(idrenc=idrenca).first()
                     if aCbsres.cliente == diccionario["cliente"] and aCbsres.empresa in diccionario["empresas"]:
@@ -156,6 +159,7 @@ class CbsresListView(ListView):
                         return redirect ('/?accesoinvalido=true')
             
             except Exception as e:
+                print("error en views 4")
                 print(e)
                 return super().dispatch(request, *args, **kwargs)
         else:
@@ -171,6 +175,7 @@ class CbsresListView(ListView):
             ano = aCbrenc.ano
             mes = aCbrenc.mes
             primerRegistro = False
+            pautado=False
             if action == 'searchdata':
                 data = []
                 position = 1
@@ -179,6 +184,12 @@ class CbsresListView(ListView):
                 for i in DataSet:
                     item = i.toJSON()
                     item["primerRegistro"] = False
+                    if pautado:
+                        item["pautado"] = 0
+                        pautado = False
+                    else:
+                        item["pautado"] = 1
+                        pautado = True
                     if primerRegistro == False:
                         
                         fecha = item["fechatrabco"]
@@ -200,12 +211,14 @@ class CbsresListView(ListView):
                             idrerpd=item['idrerpd']).first()
                         item['debeerporiginal'] = aCbrerpd.debe
                         item['habererporiginal'] = aCbrerpd.haber
+
                     data.append(item)
                     position += 1
                 createCbrenct(request, idrenc, 2, "CBF02")
             else:
                 data['error'] = 'Ha ocurrido un error'
         except Exception as e:
+            print("error en views 5")
             print(e)
             data['error'] = str(e)
 
@@ -266,6 +279,7 @@ class CbsresviewListView(ListView):
         try:
             action = request.POST['action']
             idrenc = request.POST['idrenc']
+            pautado = False
             if action == 'searchdata':
                 data = []
                 position = 1
@@ -284,6 +298,12 @@ class CbsresviewListView(ListView):
                             idrerpd=item['idrerpd']).first()
                         item['debeerporiginal'] = aCbrerpd.debe
                         item['habererporiginal'] = aCbrerpd.haber
+                    if pautado:
+                        item["pautado"] = 0
+                        pautado = False
+                    else:
+                        item["pautado"] = 1
+                        pautado = True
                     data.append(item)
                     position += 1
                 createCbrenct(request,idrenc, 7, "CBF02")
@@ -381,7 +401,7 @@ class CbrencCreateView(CreateView):
                                        estado=2,
                                        ).exists() or Cbrenc.objects.exclude(estado="3").filter(codbco=codbco,
                                                                                                nrocta=nrocta,
-                                                                                               # cliente=cliente,
+                                                                                               cliente=cliente,
                                                                                                empresa=empresa,
                                                                                                ).exists() == False:
                 if Cbrenc.objects.exclude(estado=3).filter(codbco=codbco,
@@ -430,7 +450,7 @@ class CbrencCreateView(CreateView):
                 # Crea el CBRENC
                 #with transaction.atomic():
                 form = self.get_form()
-                form.fechact = dt.datetime.now(tz=timezone.utc)
+                form.fechact = ahora(request)
                 form.idusualt = request.user.username
                 self.CbrencNew = form.save()
                 codbco = request.POST.get( 'codbco')
@@ -457,6 +477,15 @@ class CbrencCreateView(CreateView):
                     codhombco = aCbmbco.codhombco
                     if codhombco == "VEBOD":
                         HomologacionBcoBOD(request, self.CbrencNew,
+                                        data, saldobcoanterior)
+                    elif codhombco == "VEBIC":
+                        HomologacionBcoVEBIC(request, self.CbrencNew,
+                                        data, saldobcoanterior)
+                    elif codhombco == "VEBAN":
+                        HomologacionBcoVEBAN(request, self.CbrencNew,
+                                        data, saldobcoanterior)
+                    elif codhombco == "VEBNC":
+                        HomologacionBcoBNC(request, self.CbrencNew,
                                         data, saldobcoanterior)
                     else:
                         data['error'] = "El Banco no tiene un sistema homologador válido"
@@ -515,6 +544,12 @@ class CbrencCreateView(CreateView):
                         idrerpe=idrerpe.idrerpe
                     Cbrbod.objects.filter(
                         idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrbic.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrban.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
+                    Cbrbnc.objects.filter(
+                        idrenc=self.CbrencNew.idrenc).delete()
                     Cbrgal.objects.filter(
                         idrenc=self.CbrencNew.idrenc).delete()
                     Cbrbcod.objects.filter(
@@ -537,7 +572,7 @@ class CbrencCreateView(CreateView):
                     difbcoerp=self.CbrencNew.difbcoerp,
                     idusu=request.user.username)
 
-                aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbrencl.fechact = ahora(request)
                 aCbrencl.save(aCbrencl)
                 # Crea el archivo de tiempo correspondiente
                 createCbrenct(request, self.CbrencNew.idrenc,1, "CBF03")
@@ -556,6 +591,7 @@ class CbrencCreateView(CreateView):
                     data['error'] = 'Error desconocido'
         except Exception as e:
             data['error'] = str(e)
+            print("error en views 6")
             print(e)
             return JsonResponse(data)
 
@@ -637,6 +673,7 @@ class Uploadimage(CreateView):
                         "/media/" + str(self.CbrencNew.archivoimgbco))
             return JsonResponse(data)
         except Exception as e:
+            print("error en views 7")
             print(e)
 
 
@@ -804,6 +841,7 @@ class DetalleBcoListView(ListView):
 
         except Exception as e:
             data['error'] = str(e)
+            print("error en views 8")
             print(e)
         return JsonResponse(data, safe=False)
 
@@ -812,6 +850,7 @@ class DetalleBcoListView(ListView):
         getContext(self.request, context, 'Detalle de carga del archivo de Banco', 'CBF06')
         idrenc = self.request.GET['idrbcoe']
         aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenc)
+        
         context['idrbcoe'] = aCbrbcoe.idrbcoe
         aCbrenc = Cbrenc.objects.filter(idrenc=idrenc).first()
         context['imagen'] = False
@@ -821,13 +860,15 @@ class DetalleBcoListView(ListView):
             context["modificable"] = True
         else:
             context["modificable"] = False
-        
         idrenca = self.request.GET.get('idrbcoe')
         if idrenca is None:
             idrenca = self.request.POST.get('idrbcoe')
         aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenca)
         aCbrenc = aCbrbcoe.idrenc
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
+        context['archivobco'] = str(aCbrenc.archivobco)[str(aCbrenc.archivobco).rfind("/")+1:]
+        context['fechact'] = aCbrbcoe.fechact1
+        context['idusu'] = aCbrbcoe.idusu1
         return context
 
 #************************* CBF07 - FORMULARIO DE DETALLE DE ERP *************************#
@@ -881,6 +922,10 @@ class DetalleErpListView(ListView):
         if idrenca is None:
             idrenca = self.request.POST.get('idrerpe')
         aCbrenc = Cbrenc.objects.get(idrenc = idrenca)
+        context['archivoerp'] = str(aCbrenc.archivoerp)[str(aCbrenc.archivoerp).rfind("/")+1:]
+        aCbrerpe = Cbrerpe.objects.get(idrenc=idrenca)
+        context['fechact'] = aCbrerpe.fechact
+        context['idusu'] = aCbrerpe.idusu
         context['moneda'] = Cbtcta.objects.filter(cliente = clienteYEmpresas(self.request)["cliente"], codbco=aCbrenc.codbco, empresa=aCbrenc.empresa, nrocta=aCbrenc.nrocta).first().monbasebco
         return context
 
@@ -915,6 +960,7 @@ class CbtctaListView(ListView):
                         try:
                             item["codbco"] = item["codbco"]
                         except Exception as e:
+                            print("error en views 9")
                             print(e)
                         if Cbrenc.objects.exclude(estado="3").filter(codbco=i.codbco,
                                                                      nrocta=i.nrocta,
@@ -997,17 +1043,18 @@ class CbtctaCreateView(CreateView):
             form = form.save()
             
             form.cliente = diccionario["cliente"]
-            form.fechact = dt.datetime.now(tz=timezone.utc)
+            form.fechact = ahora(request)
             form.idusu = request.user.username
 
             form.save()
             aCbtcon = Cbtcon(codcon=form.codctaconbco, descon=form.descta, actpas="A")
-            aCbtcon.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbtcon.fechact = ahora(request)
             aCbtcon.idusu = request.user.username
             aCbtcon.save()
         except Exception as e:
 
             data['error'] = str(e)
+            print("error en views 10")
             print(e)
             return JsonResponse(data)
 
@@ -1046,7 +1093,6 @@ class CbtctaEditView(CreateView):
         try:
             idtcta = self.request.GET.get('idtcta')
             aCbtcta = Cbtcta.objects.filter(idtcta=idtcta).first()
-            print(aCbtcta.nrocta)
             return {'empresa': aCbtcta.empresa, 'codbco': aCbtcta.codbco, 'idtcta': idtcta, 'nrocta': aCbtcta.nrocta, 'descta': aCbtcta.descta, 'diremail' : aCbtcta.diremail, 'monbasebco': aCbtcta.monbasebco, 'codctaconbco':aCbtcta.codctaconbco, 'ano': aCbtcta.ano, 'mes': aCbtcta.mes, 'saldoinibco': aCbtcta.saldoinibco, 'saldoinierp': aCbtcta.saldoinierp}
         except:
             pass
@@ -1124,15 +1170,12 @@ class CbtctaEditView(CreateView):
             form = self.get_form()
             aCbtcta.diremail = request.POST["diremail"]
             aCbtcta.descta = request.POST["descta"]
-            print("a")
             if Cbrenc.objects.exclude(estado="3").filter(codbco=aCbtcta.codbco,
             nrocta=aCbtcta.nrocta,
             empresa=aCbtcta.empresa,
             ).exists():
-                print("B")
                 aCbtcta.save()
             else:
-                print("C")           
                 nuevoCbtcon = False
                 if aCbtcta.codctaconbco != request.POST["codctaconbco"] or aCbtcta.descta != request.POST["descta"]:
                     nuevoCbtcon = True
@@ -1145,17 +1188,18 @@ class CbtctaEditView(CreateView):
                 aCbtcta.mes = request.POST["mes"]
                 aCbtcta.saldoinibco = request.POST["saldoinibco"]
                 aCbtcta.saldoinierp = request.POST["saldoinierp"]
-                aCbtcta.fechalt = dt.datetime.now(tz=timezone.utc)
+                aCbtcta.fechalt = ahora(request)
                 aCbtcta.idusualt = request.user.username
                 aCbtcta.save()
                 if nuevoCbtcon:
                     aCbtcon = Cbtcon(codcon=aCbtcta.codctaconbco, descon=aCbtcta.descta, actpas="A")
-                    aCbtcon.fechact = dt.datetime.now(tz=timezone.utc)
+                    aCbtcon.fechact = ahora(request)
                     aCbtcon.idusu = request.user.username
                     aCbtcon.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
+            print("error en views 11")
             print(e)
             return JsonResponse(data)
 
@@ -1190,7 +1234,6 @@ class CbtctaEditView(CreateView):
         context["banco"] = aCbtcta.codbco
         context["nrocta"] = aCbtcta.nrocta
         context["monbasebco"] = aCbtcta.monbasebco
-        print(aCbtcta.codctaconbco)
         context["codctaconbco"] = aCbtcta.codctaconbco
         context["ano"] = aCbtcta.ano
         context["mes"] = aCbtcta.mes
@@ -1241,6 +1284,137 @@ class DetalleErroresBodListView(ListView):
                 data.append(item)
                 position += 1
         except Exception as e:
+            print("error en views 12")
+            print(e)
+        return JsonResponse(data, safe=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        getContext(self.request, context, 'Detalle de Errores Banco','CBF10')
+        return context
+
+class DetalleErroresBicListView(ListView):
+    model = Cbrbice
+    template_name = 'cbrbice/list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data = {}
+        try:
+            action = request.POST['action']
+            data = []
+            position = 1
+            for i in Cbrbice.objects.all():
+                detalle = i.idrbic
+                item = i.toJSON()
+                item['diatra'] = detalle.diatra
+                item['desctra'] = detalle.desctra
+                item['codtra'] = detalle.codtra
+                item['reftra'] = detalle.reftra
+                item['debe'] = detalle.debe
+                item['haber'] = detalle.haber
+                item['saldo'] = detalle.saldo
+                item['position'] = position
+                aCbterr = Cbterr.objects.filter(coderr=i.coderr).first()
+                item['coderr'] = aCbterr.descerr
+                item['ID'] = position
+                data.append(item)
+                position += 1
+        except Exception as e:
+            print("error en views 13")
+            print(e)
+        return JsonResponse(data, safe=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        getContext(self.request, context, 'Detalle de Errores Banco','CBF10')
+        return context
+
+class DetalleErroresBanListView(ListView):
+    model = Cbrbane
+    template_name = 'cbrbane/list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data = {}
+        try:
+            action = request.POST['action']
+            data = []
+            position = 1
+            for i in Cbrbane.objects.all():
+                detalle = i.idrban
+                item = i.toJSON()
+                item['fechatra'] = detalle.fechatra
+                item['desctra'] = detalle.desctra
+                item['reftra'] = detalle.reftra
+                item['monto'] = detalle.monto
+                item['saldo'] = detalle.saldo
+                item['position'] = position
+                aCbterr = Cbterr.objects.filter(coderr=i.coderr).first()
+                item['coderr'] = aCbterr.descerr
+                item['ID'] = position
+                data.append(item)
+                position += 1
+        except Exception as e:
+            print("error en views 14")
+            print(e)
+        return JsonResponse(data, safe=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        getContext(self.request, context, 'Detalle de Errores Banco','CBF10')
+        return context
+
+
+class DetalleErroresBncListView(ListView):
+    model = Cbrbnce
+    template_name = 'cbrbnce/list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if chequearNoDobleConexion(request):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect("/")
+
+    def post(self, request, *args, **kwargs):
+        chequearNoDobleConexion(request)
+        data = {}
+        try:
+            action = request.POST['action']
+            data = []
+            position = 1
+            for i in Cbrbnce.objects.all():
+                detalle = i.idrbnc
+                item = i.toJSON()
+                item['fechatra'] = detalle.fechatra
+                item['reftra'] = detalle.reftra
+                item['desctra'] = detalle.desctra
+                item['debe'] = detalle.debe
+                item['haber'] = detalle.haber
+                item['saldo'] = detalle.saldo
+                item['position'] = position
+                aCbterr = Cbterr.objects.filter(coderr=i.coderr).first()
+                item['coderr'] = aCbterr.descerr
+                item['ID'] = position
+                data.append(item)
+                position += 1
+        except Exception as e:
+            print("error en views 15")
             print(e)
         return JsonResponse(data, safe=False)
 
@@ -1289,6 +1463,7 @@ class DetalleErroresGalListView(ListView):
                 data.append(item)
                 position += 1
         except Exception as e:
+            print("error en views 16")
             print(e)
         return JsonResponse(data, safe=False)
 
@@ -1364,13 +1539,14 @@ class ConciliacionDeleteForm(CreateView):
                 self.Cbrencl.saldoerp = aCbrenc.saldoerp
                 self.Cbrencl.difbcoerp = aCbrenc.difbcoerp
                 self.Cbrencl.idusu = request.user.username
-                self.Cbrencl.fechact = dt.datetime.now(tz=timezone.utc)
+                self.Cbrencl.fechact = ahora(request)
                 self.Cbrencl.save()
                 aCbrenc.estado = 3
                 aCbrenc.save()
 
         except Exception as e:
             data['error'] = str(e)
+            print("error en views 17")
             print(e)
             return JsonResponse(data)
 
@@ -1437,7 +1613,7 @@ class CbtusuCreateView(CreateView):
                     else:
                         CbtusuNew.indconc = ""
                     CbtusuNew.pasusu = True
-                    CbtusuNew.fechact = dt.datetime.now(tz=timezone.utc)
+                    CbtusuNew.fechact = ahora(request)
                     CbtusuNew.idusu = request.user.username
                     CbtusuNew.cliente = Cbtusu.objects.filter(
                         idusu1=request.user.username).first().cliente
@@ -1450,6 +1626,7 @@ class CbtusuCreateView(CreateView):
         except Exception as e:
 
             data['error'] = str(e)
+            print("error en views 18")
             print(e)
             return JsonResponse(data)
 
@@ -1539,12 +1716,12 @@ class CbtusuEditView(CreateView):
                         return JsonResponse(data, safe=False)
                     aCbsusu = Cbsusu.objects.filter(idusu1=idusu1, finlogin = None).first()
                     if aCbsusu != None:
-                        aCbsusu.finlogin = dt.datetime.now(tz=timezone.utc)
+                        aCbsusu.finlogin = ahora(request)
                         aCbsusu.save()
                     Cbwres.objects.filter(idusu=idusu1).delete()
                     aCbrenct= Cbrenct.objects.filter(idusu=idusu1, fechorafin=None).first()
                     if aCbrenct != None:
-                        aCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+                        aCbrenct.fechorafin = ahora(request)
                         aCbrenct.save()
                 aUser = User.objects.filter(username=CbtusuNew.idusu1).first()
 
@@ -1573,7 +1750,7 @@ class CbtusuEditView(CreateView):
                 
                 
 
-                CbtusuNew.fechact = dt.datetime.now(tz=timezone.utc)
+                CbtusuNew.fechact = ahora(request)
                 CbtusuNew.idusu = request.user.username
                 CbtusuNew.cliente = Cbtusu.objects.filter(
                     idusu1=request.user.username).first().cliente
@@ -1582,6 +1759,7 @@ class CbtusuEditView(CreateView):
 
         except Exception as e:
             data['error'] = str(e)
+            print("error en views 19")
             print(e)
             return JsonResponse(data)
 
@@ -1938,6 +2116,7 @@ class DetalleTiposDeConciliacion(ListView):
                 createCbrenct(request, idrenc.first(),7,"CBF18" )
                 
             except Exception as e:
+                print("error en views 20")
                 print(e)
         except Exception as e:
             data['error'] = str(e)
@@ -1971,7 +2150,7 @@ class definirColumnas(ListView):
         Cbtusuc.objects.filter(idtusu=idtusu).delete()
         for aCbtcol in Cbtcol.objects.filter(inddef=1):
             aCbtusuc = Cbtusuc(idtusu=idtusu, codcol=aCbtcol.codcol)
-            aCbtusuc.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbtusuc.fechact = ahora(request)
             aCbtusuc.idusu = request.user.username
             aCbtusuc.save()
 
@@ -2059,17 +2238,18 @@ class CbtempCreateView(CreateView):
                 aCbtusue = Cbtusue(idtusu=Cbtusu.objects.filter(
                     idusu1=request.user.username).first(), actpas="A", empresa=empresa)
                 aCbtusue.idusu = request.user.username
-                aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtusue.fechact = ahora(request)
                 aCbtusue.save()
                 # CREATE
                 aCbtemp = Cbtemp(empresa=empresa, desemp=desemp, actpas=actpas, codhomerp=codhomerp, diremail=diremail)
-                aCbtemp.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtemp.fechact = ahora(request)
                 aCbtemp.idusu = request.user.username
                 aCbtemp.cliente = diccionario["cliente"]
                 aCbtemp.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
+            print("error en views 21")
             print(e)
             return JsonResponse(data)
 
@@ -2104,6 +2284,7 @@ class CbtempEditView(CreateView):
             actpas = aCbtemp.actpas == "A"
             return {'empresa': aCbtemp.empresa, 'desemp': aCbtemp.desemp, 'actpas': actpas, 'codhomerp' : aCbtemp.codhomerp, 'diremail' : aCbtemp.diremail}
         except Exception as e:
+            print("error en views 22")
             print(e)
 
     template_name = 'cbtemp/add-edit.html'
@@ -2172,7 +2353,7 @@ class CbtempEditView(CreateView):
                 aCbtusue = Cbtusue(idtusu=Cbtusu.objects.filter(
                     idusu1=request.user.username).first(), actpas="A", empresa=empresa)
                 aCbtusue.idusu = request.user.username
-                aCbtusue.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtusue.fechact = ahora(request)
                 aCbtusue.save()
                 # CREATE
                 
@@ -2181,13 +2362,14 @@ class CbtempEditView(CreateView):
                 aCbtemp.desemp = desemp
                 aCbtemp.actpas = actpas
                 aCbtemp.codhomerp = codhomerp
-                aCbtemp.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtemp.fechact = ahora(request)
                 aCbtemp.idusu = request.user.username
                 aCbtemp.cliente = diccionario["cliente"]
                 aCbtemp.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
+            print("error en views 23")
             print(e)
             return JsonResponse(data)
 
@@ -2239,6 +2421,7 @@ class CbtbcoEditView(CreateView):
             actpas = aCbtbco.actpas == "A"
             return {'codbco': aCbtbco.codbco, 'actpas': actpas}
         except Exception as e:
+            print("error en views 24")
             print(e)
 
     template_name = 'cbtbco/add-edit.html'
@@ -2306,13 +2489,14 @@ class CbtbcoEditView(CreateView):
 
                 aCbtbco.codbco = banco
                 aCbtbco.actpas = actpas
-                aCbtbco.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtbco.fechact = ahora(request)
                 aCbtbco.idusu = request.user.username
                 aCbtbco.cliente = diccionario["cliente"]
                 aCbtbco.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
+            print("error en views 25")
             print(e)
             return JsonResponse(data)
 
@@ -2389,13 +2573,14 @@ class CbtbcoCreateView(CreateView):
 
                 # CREATE
                 aCbtbco = Cbtbco(codbco=codbco, actpas=actpas)
-                aCbtbco.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtbco.fechact = ahora(request)
                 aCbtbco.idusu = request.user.username
                 aCbtbco.cliente = diccionario["cliente"]
                 aCbtbco.save()
         except Exception as e:
             data = {}
             data['error'] = str(e)
+            print("error en views 26")
             print(e)
             return JsonResponse(data)
 
@@ -2585,7 +2770,6 @@ def verLadoErpHtml(request):
     idrenc = request.GET.get("idrenc")
     
     send_to, context = CreateContextNoConciliadosErpHtml(request, idrenc)
-    print(context)
     return render(request,'utils/paradescargarerp.html', context)
 #************************* DETALLES *************************#
 

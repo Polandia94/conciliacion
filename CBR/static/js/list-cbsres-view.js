@@ -468,13 +468,13 @@ $.ajax({
                             table.cell(fila, ".saldoacumdiaerp").data(saldodia);
                             var rows = table.row(fila)
                             /*Llena los html de los subtotales */
-                            try { saldodiferenciahtml.innerHTML = globalVariableIndtco.moneda + Number(saldodiferencia).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { saldodiferenciahtml.innerHTML = Number(saldodiferencia).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
                             try { saldoerphtml.innerHTML = globalVariableIndtco.moneda +Number(saldoi).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
-                            try { debeerphtml.innerHTML = globalVariableIndtco.moneda + Number(totaldebe).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { debeerphtml.innerHTML = Number(totaldebe).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
-                            try { habererphtml.innerHTML = globalVariableIndtco.moneda +  Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { habererphtml.innerHTML =  Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
                             /*va llenando la informacion a enviar al back */
                             datasend.push(rows.data());
@@ -579,21 +579,21 @@ $.ajax({
                                 url: '/getTiposDeConciliacionpost',
                                 data: { 'idrenc': idrenc },
                                 success: function (respons) {
-                                    try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { debebcototal.innerHTML =  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
                                     try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { saldobcototal.innerHTML = Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { debeerptotalhtml.innerHTML = Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { habererptotalhtml.innerHTML = Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { saldoerptotalhtml.innerHTML = Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { saldodiferenciatotalhtml.innerHTML = Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch {}
-                                    globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
+                                    globalVariable.SaldoDiferenciaTotal = Number(respons.saldodiferenciatotal)
                                     if(respons.saldodiferenciatotal == 0){
                                         document.getElementById("btnCerrarConciliacion").className = "btn btn-success btn-flat mb-3"
                                         document.getElementById("btnCerrarConciliacion").title = "Pasar la conciliación " + idrenc + " al estado conciliado"
@@ -800,19 +800,19 @@ $.ajax({
                         { "data": "horatrabco", className: "dt-bancoColor" },
                         { "data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         {
                             "data": "saldoacumesbco",
                             name: "saldoacumesbco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         {
@@ -820,7 +820,7 @@ $.ajax({
                             name: "saldoacumdiabco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         { "data": 'oficina', className: "dt-bancoColor" },
@@ -867,30 +867,30 @@ $.ajax({
                         },
                         { "data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         {
                             "data": "saldoacumeserp",
                             name: "saldoacumeserp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         {
                             "data": "saldoacumdiaerp",
                             name: "saldoacumdiaerp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"|| type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"|| type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         { "data": "saldodiferencia", name: "saldodiferencia", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
         
                         { "data": 'nrotraerp' },
                         {
@@ -1667,18 +1667,18 @@ $.ajax({
 
                                 switch (row['estadobco']) {
                                     case 0: {
-                                        var $Etiqueta = $('<p>No Conciliado</p>');
+                                        var $Etiqueta = $('<p>B No Conciliado</p>');
                                         classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
-                                        var $Etiqueta = $('<p>Conciliado</p>');
+                                        var $Etiqueta = $('<p>B Conciliado</p>');
                                         classBackground = 'callout-success';
                                         break;
                                     }
                                     case 2: {
-                                        var $Etiqueta = $('<p>Conciliado Sugerido</p>');
+                                        var $Etiqueta = $('<p>B Conciliado Sugerido</p>');
                                         classBackground = 'callout-warning';
                                         break;
                                     }
@@ -1922,18 +1922,18 @@ $.ajax({
                                 var classBackground = '';
                                 switch (parseInt(row['estadoerp'])) {
                                     case 0: {
-                                        var $Etiqueta = $('<p>No Conciliado</p>');
+                                        var $Etiqueta = $('<p>E No Conciliado</p>');
                                         classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
-                                        var $Etiqueta = $('<p>Conciliado</p>');
+                                        var $Etiqueta = $('<p>E Conciliado</p>');
                                         classBackground = 'callout-success';
                                         break;
                                     }
                                     case 2: {
-                                        var $Etiqueta = $('<p>Conciliado Sugerido</p>');
+                                        var $Etiqueta = $('<p>E Conciliado Sugerido</p>');
                                         classBackground = 'callout-warning';
                                         break;
                                     }

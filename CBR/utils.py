@@ -8,6 +8,7 @@ import json
 from json.decoder import JSONDecodeError
 import time
 from typing import Union
+from dateutil.tz import tzoffset
 
 from django.contrib.auth import logout
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -25,9 +26,9 @@ from django.urls.base import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
+from CBR.models import (Cbmbco, Cbrban, Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
                         Cbtbco, Cbtcli, Cbtcol, Cbtcta, Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
-                        Cbtusuc, Cbtusue, Cbwres, Cbtcfg, Cbtcfgc)
+                        Cbtusuc, Cbtusue, Cbwres, Cbtcfg, Cbtcfgc, Cbrbic, Cbrbnc)
 from pathlib import Path
 import smtplib
 from os.path import basename
@@ -65,6 +66,7 @@ def cbtctaDelete(request):
                     aCbtcta.delete()
 
         except Exception as e:
+            print("error en utils 1")
             print(e)
             data = {}
             data['error'] = str(e)
@@ -90,7 +92,7 @@ def chequearNoDobleConexion(request):
         logout(request)
         return False
     aCbtlic = Cbtlic.objects.filter(cliente=clienteYEmpresas(request)["cliente"]).first()
-    if aCbtlic.fechalic < dt.datetime.now(tz=timezone.utc):
+    if aCbtlic.fechalic < ahora(request):
         logout(request)
         return False
     if request.session["iddesesion"] < aCbsusu.corrusu:
@@ -103,6 +105,7 @@ def chequearNoDobleConexion(request):
 
 
 def clienteYEmpresas(request):
+    
     aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
     empresasHabilitadas = []
     if aCbtusu.tipousu == "S":
@@ -118,14 +121,13 @@ def clienteYEmpresas(request):
 @receiver(user_logged_out)
 def post_logout(sender, user, request, **kwargs):
     try:
-        print("estacosa")
         cerrarCbrenct(request)
         if Cbsusu.objects.filter(
                 idusu1=request.user.username, finlogin=None).count()>0:
             
             aCbsusu = Cbsusu.objects.filter(
                 idusu1=request.user.username, finlogin=None).order_by("corrusu").first()
-            aCbsusu.finlogin = dt.datetime.now(tz=timezone.utc)
+            aCbsusu.finlogin = ahora(request)
             aCbsusu.save()
         else:
             data = {}
@@ -141,7 +143,7 @@ def cerrarsesionusuario(request):
     data = {}
     aCbsusu = Cbsusu.objects.filter(idusu1=usuario, finlogin = None).all()
     for registro in aCbsusu:
-        registro.finlogin = dt.datetime.now(tz=timezone.utc)
+        registro.finlogin = ahora(request)
         registro.save()
     cerrarCbrenct(request)
     return JsonResponse(data)
@@ -169,10 +171,6 @@ def login(request):
     else:
         data["noexiste"] = False
     aCbsusu = Cbsusu.objects.filter(idusu1=usuario, finlogin=None).first()
-    print("arte")
-    print(aCbsusu)
-    print(usuario)
-    print("artista")
     try:
         
         if aCbsusu is not None:
@@ -183,6 +181,7 @@ def login(request):
     except Exception as e:
         data["iniciodesesion"] = 0
         data["yaconectado"] = False
+        print("error en utils 2")
         print(e)
     try:
         data["activo"] = aCbtusu.actpas == "A"
@@ -221,7 +220,7 @@ def post_login(sender, user, request, **kwargs):
     try:
         cliente = aCbtusu.cliente
         idusu1 = request.user.username
-        iniciologin = dt.datetime.now(tz=timezone.utc)
+        iniciologin = ahora(request)
         aCbsusu = Cbsusu(cliente=cliente, idusu1=idusu1,
                          iniciologin=iniciologin, fechact=iniciologin, idusu=idusu1)
         aCbsusu.guardar(aCbsusu)
@@ -230,13 +229,15 @@ def post_login(sender, user, request, **kwargs):
         try:
             cliente = aCbtusu.cliente
             idusu1 = request.user.username
-            iniciologin = dt.datetime.now(tz=timezone.utc)
+            iniciologin = ahora(request)
             aCbsusu = Cbsusu(cliente=cliente, idusu1=idusu1,
                              iniciologin=iniciologin, fechact=iniciologin, idusu=idusu1)
             aCbsusu.guardar(aCbsusu)
             request.session["iddesesion"] = aCbsusu.corrusu
+            print("error en utils 3")
             print(e)
         except Exception as e:
+            print("error en utils 4")
             print(e)
         #cliente = aCbtusu.cliente
         #idusu1 = request.user.username
@@ -280,6 +281,7 @@ def cbtusuDelete(request):
                     aCbtusu.delete()
 
         except Exception as e:
+            print("error en utils 5")
             print(e)
             data = {}
             data['error'] = str(e)
@@ -314,6 +316,7 @@ def cbtempDelete(request):
                     aCbtemp.delete()
 
         except Exception as e:
+            print("error en utils 6")
             print(e)
             data = {}
             data['error'] = str(e)
@@ -345,6 +348,7 @@ def cbtbcoDelete(request):
                     aCbtbco.delete()
 
         except Exception as e:
+            print("error en utils 7")
             print(e)
             data = {}
             data['error'] = str(e)
@@ -388,11 +392,9 @@ def conciliarSaldos(request):
                             bcoDataSetAnterior =  Cbsres.objects.filter(estadobco=0, fechatrabco__isnull=False, idrenc=aCbrencAnterior.idrenc).order_by("-fechatrabco")
                         else:
                             bcoDataSetAnterior = []
-                        print("PASA POR ACA")
                         aCbrbcoe = Cbrbcoe.objects.get(idrenc=idrenc)
                         bcoDataSet = list(Cbrbcod.objects.filter(
                             idrbcoe=aCbrbcoe.idrbcoe).order_by('fechatra', 'horatra','idrbcod'))
-                        print("POR ACA NO")
                         
                         for element in bcoDataSetAnterior:
                             if Cbttco.objects.filter(codtco=element.codtcobco,indtco=2, indpend=0).exists() == False:
@@ -417,7 +419,6 @@ def conciliarSaldos(request):
                             erpDataSetAnterior = Cbsres.objects.filter(estadoerp=0, fechatraerp__isnull=False, idrenc=aCbrencAnterior.idrenc).order_by("-fechatraerp")
                         else:
                             erpDataSetAnterior = []
-                        print("LLEGA ACA")
                         aCbrerpe = Cbrerpe.objects.get(idrenc=idrenc)
                         erpDataSet = list(Cbrerpd.objects.filter(
                             idrerpe=aCbrerpe.idrerpe).order_by('fechatra','idrerpd'))
@@ -508,8 +509,7 @@ def conciliarSaldos(request):
                                         insCbsres.codtcobco=vwRow.codtcobco
                                     except:
                                         insCbsres.codtcobco=""
-                                    insCbsres.fechact = dt.datetime.now(
-                                        tz=timezone.utc)
+                                    insCbsres.fechact = ahora(request)
                                     insCbsres.idusu = request.user.username
                                     insCbsres.save()
                                     cambio = True
@@ -544,21 +544,21 @@ def conciliarSaldos(request):
                                 cambio = False
                         conciliacioAutoySemiAuto(request, idrenc, aCbrenc)
                         CbrencUpd = Cbrenc.objects.get(idrenc=idrenc)
-                        CbrencUpd.fechacons = dt.datetime.now(tz=timezone.utc)
+                        CbrencUpd.fechacons = ahora(request)
                         CbrencUpd.idusucons = request.user.username
                         CbrencUpd.save()
                         if Cbrenct.objects.filter(idusu=request.user.username, fechorafin=None).exists():
                             bCbrenct = Cbrenct.objects.filter(
                                 idusu=request.user.username, fechorafin=None).first()
-                            bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+                            bCbrenct.fechorafin = ahora(request)
                             bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
                             bCbrenct.save()
                         aCbrenct = Cbrenct(
                             formulario="CBF02", idrenc=Cbrenc.objects.filter(idrenc=idrenc).first())
                         aCbrenct.idusu = request.user.username
-                        aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)
+                        aCbrenct.fechact = ahora(request)
                         aCbrenct.accion = 2
-                        aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)
+                        aCbrenct.fechoraini = ahora(request)
                         aCbrenct.save()
                         data = {"idrenc": idrenc}
                 else:
@@ -573,6 +573,7 @@ def conciliarSaldos(request):
                 data = {"info": "La conciliación ya fue cerrada"}
         except Exception as e:
             data = {}
+            print("error en utils 8")
             print(e)
             data['error'] = str(e)
         return JsonResponse(data)
@@ -606,7 +607,7 @@ def conciliacioAutoySemiAuto(request, idrenc, aCbrenc):
                 aCbsres.saldoacumdiabco = saldoacumdiabco
                 aCbsres.saldoacumeserp = saldoacumeserp
                 aCbsres.saldoacumdiaerp = saldoacumdiaerp
-                aCbsres.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbsres.fechact = ahora(request)
                 aCbsres.idusualt = request.user.username
                 aCbsres.save()
         else:
@@ -637,7 +638,7 @@ def conciliacioAutoySemiAuto(request, idrenc, aCbrenc):
             aCbsres.saldodiferencia = saldodiferencia
             diabcoant = diabco
             diaerpant = diaerp
-            aCbsres.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbsres.fechact = ahora(request)
             aCbsres.idusualt = request.user.username
             aCbsres.save()
     n = 0
@@ -800,7 +801,6 @@ def editCbwres(request):
     try:
         idrenc = None
         tabla = list(dict(request.POST).keys())[0][1:-1]
-        print(tabla[:200])
         while True:
             
             fila = tabla[:tabla.find("}")+1]
@@ -846,6 +846,7 @@ def editCbwres(request):
             try:
                 aCbwsres.codtcobco = fila["codtcobco"]
             except Exception as e:
+                print("error en utils 9")
                 print(e)
                 aCbwsres.codtcobco = ""
             try:
@@ -854,7 +855,6 @@ def editCbwres(request):
                 aCbwsres.codtcoerp = ""
                 
 
-            print("A")
             #print(fila["codtcobco"])
             aCbwsres.estadobco = fila["estadobco"]
             aCbwsres.estadoerp = fila["estadoerp"]
@@ -868,7 +868,7 @@ def editCbwres(request):
             tabla = tabla[comienzo+10:]
         return HttpResponse("")
     except Exception as e:
-        print("ACA")
+        print("error en utils 10")
         print(e)
 # ******************************************************************************************************************** #
 # ******************************************************************************************************************** #
@@ -905,15 +905,15 @@ def cerrarConciliacion(request):
                 if Cbrenct.objects.filter(idusu=request.user.username, fechorafin=None).exists():
                     bCbrenct = Cbrenct.objects.filter(
                         idusu=request.user.username, fechorafin=None).first()
-                    bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+                    bCbrenct.fechorafin = ahora(request)
                     bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
                     bCbrenct.save()
                 aCbrenct = Cbrenct(
                     formulario="CBF02", idrenc=Cbrenc.objects.filter(idrenc=idrenc).first())
                 aCbrenct.idusu = request.user.username
-                aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbrenct.fechact = ahora(request)
                 aCbrenct.accion = 2
-                aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)
+                aCbrenct.fechoraini = ahora(request)
                 aCbrenct.save()
                 data={}
                 data["exito"] = True
@@ -987,6 +987,7 @@ def getdesbco(request):
         algo = Cbmbco.objects.filter(codbco=codbco).first()
         data["desbco"] = Cbmbco.objects.filter(codbco=codbco).first().desbco
     except Exception as e:
+        print("error en utils 11")
         print(e)
         data["desbco"] = ""
     return JsonResponse(data)
@@ -1203,13 +1204,14 @@ def CbtusucGuardar(request):
 
             if request.POST[clave] == "true":
                 aCbtusuc = Cbtusuc(codcol=i)
-                aCbtusuc.fechact = dt.datetime.now(tz=timezone.utc)
+                aCbtusuc.fechact = ahora(request)
                 aCbtusuc.idusu = request.user.username
                 aCbtusuc.idtusu = Cbtusu.objects.filter(
                     idusu1=request.user.username).first().idtusu
                 aCbtusuc.save()
             i = i+1
     except Exception as e:
+        print("error en utils 12")
         print(e)
         pass
     return JsonResponse({})
@@ -1219,15 +1221,15 @@ def eliminarGuardado(request):
     if Cbrenct.objects.filter(idusu=request.user.username, fechorafin=None).exists():
         bCbrenct = Cbrenct.objects.filter(
             idusu=request.user.username, fechorafin=None).first()
-        bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+        bCbrenct.fechorafin = ahora(request)
         bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
         bCbrenct.save()
     aCbrenct = Cbrenct(formulario="CBF02",
                        idrenc=Cbrenc.objects.filter(idrenc=idrenc).first())
     aCbrenct.idusu = request.user.username
-    aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)
+    aCbrenct.fechact = ahora(request)
     aCbrenct.accion = 10
-    aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)
+    aCbrenct.fechoraini = ahora(request)
     aCbrenct.save()
 
     Cbwres.objects.filter(idrenc=idrenc).delete()
@@ -1238,15 +1240,15 @@ def guardado(idrenc, request):
     if Cbrenct.objects.filter(idusu=request.user.username, fechorafin=None).exists():
         bCbrenct = Cbrenct.objects.filter(
             idusu=request.user.username, fechorafin=None).first()
-        bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+        bCbrenct.fechorafin = ahora(request)
         bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
         bCbrenct.save()
     aCbrenct = Cbrenct(formulario="CBF02",
                        idrenc=Cbrenc.objects.filter(idrenc=idrenc).first())
     aCbrenct.idusu = request.user.username
-    aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)
+    aCbrenct.fechact = ahora(request)
     aCbrenct.accion = 4
-    aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)
+    aCbrenct.fechoraini = ahora(request)
     aCbrenct.save()
     with transaction.atomic():
         while Cbwres.objects.filter(idrenc=idrenc).exists():
@@ -1305,11 +1307,12 @@ def guardado(idrenc, request):
                 difbcoerp=Cbrenc.objects.filter(idrenc=idrenc).first(
                 ).saldobco - aCbsres.saldoacumeserp+ultimoDebeErp-ultimoHaberErp,
                 idusu=request.user.username)
-            aCbrencl.fechact = dt.datetime.now(tz=timezone.utc)
+            aCbrencl.fechact = ahora(request)
             anteriorCbrencl = Cbrencl.objects.filter(idrenc=aCbrencl.idrenc).last()
             if aCbrencl.status != anteriorCbrencl.status or aCbrencl.difbcoerp != anteriorCbrencl.difbcoerp or aCbrencl.saldobco != anteriorCbrencl.saldobco:
                 aCbrencl.save(aCbrencl)
         except Exception as e:
+            print("error en utils 13")
             print(e)
             pass
     
@@ -1341,6 +1344,9 @@ def eliminarCarga(request):
     if idrerpe is not None:
         idrerpe=idrerpe.idrerpe
     Cbrbod.objects.filter(idrenc=idrenc).delete()
+    Cbrbnc.objects.filter(idrenc=idrenc).delete()
+    Cbrbic.objects.filter(idrenc=idrenc).delete()
+    Cbrban.objects.filter(idrenc=idrenc).delete()
     Cbrgal.objects.filter(idrenc=idrenc).delete()
     Cbrbcod.objects.filter(idrbcoe=idrbcoe).delete()
     Cbrerpd.objects.filter(idrerpe=idrerpe).delete()
@@ -1416,16 +1422,16 @@ def createCbrenct(request, idrenc, accion, formulario):
         aCbrenct = Cbrenct(
                     formulario=formulario, idrenc=Cbrenc.objects.filter(idrenc=idrenc).first())
         aCbrenct.idusu = request.user.username
-        aCbrenct.fechact = dt.datetime.now(tz=timezone.utc)
+        aCbrenct.fechact = ahora(request)
         aCbrenct.accion = accion
-        aCbrenct.fechoraini = dt.datetime.now(tz=timezone.utc)
+        aCbrenct.fechoraini = ahora(request)
         aCbrenct.save()
 
 def cerrarCbrenct(request):
         if Cbrenct.objects.filter(idusu=request.user.username, fechorafin=None).exists():
             bCbrenct = Cbrenct.objects.filter(
                         idusu=request.user.username, fechorafin=None).first()
-            bCbrenct.fechorafin = dt.datetime.now(tz=timezone.utc)
+            bCbrenct.fechorafin = ahora(request)
             bCbrenct.tiempodif = bCbrenct.fechorafin - bCbrenct.fechoraini
             bCbrenct.save()
 
@@ -1548,31 +1554,25 @@ def calcularTotales(request, context):
                 except:
                     pass
         except Exception as e:
+            print("error en utils 14")
             print(e)
 
         tiposDeConciliacion = json.loads(
             getTiposDeConciliacion(request,request.GET.get('idrenc')).content)
-        context['debebcototal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["debebcototal"]))
-        context['haberbcototal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["haberbcototal"]))
-        context['saldobcototal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["saldobcototal"]))
-        context['debeerptotal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["debeerptotal"]))
-        context['habererptotal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["habererptotal"]))
-        context['saldoerptotal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["saldoerptotal"]))
-        context['saldodiferenciatotal'] =  moneda + \
-            '{:,}'.format(float(tiposDeConciliacion["saldodiferenciatotal"]))
-        context['habererp'] =  moneda+'{:,}'.format(habererp)
-        context['debeerp'] =  moneda+'{:,}'.format(debeerp)
-        context['debebco'] =  moneda+'{:,}'.format(debebco)
-        context['haberbco'] =  moneda+'{:,}'.format(haberbco)
-        context['saldobco'] =  moneda+'{:,}'.format(saldobco)
-        context['saldoerp'] =  moneda+'{:,}'.format(saldoerp)
-        context['saldodiferencia'] =  moneda+'{:,}'.format(saldodiferencia)
+        context['debebcototal'] =  '{:,}'.format(float(tiposDeConciliacion["debebcototal"]))
+        context['haberbcototal'] =  '{:,}'.format(float(tiposDeConciliacion["haberbcototal"]))
+        context['saldobcototal'] =  '{:,}'.format(float(tiposDeConciliacion["saldobcototal"]))
+        context['debeerptotal'] =  '{:,}'.format(float(tiposDeConciliacion["debeerptotal"]))
+        context['habererptotal'] =  '{:,}'.format(float(tiposDeConciliacion["habererptotal"]))
+        context['saldoerptotal'] =  '{:,}'.format(float(tiposDeConciliacion["saldoerptotal"]))
+        context['saldodiferenciatotal'] =  '{:,}'.format(float(tiposDeConciliacion["saldodiferenciatotal"]))
+        context['habererp'] =  '{:,}'.format(habererp)
+        context['debeerp'] =  '{:,}'.format(debeerp)
+        context['debebco'] =  '{:,}'.format(debebco)
+        context['haberbco'] =  '{:,}'.format(haberbco)
+        context['saldobco'] =  '{:,}'.format(saldobco)
+        context['saldoerp'] =  '{:,}'.format(saldoerp)
+        context['saldodiferencia'] =  '{:,}'.format(saldodiferencia)
         
 
 def populateDatabase():
@@ -1686,6 +1686,8 @@ def populateDatabase():
             aCbterr.save()
             aCbterr = Cbterr(coderr=5, descerr="Saldo Inválido")
             aCbterr.save()
+            aCbterr = Cbterr(coderr=6, descerr="Monto Inválido")
+            aCbterr.save()
             aCbterr = Cbterr(coderr=99, descerr="Error Desconocido")
             aCbterr.save()
         if Cbterr.objects.filter(coderr=6).exists() == False:
@@ -1711,7 +1713,7 @@ def updateCbtusuc(request):
         Cbtusuc.objects.filter(idusu=request.user.username, codcol=codcol).delete()
     else:
         aCbtusuc = Cbtusuc(idusu=request.user.username, codcol=codcol)
-        aCbtusuc.fechact = dt.datetime.now(tz=timezone.utc)
+        aCbtusuc.fechact = ahora(request)
         aCbtusuc.idusu = request.user.username
         aCbtusuc.save()
     return JsonResponse({})
@@ -1733,9 +1735,9 @@ def cbrencDesconciliar(request):
 def CbtcfgCreate(request):
     cliente = clienteYEmpresas(request)["cliente"]
     ordencfg= Cbtcfg.objects.filter(cliente=cliente).count()-1
-    aCbtcfg = Cbtcfg(cliente=cliente, codcfg=3,actpas="P", fechact=dt.datetime.now(), idusu=request.user.username)
+    aCbtcfg = Cbtcfg(cliente=cliente, codcfg=3,actpas="P", fechact=ahora(request), idusu=request.user.username)
     aCbtcfg.save()
-    Cbtcfgc(idtcfg=aCbtcfg, campobco="", campoerp="", ordencfg=ordencfg, fechact=dt.datetime.now(), idusu=request.user.username).save()
+    Cbtcfgc(idtcfg=aCbtcfg, campobco="", campoerp="", ordencfg=ordencfg, fechact=ahora(request), idusu=request.user.username).save()
     return HttpResponse("")
 
 
@@ -1749,6 +1751,7 @@ def chequearUsuarioConectado(request):
             data['enuso']=False
     except Exception as e:
         data['enuso']=False
+        print("error en utils 15")
         print(e)
     return JsonResponse(data)
 
@@ -1761,7 +1764,7 @@ def userCheck(request):
     elif aCbtusu.actpas != "A":
         data["cerrar"]= True
     aCbtlic = Cbtlic.objects.filter(cliente=clienteYEmpresas(request)["cliente"]).first()
-    if aCbtlic.fechalic < dt.datetime.now(tz=timezone.utc):
+    if aCbtlic.fechalic < ahora(request):
         data["cerrar"]= True
     return JsonResponse(data)
 
@@ -1799,6 +1802,7 @@ def conciliarSaldosExistentes(request):
         aCbrenc = Cbrenc.objects.get(idrenc=idrenc)
         conciliacioAutoySemiAuto(request,idrenc, aCbrenc)
     except Exception as e:
+        print("error en utils 16")
         print(e)
     return JsonResponse({})
 
@@ -1813,6 +1817,7 @@ def enviarMailLadoBancoHtml(request):
         send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco.html"])
         data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
     except Exception as e:
+        print("error en utils 17")
         print(e)
         data["info"]="Envio Fallido"
 
@@ -1829,7 +1834,7 @@ def CreateContextNoConciliadosBancoHtml(request, idrenc):
     aCbtemp = Cbtemp.objects.get(empresa=aCbrenc.empresa)
     aCbmbco = Cbmbco.objects.get(codbco = aCbrenc.codbco)
     context["descli"]=aCbtcli.descli
-    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+    context["fechaDeEmision"] =str(ahora(request).strftime('%d/%m/%Y %H:%M:%S'))
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
@@ -1868,6 +1873,7 @@ def enviarMailLadoBancoPdf(request):
         send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf"])
         data["info"]="Lado Banco de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
     except Exception as e:
+        print("error en utils 18")
         print(e)
         data["info"]="Envio Fallido"
 
@@ -1887,7 +1893,7 @@ def crearPdfBanco(request):
     aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
     send_to = aCbtcta.diremail
     context["descli"]=aCbtcli.descli
-    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+    context["fechaDeEmision"] =str(ahora(request).strftime('%d/%m/%Y %H:%M:%S'))
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
@@ -1940,9 +1946,7 @@ def crearPdfBanco(request):
         with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", 'wb') as f:
             f.write(pdf)
         merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginabanco"+str(pagina)+".pdf", import_bookmarks=False )
-        print(ultimoRegistro)
         primerRegistro = ultimoRegistro + 1
-        print(ultimoRegistro)
     merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladobanco.pdf")
     return data,idrenc,send_to 
 
@@ -1957,6 +1961,7 @@ def enviarMailLadoErpHtml(request):
         send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp.html"])
         data["info"]="Lado Erp de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato HTML"
     except Exception as e:
+        print("error en utils 19")
         print(e)
         data["info"]="Envio Fallido"
 
@@ -1972,7 +1977,7 @@ def CreateContextNoConciliadosErpHtml(request, idrenc):
     aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
     send_to = aCbtcta.diremail
     context["descli"]=aCbtcli.descli
-    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+    context["fechaDeEmision"] =str(ahora(request).strftime('%d/%m/%Y %H:%M:%S'))
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
@@ -2010,6 +2015,7 @@ def enviarMailLadoErpPdf(request):
         send_mail(send_to, "banco", [str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf"])
         data["info"]="Lado ERP de No conciliados del Idrenc " + idrenc + " enviado correctamente en formato PDF"
     except Exception as e:
+        print("error en utils 20")
         print(e)
         data["info"]="Envio Fallido."
 
@@ -2030,7 +2036,7 @@ def crearPdferp(request):
     aCbtcta = Cbtcta.objects.get(nrocta = aCbrenc.nrocta)
     send_to = aCbtcta.diremail
     context["descli"]=aCbtcli.descli
-    context["fechaDeEmision"] =str(dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+    context["fechaDeEmision"] =str(ahora(request).strftime('%d/%m/%Y %H:%M:%S'))
         
     context["desemp"] = aCbtemp.desemp
     context["desbco"] = aCbmbco.desbco
@@ -2082,9 +2088,7 @@ def crearPdferp(request):
         with open(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", 'wb') as f:
             f.write(pdf)
         merger.append(str(Path(__file__).resolve().parent.parent) + "/media/temp/paginaerp"+str(pagina)+".pdf", import_bookmarks=False )
-        print(ultimoRegistro)
         primerRegistro = ultimoRegistro + 1
-        print(ultimoRegistro)
     merger.write(str(Path(__file__).resolve().parent.parent) + "/media/temp/ladoerp.pdf")
     return data,idrenc,send_to
 
@@ -2094,7 +2098,6 @@ def send_mail(send_to,lado, files=None):
     try:
         text = "Se envía el listado de registros no conciliados del " + lado
         msg = MIMEMultipart()
-        print(config)
         msg['From'] = 'vadiasys.cb.noreply@gmail.com'
         msg['To'] = send_to
         msg['Date'] = formatdate(localtime=True)
@@ -2113,31 +2116,25 @@ def send_mail(send_to,lado, files=None):
             msg.attach(part)  
         smtp = smtplib.SMTP()
         smtp.connect('127.0.0.1')
-        print("aqui")
         #smtp.starttls()
         #smtp.login(config["SMTP_USER"], config["SMTP_PASSWORD"])
-        print("b")
         smtp.sendmail('vadiasys.cb.noreply@gmail.com', send_to, msg.as_string())
-        print("c")
         smtp.quit()
         smtp.close()
-        print("d")
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
+        print("error en utils 21")
         print(e)
 
 def getMailEmpresa(request):
     data = {}
     try:
         cliente = request.GET.get("cliente")
-        print(cliente)
         empresa = request.GET.get('empresa')
-        print(empresa)
         aCbtemp = Cbtemp.objects.filter(empresa=empresa, cliente=cliente).first()
         data["diremail"] = aCbtemp.diremail
         return JsonResponse(data)
     except Exception as e:
+        print("error en utils 22")
         print(e)
         data["diremail"] = "Error en mail"
         return JsonResponse(data)
@@ -2156,3 +2153,20 @@ def cortarPalabras(frase):
             n = 0
         resultado = resultado + i
     return resultado
+
+def ahora(request):
+    aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+    aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
+    husohor = aCbtcli.husohor
+    if husohor[0] == "-":
+        invertir=-1
+    else:
+        invertir=1
+    if invertir == -1:
+        horas = int(husohor[1:3])
+        minutos = int(husohor[4:])
+    else:
+        horas = int(husohor[0:2])
+        minutos = int(husohor[3:])
+    timedelta =  dt.timedelta(hours=horas, minutes=minutos)*invertir
+    return dt.datetime.now(tz=timezone.utc) + timedelta

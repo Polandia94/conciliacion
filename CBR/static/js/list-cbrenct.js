@@ -29,10 +29,8 @@ $(function () {
         },
         columns: [
             {"data": "idusu"},
-            {'data': 'fechoraini', "render":function(data){
-                return moment(data).format('DD/MM/YYYY HH:mm:ss')}},
-            {"data": "fechorafin", "render":function(data){
-                return moment(data).format('DD/MM/YYYY HH:mm:ss')}},
+            {'data': 'fechoraini'},
+            {"data": "fechorafin"},
             {"data": "tiempodif", "render":function(data){
                 return String(data).replace("day","día")}},
             {"data": "formulario"},

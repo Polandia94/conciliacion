@@ -37,7 +37,7 @@
     </a>
 
     {% endif %}
-    <label class="ml-2">Folio conciliación:<input value="{{ idrenc }}" class="w-50" readonly></label>
+    <label class="ml-2">Folio:<input value="{{ idrenc }}" class="w-50" readonly></label>
     {% if editable == 'Editable' %}         
     <a id="btnConciliar" class="btn btn-warning btn-flat"  data-toggle="tooltip" data-placement="bottom" title="Ejecuta el proceso de conciliación. Se recalcularán los saldos diarias y mensuales a partir de los registros originales">
         <i class="fas fa-play"></i>
@@ -45,13 +45,13 @@
     </a>
     {% endif %}
     <label class="mt-0" id="cargando"></label>
-
-
+    <label class="label-cbf02"><input value="{{moneda}}" class="w-50" readonly></label> 
     <label class="label-cbf02">Mes <input value="{{mes}}/{{ano}}" class="w-50" readonly></label>
     <label class="label-cbf02-cuenta">Cuenta <input value="{{nrocta}}" class="w-50" style="margin-right: 0%;" readonly></label>
     <label class="label-cbf02">Banco <input value="{{codbco}}" class="w-50" readonly></label> 
     <label class="label-cbf02">Empresa <input value="{{empresa}}" class="w-50" readonly></label> 
     <div hidden id="saldodiferenciatotaloculto">{{saldodiferenciatotal}}</div>
+    
 
 
 

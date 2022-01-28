@@ -52,6 +52,7 @@ $(function () {
         select: true,
         deferRender: true,
         searching: true,
+        
         ajax: {
             url: window.location.pathname,
             type: 'POST',

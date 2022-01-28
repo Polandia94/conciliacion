@@ -382,22 +382,22 @@ $.ajax({
     url: '/getTiposDeConciliacionpost',
     data: { 'idrenc': idrenc },
     success: function (respons) {
-        try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { debebcototal.innerHTML =   Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch { }
-        try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch { }
-        try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { saldobcototal.innerHTML =  Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch { }
-        try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { debeerptotalhtml.innerHTML =  Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch { }
-        try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { habererptotalhtml.innerHTML =  Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch { }
-        try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { saldoerptotalhtml.innerHTML =  Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch { }
-        try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+        try { saldodiferenciatotalhtml.innerHTML =  Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
         catch {}
-        saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
-        globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
+        saldodiferenciatotaloculto.innerHTML =  Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
+        globalVariable.SaldoDiferenciaTotal =  Number(respons.saldodiferenciatotal)
         console.log(respons.saldodiferenciatotal)
         console.log(respons.puedeCerrar)
         if(respons.saldodiferenciatotal == 0 && respons.puedeCerrar == 1){
@@ -519,13 +519,13 @@ $.ajax({
                             table.cell(fila, ".saldoacumdiaerp").data(saldodia);
                             var rows = table.row(fila)
                             /*Llena los html de los subtotales */
-                            try { saldodiferenciahtml.innerHTML = globalVariableIndtco.moneda + Number(saldodiferencia).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { saldodiferenciahtml.innerHTML =  Number(saldodiferencia).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
-                            try { saldoerphtml.innerHTML = globalVariableIndtco.moneda +Number(saldoi).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { saldoerphtml.innerHTML = Number(saldoi).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
-                            try { debeerphtml.innerHTML = globalVariableIndtco.moneda + Number(totaldebe).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { debeerphtml.innerHTML =  Number(totaldebe).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
-                            try { habererphtml.innerHTML = globalVariableIndtco.moneda +  Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                            try { habererphtml.innerHTML =   Number(totalhaber).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                             catch { }
                             /*va llenando la informacion a enviar al back */
                             let agregar = {"idrenc":rows.data()["idrenc"], "idsres":rows.data()["idsres"], "debeerp":rows.data()["debeerp"], "habererp":rows.data()["habererp"], "saldoacumeserp":rows.data()["saldoacumeserp"],"saldoacumdiaerp":rows.data()["saldoacumdiaerp"], "saldodiferencia":rows.data()["saldodiferencia"], "historial":rows.data()["historial"], "idrbcodl":rows.data()["idrbcodl"], "idrerpdl":rows.data()["idrerpdl"],"codtcobco":rows.data()["codtcobco"],"codtcoerp":rows.data()["codtcoerp"],"estadobco":rows.data()["estadobco"],"estadoerp":rows.data()["estadoerp"]  }
@@ -631,22 +631,22 @@ $.ajax({
                                 url: '/getTiposDeConciliacionpost',
                                 data: { 'idrenc': idrenc },
                                 success: function (respons) {
-                                    try { debebcototal.innerHTML = globalVariableIndtco.moneda +  Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { debebcototal.innerHTML =   Number(respons.debebcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { haberbcototal.innerHTML = globalVariableIndtco.moneda +Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { haberbcototal.innerHTML = Number(respons.haberbcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldobcototal.innerHTML = globalVariableIndtco.moneda + Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { saldobcototal.innerHTML =  Number(respons.saldobcototal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { debeerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { debeerptotalhtml.innerHTML =  Number(respons.debeerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { habererptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { habererptotalhtml.innerHTML =  Number(respons.habererptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldoerptotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { saldoerptotalhtml.innerHTML =  Number(respons.saldoerptotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch { }
-                                    try { saldodiferenciatotalhtml.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
+                                    try { saldodiferenciatotalhtml.innerHTML =  Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) }
                                     catch {}
-                                    saldodiferenciatotaloculto.innerHTML = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
-                                    globalVariable.SaldoDiferenciaTotal = globalVariableIndtco.moneda + Number(respons.saldodiferenciatotal)
+                                    saldodiferenciatotaloculto.innerHTML =  Number(respons.saldodiferenciatotal).toLocaleString("en-US", {   minimumFractionDigits: 2 }) 
+                                    globalVariable.SaldoDiferenciaTotal =  Number(respons.saldodiferenciatotal)
                                     console.log(respons.saldodiferenciatotal)
                                     console.log(respons.puedeCerrar)
                                     if(respons.saldodiferenciatotal == 0 && respons.puedeCerrar == 1){
@@ -794,6 +794,10 @@ $.ajax({
                 let maximosCaracteres = 25;
         
                 let table = $('#data').DataTable({
+                    targets: 'no-sort',
+                    ordering: false,
+                    order: [],
+                    orderFixed: [ 0, 'asc' ],
                     deferRender: true,
                     colReorder: true,
                     stateSave: true,
@@ -860,19 +864,19 @@ $.ajax({
                         { "data": "horatrabco", className: "dt-bancoColor" },
                         { "data": "debebco", name: "debebco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(parseFloat(data.toString()).toFixed(2)).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "haberbco", name: "haberbco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         { "data": "saldobco", name: "saldobco", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}, className: "dt-bancoColor" },
                         {
                             "data": "saldoacumesbco",
                             name: "saldoacumesbco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         {
@@ -880,7 +884,7 @@ $.ajax({
                             name: "saldoacumdiabco",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}},
                             className: "dt-bancoColor"
                         },
                         { "data": 'oficina', className: "dt-bancoColor" },
@@ -927,30 +931,30 @@ $.ajax({
                         },
                         { "data": "debeerp", name: "debeerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "habererp", name: "habererp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         { "data": "saldoerp", name: "saldoerp", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
                         {
                             "data": "saldoacumeserp",
                             name: "saldoacumeserp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         {
                             "data": "saldoacumdiaerp",
                             name: "saldoacumdiaerp",
                             render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display"|| type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
+                                return parseFloat(data)}else if(type === "filter" || type === "display"|| type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}}
                         },
                         { "data": "saldodiferencia", name: "saldodiferencia", render: function (data, type, full, meta) {if(data != null){
                              if (type === "sort"){
-                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return globalVariableIndtco.moneda + parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
+                                return parseFloat(data)}else if(type === "filter" || type === "display" || type === "export"){{return  parseFloat(data.toString()).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")}}else{return data}}else{return""}} },
         
                         { "data": 'nrotraerp' },
                         {
@@ -1022,6 +1026,7 @@ $.ajax({
                         {orderData: [0]},
                         {
                             targets: [2, 8, 10, 11, 12],
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarerp(e) })
@@ -1029,6 +1034,7 @@ $.ajax({
                         },
                         {
                             targets: [19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 32],
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseenter', function (e) { resaltarbco(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarbco(e) })
@@ -1036,6 +1042,7 @@ $.ajax({
                         },
                         {
                             targets: ['fechatrabco'],
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
                                 cell.addEventListener('mouseleave', function (e) { desresaltarerp(e) })
@@ -1045,6 +1052,7 @@ $.ajax({
                         },
                         {
                             targets: ["debebco"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 $(cell).attr("data-look", 'habererp');
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
@@ -1053,6 +1061,7 @@ $.ajax({
                         },
                         {
                             targets: ["haberbco"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 $(cell).attr("data-look", 'debeerp');
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
@@ -1061,6 +1070,7 @@ $.ajax({
                         },
                         {
                             targets: ["saldobco"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 $(cell).attr("data-look", 'saldoerp');
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
@@ -1069,6 +1079,7 @@ $.ajax({
                         },
                         {
                             targets: ["saldoacumesbco"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 $(cell).attr("data-look", 'saldoacumeserp');
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
@@ -1077,6 +1088,7 @@ $.ajax({
                         },
                         {
                             targets: ["saldoacumdiabco"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 $(cell).attr("data-look", 'saldoacumdiaerp');
                                 cell.addEventListener('mouseenter', function (e) { resaltarerp(e) })
@@ -1085,6 +1097,7 @@ $.ajax({
                         },
                         {
                             targets: ["desctra"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 var row = table.row(cell)
                                 if (table.column(cell).visible() === true) {
@@ -1098,6 +1111,7 @@ $.ajax({
                         },
                         {
                             targets: ["referp"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 var row = table.row(cell)
                                 if (table.column(cell).visible() === true) {
@@ -1112,6 +1126,7 @@ $.ajax({
                         },
                         {
                             targets: ["glosaerp"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 var row = table.row(cell)
                                 if (table.column(cell).visible() === true) {
@@ -1127,6 +1142,7 @@ $.ajax({
                         },
                         {
                             targets: ["codtcobco"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseleave', function (e) {
                                     var row = table.row(e.target.parentElement)
@@ -1151,6 +1167,7 @@ $.ajax({
                         
                         {
                             targets: ["codtcoerp"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseleave', function (e) {
                                     var row = table.row(e.target.parentElement)
@@ -1174,6 +1191,7 @@ $.ajax({
                         },
                         {
                             targets: ["idrerpdl"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 let original
                                 var row = table.row(cell)
@@ -1377,6 +1395,7 @@ $.ajax({
                         },
                         {
                             targets: ["debeerp"],
+                            orderable: false,
                             createdCell: function (cell) {
         
                                 $(cell).attr("data-look", 'haberbco');
@@ -1440,6 +1459,7 @@ $.ajax({
                         },
                         {
                             targets: ["habererp"],
+                            orderable: false,
                             createdCell: function (cell) {
         
                                 $(cell).attr("data-look", 'debebco');
@@ -1507,6 +1527,7 @@ $.ajax({
         
                         {
                             targets: ["idrbcodl"],
+                            orderable: false,
                             createdCell: function (cell) {
                                 let original
                                 let estadooriginal
@@ -1713,6 +1734,7 @@ $.ajax({
                         },
                         {
                             targets: ["_all"],
+                            orderable: false,
                             className: "dt-nowrap pt-1 pb-1 pr-1 pl-1",
                             // createdCell: function (td,value, data){
                             //     /* CELDA POR CELDA DE LAS COLUMNAS EN targets */
@@ -1720,6 +1742,7 @@ $.ajax({
                         },
                         {
                             targets: ["idrbcod"],
+                            orderable: false,
                             render: function (data, type, row) {
                                 if (((data != "0") && (data != null) && (data != undefined) && (data != ''))) {
                                     return `</nobr></td> <button class="link"  onclick="javascript:ventanaSecundaria('../cbrbcod/${data}/${idrenc}/?return_url=CBR:cbsres-list')">${data}</button></nobr></td>`
@@ -1731,8 +1754,9 @@ $.ajax({
         
                         {
                             targets: ["estadobco"],
+                            orderable: false,
                             className: "p-0 pb-0 ",
-                            orderable: true,
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseleave', function (e) {
                                     var row = table.row(e.target.parentElement)
@@ -1769,18 +1793,18 @@ $.ajax({
 
                                 switch (row['estadobco']) {
                                     case 0: {
-                                        var $Etiqueta = $('<p>No Conciliado</p>');
+                                        var $Etiqueta = $('<p>B No Conciliado</p>');
                                         classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
-                                        var $Etiqueta = $('<p>Conciliado</p>');
+                                        var $Etiqueta = $('<p>B Conciliado</p>');
                                         classBackground = 'callout-success';
                                         break;
                                     }
                                     case 2: {
-                                        var $Etiqueta = $('<p>Sugerido</p>');
+                                        var $Etiqueta = $('<p>B Sugerido</p>');
                                         classBackground = 'callout-warning';
                                         break;
                                     }
@@ -1888,8 +1912,9 @@ $.ajax({
                         },
                         {
                             targets: ["idrerpdl"],
+                            orderable: false,
                             className: "p-0 pb-0 ",
-                            orderable: true,
+                            orderable: false,
                             render: function (data, type, row) {
                                 var zone_html = "";
                                 if (data == null || data == 0) {
@@ -1938,8 +1963,9 @@ $.ajax({
                         },
                         {
                             targets: ["idrbcodl"],
+                            orderable: false,
                             className: "p-0 pb-0 ",
-                            orderable: true,
+                            orderable: false,
                             render: function (data, type, row) {
                                 var zone_html = "";
                                 if (data == null || data == 0) {
@@ -1987,6 +2013,7 @@ $.ajax({
                         },
                         {
                             targets: ["codtcobco"],
+                            orderable: false,
                             render: function (data, type, row, meta) {
                                 if(type=='export'){return data}else{
                                 if (row['debebco'] != null) {
@@ -2017,6 +2044,7 @@ $.ajax({
                         },
                         {
                             targets: ["idrerpd"],
+                            orderable: false,
                             render: function (data, type, row) {
                                 if (((data != "0") && (data != null) && (data != undefined) && (data != ''))) {
                                     return ` <button class="link" onclick="javascript:ventanaSecundaria('../cbrerpd/${data}/${idrenc}/?return_url=CBR:cbsres-list')"> ${data}</button>
@@ -2032,8 +2060,9 @@ $.ajax({
                         },
                         {
                             targets: ["estadoerp"],
+                            orderable: false,
                             className: "p-0 pb-0 ",
-                            orderable: true,
+                            orderable: false,
                             createdCell: function (cell) {
                                 cell.addEventListener('mouseleave', function (e) {
                                     var row = table.row(e.target.parentElement)
@@ -2068,18 +2097,18 @@ $.ajax({
                                 var classBackground = '';
                                 switch (parseInt(row['estadoerp'])) {
                                     case 0: {
-                                        var $Etiqueta = $('<p>No Conciliado</p>');
+                                        var $Etiqueta = $('<p>E No Conciliado</p>');
                                         classBackground = 'callout-danger ';
                                         break;
                                     }
         
                                     case 1: {
-                                        var $Etiqueta = $('<p>Conciliado</p>');
+                                        var $Etiqueta = $('<p>E Conciliado</p>');
                                         classBackground = 'callout-success';
                                         break;
                                     }
                                     case 2: {
-                                        var $Etiqueta = $('<p>Sugerido</p>');
+                                        var $Etiqueta = $('<p>E Sugerido</p>');
                                         classBackground = 'callout-warning';
                                         break;
                                     }
@@ -2189,6 +2218,7 @@ $.ajax({
                         },
                         {
                             targets: ["codtcoerp"],
+                            orderable: false,
                             render: function (data, type, row, meta) {
                                 if(type=='export'){return data}else{
                                 if (row['debeerp'] != null) {
@@ -2221,16 +2251,19 @@ $.ajax({
                     ],
                     rowCallback: function (row, data, index) {
                         var sortInfo = $(this).dataTable().fnSettings().aaSorting;
-                        if ((sortInfo[0][0] === 0) || (sortInfo[0][0] === 1) || (sortInfo[0][0] === 10)) {
+                        //console.log(sortInfo)
+                        //if ((sortInfo[0][0] === 0) || (sortInfo[0][0] === 1) || (sortInfo[0][0] === 10)) {
+                            $(row).removeClass('odd');
+                            $(row).removeClass('even');
                             if (data['pautado'] === 0) {
                                 $(row).addClass('odd');
                             } else {
                                 $(row).addClass('even');
                             }
-                        } else {
-                            $(row).removeClass('odd');
-                            $(row).removeClass('even');
-                        }
+                        //} else {
+                        //    $(row).removeClass('odd');
+                        //    $(row).removeClass('even');
+                        //}
         
                     },
                     drawCallback: function () {

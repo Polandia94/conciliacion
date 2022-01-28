@@ -1,0 +1,38 @@
+{% extends 'Classes/list.html' %}
+{% load static %}
+{% block head_list %}
+    <script src="{% static 'js/list-cbrbane.js' %}"></script>
+
+{% endblock %}
+    {% block botones %}
+
+
+        <a id="cerrar" onclick="window.close()" class="btn btn-primary btn-flat mb-3">
+            <i class="fas fa-arrow-circle-left"></i>
+        </a>
+        
+    {% endblock %}
+{% block columns %}
+
+
+
+    <tr>
+
+        <th scope="col" style="width: 3%;">FECHA</th>
+        <th scope="col" style="width: 5%;">REFERENCIA</th>
+        <th scope="col" style="width: 5%;">DESCRIPCIÓN</th>
+        <th scope="col" style="width: 5%;">MONTO</th>
+        <th scope="col" style="width: 3%;">BALANCE</th>
+        <th scope="col" style="width: 3%;">ERRORES ENCONTRADOS</th>
+
+
+
+    </tr>
+{% endblock %}
+
+{% block rows %}
+
+{% endblock %}
+
+{% block javascript %}
+{% endblock %}

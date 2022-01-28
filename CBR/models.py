@@ -12,6 +12,12 @@ import datetime as dt
 import os
 from django.contrib.auth.hashers import make_password
 
+def formatearFecha(fecha):
+    try:
+        return fecha.strftime('%d/%m/%Y %H:%M:%S')
+    except:
+        return ""
+
 def get_path(instance, filename):
     ahora = dt.datetime.now()
     filename = filename.encode("ascii", "ignore")
@@ -151,8 +157,39 @@ class Cbttco(models.Model):
     def save(self, *args, **kwargs):
         super( Cbttco, self ).save( *args, **kwargs )
 
+    def __str__(self):
+        return self.codtco
         # - - - - - - - - - - - - - - - - - - - - - - - - #
 
+
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+class Cbrbnc(models.Model):
+    idrbnc = models.AutoField(db_column='idrbnc', primary_key=True)
+    idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
+    fechatra = models.TextField(verbose_name='Fecha de Transaccion', db_column='fechatra')
+    desctra = models.TextField(verbose_name='Descripcion de la transaccion', db_column='desctra')
+    reftra = models.TextField(verbose_name='Referencia de la transaccion', db_column='reftra')
+    debe = models.TextField(db_column='debe')
+    haber = models.TextField(db_column='haber')
+    saldo = models.TextField(db_column='saldo')
+    fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrbnc'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - #
 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
@@ -175,6 +212,61 @@ class Cbrbod(models.Model):
     class Meta:
         managed = True
         db_table = 'cbrbod'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+
+        # - - - - - - - - - - - - - - - - - - - - - - - - #
+
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
+class Cbrban(models.Model):
+    idrban = models.AutoField(db_column='idrban', primary_key=True)
+    idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
+    fechatra = models.TextField(verbose_name='Fecha de Transaccion', db_column='fechatra')
+    desctra = models.TextField(verbose_name='Descripcion de la transaccion', db_column='desctra')
+    reftra = models.TextField(verbose_name='Referencia de la transaccion', db_column='reftra')
+    monto = models.TextField(db_column='monto')
+    saldo = models.TextField(db_column='saldo')
+    fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
+    idusu = models.CharField( verbose_name='Usuario de archivo ERP', db_column='idusu', max_length=16, null=True )
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrban'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+class Cbrbic(models.Model):
+    idrbic = models.AutoField(db_column='idrbic', primary_key=True)
+    idrenc = models.ForeignKey( 'Cbrenc', models.DO_NOTHING, db_column='idrenc', default=0, null=True )
+    diatra = models.TextField(verbose_name='Dia de Transaccion', db_column='diatra')
+    desctra = models.TextField(verbose_name='Descripcion de la transaccion', db_column='desctra')
+    codtra = models.TextField(verbose_name='Codigo de la transaccion', db_column='codtra')
+    reftra = models.TextField(verbose_name='Referencia de la transaccion', db_column='reftra')
+    debe = models.TextField(db_column='debe')
+    haber = models.TextField(db_column='haber')
+    saldo = models.TextField(db_column='saldo')
+    fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
+    idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrbic'  # Para que en la migracion no ponga el prefijo de la app
 
     def toJSON(self):
         item = model_to_dict(self)
@@ -252,6 +344,9 @@ class Cbtbco(models.Model):
     def toJSON(self):
         item = model_to_dict(self)
         return item
+    
+    def __str__(self):
+        return self.codbco
 
     def save(self, *args, **kwargs):
         super( Cbtbco, self ).save( *args, **kwargs )
@@ -308,7 +403,77 @@ class Cbrbode(models.Model):
         # 
 #**********************************************************************************************************************#
 #**********************************************************************************************************************#
+class Cbrbnce(models.Model):
+    idrbnce = models.AutoField(db_column='idrbnce', primary_key=True)
+    idrbnc = models.ForeignKey( 'Cbrbnc', models.DO_NOTHING, db_column='idrbnc', default=0, null=True )
+    coderr = models.SmallIntegerField( db_column='coderr', default=0 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
 
+    class Meta:
+        managed = True
+        db_table = 'cbrbnce'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbrbnce, self ).save( *args, **kwargs )
+
+        # 
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
+class Cbrbane(models.Model):
+    idrbane = models.AutoField(db_column='idrbane', primary_key=True)
+    idrban = models.ForeignKey( 'Cbrban', models.DO_NOTHING, db_column='idrban', default=0, null=True )
+    coderr = models.SmallIntegerField( db_column='coderr', default=0 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrbane'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbrbane, self ).save( *args, **kwargs )
+
+        
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
+
+class Cbrbice(models.Model):
+    idrbice = models.AutoField(db_column='idrbice', primary_key=True)
+    idrbic = models.ForeignKey( 'Cbrbic', models.DO_NOTHING, db_column='idrbic', default=0, null=True )
+    coderr = models.SmallIntegerField( db_column='coderr', default=0 )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs )
+        # self.fields['names'].widget.attrs['autofocus']=True
+
+    class Meta:
+        managed = True
+        db_table = 'cbrbice'  # Para que en la migracion no ponga el prefijo de la app
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    def save(self, *args, **kwargs):
+        super( Cbrbice, self ).save( *args, **kwargs )
+
+        # 
+#**********************************************************************************************************************#
+#**********************************************************************************************************************#
 
 class Cbterr(models.Model):
     idterr = models.AutoField(db_column='idterr', primary_key=True)
@@ -317,6 +482,9 @@ class Cbterr(models.Model):
     fechact = models.DateTimeField(verbose_name='Fecha de carga', db_column='fechact', blank=True, null=True)
     idusu = models.CharField( verbose_name='Usuario de archivo', db_column='idusu', max_length=16, null=True )
     
+    def __str__(self):
+        return self.descerr
+
     def __init__(self, *args, **kwargs):
         super().__init__( *args, **kwargs )
         # self.fields['names'].widget.attrs['autofocus']=True
@@ -509,6 +677,12 @@ class Cbrencl(models.Model):
 
     def toJSON(self):
         item = model_to_dict(self)
+        try:
+            item["fechactdia"] = item["fechact"].strftime('%d/%m/%Y')
+            item["fechacthora"] = item["fechact"].strftime('%H:%M')
+        except:
+            item["fechactdia"] = ""
+            item["fechacthora"] = ""
         return item
 
     # def __str__(self):
@@ -539,6 +713,8 @@ class Cbrenct(models.Model):
 
     def toJSON(self):
         item = model_to_dict(self)
+        item["fechorafin"] = formatearFecha(item["fechorafin"])
+        item["fechoraini"] = formatearFecha(item["fechoraini"])
         return item
 
     # def __str__(self):
@@ -707,6 +883,9 @@ class Cbmbco(models.Model):
     class Meta:
         managed = True
         db_table = 'cbmbco'
+    
+    def __str__(self):
+        return self.codbco
 
 class Cbmbcoh(models.Model):
     idmbcoh = models.AutoField( verbose_name='ID', db_column='idmbcoh', primary_key=True )
@@ -719,6 +898,8 @@ class Cbmbcoh(models.Model):
     class Meta:
         managed = True
         db_table = 'cbmbcoh'
+    
+
 
 class Cbtpai(models.Model):
     idtpai = models.AutoField( verbose_name='ID', db_column='idtpai', primary_key=True )
@@ -730,6 +911,8 @@ class Cbtpai(models.Model):
     class Meta:
         managed = True
         db_table = 'cbtpai'
+    def __str__(self):
+        return self.codpai
 
 class Cbtemp(models.Model):
     idtemp = models.AutoField( verbose_name='ID', db_column='idtemp', primary_key=True )
@@ -749,6 +932,9 @@ class Cbtemp(models.Model):
     class Meta:
         managed = True
         db_table = 'cbtemp'
+    
+    def __str__(self):
+        return self.empresa
 
 class Cbtcli(models.Model):
     idtcli = models.AutoField( verbose_name='ID', db_column='idtcli', primary_key=True )
@@ -757,6 +943,7 @@ class Cbtcli(models.Model):
     diremail = models.CharField(verbose_name='Mail del cliente', db_column='diremail', max_length=60)
     celsopo = models.CharField(verbose_name='Whatsapp del cliente', db_column='celsopo', max_length=15)
     codhomerp = models.CharField(verbose_name='Codigo de homologador erp', db_column='codhomerp', max_length=5, default="vegal")
+    husohor = models.CharField(verbose_name='Huso horario', db_column='husohor', max_length=6, default="00:00")
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
@@ -800,6 +987,9 @@ class Cbtfor(models.Model):
         managed = True
         db_table = 'cbtfor'
 
+    def __str__(self):
+        return self.descfor
+
 class Cbtusu(models.Model):
     idtusu = models.AutoField( verbose_name='ID', db_column='idtusu', primary_key=True )
     idusu1 = models.CharField(verbose_name='Login del usuario', db_column='idusu1', max_length=16)
@@ -828,6 +1018,9 @@ class Cbtusu(models.Model):
                                password=make_password("ninguno"))
             usuario.save()
         super( Cbtusu, self ).save( *args, **kwargs )
+    
+    def __str__(self):
+        return self.idusu1
 
 
 class Cbtusue(models.Model):
@@ -869,7 +1062,10 @@ class Cbtcol(models.Model):
     def toJSON(self):
         item = model_to_dict(self)
         return item
-        
+
+    def __str__(self):
+        return self.descol
+
     class Meta:
         managed = True
         db_table = 'cbtcol'
@@ -886,6 +1082,8 @@ class Cbsusu(models.Model):
     
     def toJSON(self):
         item = model_to_dict(self)
+        item["iniciologin"] = formatearFecha(item["iniciologin"])
+        item["finlogin"]= formatearFecha(item["finlogin"])
         return item
         
     class Meta:
@@ -908,7 +1106,8 @@ class Cbthom(models.Model):
     class Meta:
         managed = True
         db_table = 'cbthom'
-
+    def __str__(self):
+        return self.codhom
 
 class Cbtcfg(models.Model):
     idtcfg = models.AutoField( verbose_name='ID', db_column='idtcfg', primary_key=True )
@@ -917,6 +1116,7 @@ class Cbtcfg(models.Model):
     actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+
 
     class Meta:
         managed = True

@@ -29,10 +29,8 @@ $(function () {
             dataSrc: ""
         },
         columns: [
-            {"data": "fechact", "render":function(data){
-                return moment(data).format('DD/MM/YYYY')}},
-            {"data": "fechact", "render":function(data){
-                return moment(data).format('HH : mm')}},
+            {"data": "fechactdia"},
+            {"data": "fechacthora"},
             {"data": "idusu"},
             {'data': 'status', 'sClass': 'text-center pt-4', "render": function (data, type, full, meta) {
                 var zone_html = "";

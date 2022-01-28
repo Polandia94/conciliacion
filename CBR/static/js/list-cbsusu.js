@@ -70,11 +70,9 @@ $(function () {
             {"data": "descusu"},
             {"data": "corrusu"},
             {"data": "iniciologin","render":function(data){
-                if(moment(data).format('DD/MM/YYYY')=='Invalid date'){return ""}else{
-                return moment(data).format('DD/MM/YYYY HH:mm:ss')}}},
-            {"data": "finlogin","render":function(data){
-                if(moment(data).format('DD/MM/YYYY HH:mm:ss')=='Invalid date'){return ""}else{
-                return moment(data).format('DD/MM/YYYY HH:mm:ss')}}},
+                
+                return data}},
+            {"data": "finlogin"},
             {"data": "conectado", "render":function(data){
                 if(data){return "Si"}else{return "No"}}}
         ],
