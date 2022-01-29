@@ -2156,6 +2156,8 @@ def cortarPalabras(frase):
 
 def ahora(request):
     aCbtusu = Cbtusu.objects.filter(idusu1=request.user.username).first()
+    if aCbtusu is None:
+        aCbtusu = Cbtusu.objects.filter(idusu1=request.POST.get("usuario")).first()
     aCbtcli = Cbtcli.objects.get(cliente=aCbtusu.cliente)
     husohor = aCbtcli.husohor
     if husohor[0] == "-":

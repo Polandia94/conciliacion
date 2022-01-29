@@ -6,7 +6,7 @@
     color: #00258c !important;
 }
 .bg-enconciliacion-resultados {
-    text-align: center;
+    /* text-align: center; */
     color: #620202;
 }
 
@@ -46,7 +46,7 @@ table.dataTable.nowrap th, table.dataTable.nowrap td {
 
 .bg-conciliado-resultados {
     color: #1c6000 ;
-    text-align: center;
+    /*text-align: center;*/
 }
 .status-resultados-header {
     padding: 0;

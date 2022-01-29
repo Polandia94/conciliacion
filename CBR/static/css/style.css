@@ -261,3 +261,7 @@ input {
     width:280px;
     float:right;
   }
+
+.total {
+    text-align: left;
+}

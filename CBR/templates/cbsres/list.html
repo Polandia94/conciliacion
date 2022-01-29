@@ -45,8 +45,8 @@
     </a>
     {% endif %}
     <label class="mt-0" id="cargando"></label>
-    <label class="label-cbf02"><input value="{{moneda}}" class="w-50" readonly></label> 
     <label class="label-cbf02">Mes <input value="{{mes}}/{{ano}}" class="w-50" readonly></label>
+    <label class="label-cbf02"><input value="{{moneda}}" class="w-50" readonly></label> 
     <label class="label-cbf02-cuenta">Cuenta <input value="{{nrocta}}" class="w-50" style="margin-right: 0%;" readonly></label>
     <label class="label-cbf02">Banco <input value="{{codbco}}" class="w-50" readonly></label> 
     <label class="label-cbf02">Empresa <input value="{{empresa}}" class="w-50" readonly></label> 
@@ -114,7 +114,7 @@
 
                 </tbody>
                 	<tfoot>
-                    <tr><th>Subtotal</th><th></th><th> </th><th><div id="debebco">{{debebco}}</div></th><th><div id="haberbco">{{haberbco}}</div></th><th></th><th><div id="saldobco">{{saldobco}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th><div id="debeerphtml" class="number">{{debeerp}}</div></th><th><div id="habererphtml">{{habererp}}</div></th><th></th><th><div id="saldoerphtml">{{saldoerp}}</div></th><th></th><th><div id="saldodiferenciahtml">{{saldodiferencia}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                    <tr><th>Subtotal</th><th></th><th> </th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="debebco" class="total">{{debebco}}</div></th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="haberbco" class="total">{{haberbco}}</div></th><th></th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="saldobco" class="total">{{saldobco}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th><div id="debeerphtml"  class="number total" >{{debeerp}}</div></th><th><div id="habererphtml" class="total">{{habererp}}</div></th><th></th><th><div id="saldoerphtml" class="total">{{saldoerp}}</div></th><th></th><th><div id="saldodiferenciahtml" class="total">{{saldodiferencia}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
                     <script>
                                 const urlParams = new URLSearchParams(window.location.search);
                                 const idrenc = urlParams.get('idrenc');
@@ -122,8 +122,8 @@
                                 window.open(URL,"Lupa","centerscreen=yes,toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no") 
                              } 
                     </script>
-                    <tr ><th class="dt-comunColor"><a onclick="javascript:ventanaSecundariaGrande('../cbttco/'+'?idrenc=' + idrenc)">Total</a></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="debebcototal">{{debebcototal}}</div></th><th class="dt-bancoColor"><div id="haberbcototal">{{haberbcototal}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"><div id="saldobcototal">{{saldobcototal}}</div></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-bancoColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor">      
-                    </th><th class="dt-comunColor"></th><th></th><th></th><th><div id="debeerptotalhtml" class="number">{{debeerptotal}}</div></th><th><div id="habererptotalhtml">{{habererptotal}}</div></th><th></th><th><div id="saldoerptotalhtml">{{saldoerptotal}}</div></th><th></th><th><div id="saldodiferenciatotalhtml">{{saldodiferenciatotal}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th class="dt-comunColor"></th></tr>
+                    <tr ><th class="dt-comunColor"><a onclick="javascript:ventanaSecundariaGrande('../cbttco/'+'?idrenc=' + idrenc)">Total</a></th><th class="dt-bancoColor total"></th><th class="dt-bancoColor total"></th><th class="dt-bancoColor total dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="debebcototal">{{debebcototal}}</div></th><th class="dt-bancoColor total dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="haberbcototal" class="total">{{haberbcototal}}</div></th><th class="dt-bancoColor dt-nowrap pt-1 pb-1 pr-1 pl-1"></th><th class="dt-bancoColor dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="saldobcototal" class="total">{{saldobcototal}}</div></th><th class="dt-bancoColor dt-nowrap pt-1 pb-1 pr-1 pl-1"></th><th class="dt-bancoColor dt-nowrap pt-1 pb-1 pr-1 pl-1"></th><th class="dt-bancoColor total"></th><th class="dt-bancoColor total"></th><th class="dt-bancoColor total"></th><th class="dt-bancoColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor"></th><th class="dt-comunColor">      
+                    </th><th class="dt-comunColor"></th><th></th><th></th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="debeerptotalhtml" class="number total">{{debeerptotal}}</div></th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="habererptotalhtml" class="total">{{habererptotal}}</div></th><th></th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="saldoerptotalhtml" class="total">{{saldoerptotal}}</div></th><th></th><th class="dt-nowrap pt-1 pb-1 pr-1 pl-1"><div id="saldodiferenciatotalhtml" class="total">{{saldodiferenciatotal}}</div></th><th></th><th></th><th></th><th></th><th></th><th></th><th class="dt-comunColor"></th></tr>
 
 	            </tfoot>
 {% endblock %}
