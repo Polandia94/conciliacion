@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
 from pathlib import Path
-from dotenv import dotenv_values
+#from dotenv import dotenv_values
 
 #importa las variables de .env
-config = dotenv_values(".env")
+#config = dotenv_values(".env")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,7 +30,7 @@ DEBUG = True
 
 USE_THOUSAND_SEPARATOR = True
 
-ALLOWED_HOSTS = ['conbcoerp.com', '18.223.167.9', '127.0.0.1', 'www.cbr.com', 'cbr.com', '190.92.148.128', "azenv.net"]
+ALLOWED_HOSTS = ['conbcoerp.com', '18.223.167.9', '127.0.0.1', 'www.cbr.com', 'cbr.com', '190.92.148.128', "azenv.net", '127.0.0.2']
 
 # Application definition
 
@@ -83,8 +83,10 @@ try:
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': 'contag',
-            'USER': config['USUARIO_POSTGRES'],
-            'PASSWORD': config['PASSWORD_POSTGRES'],
+            #'USER': config['USUARIO_POSTGRES'],
+            'USER': 'alejokio',
+            # 'PASSWORD': config['PASSWORD_POSTGRES'],
+            'PASSWORD': 'root',
             'HOST': 'localhost',
             'PORT': '5432',
         }

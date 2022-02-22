@@ -910,17 +910,53 @@ class Cbthom(models.Model):
         db_table = 'cbthom'
 
 
-class Cbtcfg(models.Model):
-    idtcfg = models.AutoField( verbose_name='ID', db_column='idtcfg', primary_key=True )
+# class Cbtcfg(models.Model):
+#     idtcfg = models.AutoField( verbose_name='ID', db_column='idtcfg', primary_key=True )
+#     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
+#     codcfg = models.SmallIntegerField(verbose_name='Codigo de configuracion',db_column='codcfg')
+#     actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
+#     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
+#     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+
+#     class Meta:
+#         managed = True
+#         db_table = 'cbtcfg'
+
+#     def toJSON(self):
+#         item = model_to_dict(self)
+#         return item
+
+class Cbtcfge(models.Model):
+    idtcfge = models.AutoField( verbose_name='ID', db_column='idtcfge', primary_key=True )
     cliente = models.CharField(verbose_name='Cliente', db_column='cliente', max_length=5)
-    codcfg = models.SmallIntegerField(verbose_name='Codigo de configuracion',db_column='codcfg')
+    empresa = models.CharField(verbose_name='Empresa', db_column='empresa', max_length=5)
+    codbco = models.CharField(verbose_name='Codigo del banco', db_column='codbco', max_length=5)
+    nrocta = models.CharField(verbose_name='Numero de cuenta', db_column='nrocta', max_length=30)
+    indas = models.CharField(verbose_name='Aprobacion de asientos',db_column='indas', max_length=1)
     actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
     class Meta:
         managed = True
-        db_table = 'cbtcfg'
+        db_table = 'cbtcfge'
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+    
+    
+class Cbtcfgd(models.Model):
+    idtcfgd = models.AutoField( verbose_name='ID', db_column='idtcfgd', primary_key=True )
+    idtcfge = models.ForeignKey( 'Cbtcfge', models.DO_NOTHING, db_column='idtcfge')
+    codcfg = models.SmallIntegerField(verbose_name='Codigo de configuracion',db_column='codcfg')
+    actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
+    fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
+    idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
+    
+    class Meta:
+        managed = True
+        db_table = 'cbtcfged'
 
     def toJSON(self):
         item = model_to_dict(self)
@@ -928,10 +964,14 @@ class Cbtcfg(models.Model):
 
 class Cbtcfgc(models.Model):
     idtcfgc = models.AutoField( verbose_name='ID', db_column='idtcfgc', primary_key=True )
-    idtcfg = models.ForeignKey( 'Cbtcfg', models.DO_NOTHING, db_column='idtcfg')
+    # idtcfg = models.ForeignKey( 'Cbtcfg', models.DO_NOTHING, db_column='idtcfg')
+    idtcfgd = models.ForeignKey( 'Cbtcfgd', models.DO_NOTHING, db_column='idtcfgd')
     ordencfg = models.SmallIntegerField(verbose_name='Orden de comparacion',db_column='ordencfg')
     campobco = models.CharField(verbose_name='Campo Banco',db_column='campobco', max_length=30)
     campoerp = models.CharField(verbose_name='Campo ERP',db_column='campoerp', max_length=30)
+    campoper = models.CharField(verbose_name='Operador',db_column='campoper', max_length=1)
+    indestado = models.SmallIntegerField(verbose_name='Indicador de estado',db_column='indestado')
+    actpas = models.CharField(verbose_name='activo o pasivo',db_column='actpas', max_length=1)
     fechact = models.DateTimeField( verbose_name='Fecha de Actualizacion', db_column='fechact', null=True)
     idusu = models.CharField( verbose_name='Usuario', db_column='idusu', max_length=16, null=True )
 
