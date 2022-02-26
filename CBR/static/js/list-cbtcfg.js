@@ -14,7 +14,8 @@ $(function () {
         deferRender: true,
         searching: true,
         ajax: {
-            url: window.location.pathname,
+            url: '/getconfigsemi',
+            // url: window.location.pathname,
             type: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -26,23 +27,25 @@ $(function () {
         },
         columns: [
             {"data": "ordencfg"},
-            {"data": "codcfg", "render": function (data, type, full, meta) {
-                if (data == 1){
-                    return "Busqueda de importe del Erp en fechas posteriores del Banco"
-                }else{
-                    if (data==2){
-                        return "Busqueda de importe del Banco en fechas posteriores del ERP"
-                    }else{
-                        if(data==3){
-                            return "Compara campos del lado del Banco y ERP"
-                        }else{
-                        return data
-                        }
-                    }
-                }
-                }},
+            // {"data": "codcfg", "render": function (data, type, full, meta) {
+            //     if (data == 1){
+            //         return "Busqueda de importe del Erp en fechas posteriores del Banco"
+            //     }else{
+            //         if (data==2){
+            //             return "Busqueda de importe del Banco en fechas posteriores del ERP"
+            //         }else{
+            //             if(data==3){
+            //                 return "Compara campos del lado del Banco y ERP"
+            //             }else{
+            //             return data
+            //             }
+            //         }
+            //     }
+            //     }},
             {"data": "campobco"},
             {"data": "campoerp"},
+            {"data": "campoper"},
+            {"data": "indestado"},
             {"data": "actpas"}
         ],
         columnDefs: [

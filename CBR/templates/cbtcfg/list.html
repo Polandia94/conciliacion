@@ -10,22 +10,98 @@
            title="Atras">
             <i class="fas fa-arrow-left"></i> 
         </a>
-        <a id="nuevoConfiguracionAuto" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
+        <!-- <a id="nuevoConfiguracionAuto" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
         title="Nuevo">
          <i class="fas fa-plus"></i> 
-        </a>
+        </a> -->
 
      </a>
 
 
     </div>
+
+    <br>
+
+    <form method="post" action="../conciliacion" enctype="multipart/form-data"  data-ajax="false" >
+        <!-- form start -->
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="form-group col-3">
+                <label for="empresa" class="col-form-label">Empresa</label>
+
+                
+                    <select class="form-control getcuentasemi" name="empresa" id="id_empresa">
+                    {% for i in empresas %}
+                        <option value={{i.nombre}}>{{i.nombre}} : {{i.descripcion}}</option>
+                    {% endfor %}
+                    </select>
+            </div>    
+            <div class="form-group col-3">
+                <label for="banco-name" class="col-form-label">Banco</label>
+
+                <select class="form-control getcuentasemi" name="codbco" id="id_codbco">
+                    {% for i in bancos %}
+                        <option value={{i.nombre}}>{{i.nombre}}</option>
+                    {% endfor %}
+                    </select>
+            
+            </div>
+            <div class="form-group col-3">
+                <label for="cuenta-text" class="col-form-label">Cuenta</label>
+
+                <select class="form-control getconfigsemi" name="nrocta" id="id_nrocta">
+                    </select>
+                
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group col-3">
+                <label for="banco-name" class="col-form-label">Aprobación Asientos</label>  
+                <input class="form-control" type="checkbox" id="id_aproasi" >          
+            </div>
+            <div class="form-group col-3">
+                <label for="banco-name" class="col-form-label">Activo</label>  
+                <input class="form-control" type="checkbox" id="id_activo" >          
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-3">
+                <label for="banco-name" class="col-form-label">BUSQUEDA DE IMPORTE DE BANCO EN FECHAS POSTERIORES EN ERP</label>  
+                <input id="id_banerp" class="form-control" type="checkbox" >          
+            </div>
+            <div class="form-group col-3">
+                <label for="banco-name" class="col-form-label">BUSQUEDA DE IMPORTE DE ERP EN FECHAS POSTERIORES EN BANCO</label>  
+                <input id="id_erpban" class="form-control" type="checkbox" >          
+            </div>
+            <div class="form-group col-3">
+                <label for="banco-name" class="col-form-label">BUSQUEDA DE CAMPO</label>  
+                <input id="id_cam" class="form-control" type="checkbox" >          
+            </div>
+        </div>
+
+
+    </form>
+
+    <div class="row">
+    <button id="nuevoConfiguracionAuto" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
+    title="Nuevo" disabled><i class="fas fa-plus"></i> </button>
+    <a id="nuevoConfiguracionAuto" class="btn btn-info btn-flat mb-3" data-toggle="tooltip" data-placement="bottom"
+        title="Nuevo">
+         <i class="fas fa-plus"></i> 
+        </a>
+    </div>
+    
 {% endblock %}
 {% block columns %}
+
     <tr>
         <th scope="col" style="width: 2% !important;">Prioridad</th>
-        <th scope="col" style="width: 3%;">Descripcion</th>
         <th scope="col" style="width: 5% !important;">Campo Banco</th>
         <th scope="col" style="width: 5%;">Campo ERP</th>
+        <th scope="col" style="width: 3%;">Operador</th>
+        <th scope="col" style="width: 3%;">Estado</th>
         <th scope="col" style="width: 5%;">Activa</th>
 
     </tr>

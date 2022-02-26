@@ -24,6 +24,7 @@ urlpatterns = [
     path('conciliarSaldos/', utils.conciliarSaldos, name='conciliarSaldos'),
     path('conciliarSaldosExistentes/', utils.conciliarSaldosExistentes, name='conciliarSaldosExistentes'),
     path('getColumnas/', utils.getColumnas, name='getColumnas'),
+    path('getconfigsemi', utils.getconfigsemi, name='getconfigsemi'),
 
 
     #*********** Listas **********************

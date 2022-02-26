@@ -33,7 +33,7 @@ from CBR.forms import (CbrbcodForm, CbrencaForm, CbrencDeleteForm, CbrerpdForm,
 from CBR.homologacion import *
 from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbode, Cbrenc,
                         Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgale, Cbsres,
-                        Cbsresc, Cbsusu, Cbtbco, Cbtcfg,Cbtcfgc, Cbtcli, Cbtcol, Cbtcon, Cbtcta,
+                        Cbsresc, Cbsusu, Cbtbco, Cbtcfge, Cbtcfgc, Cbtcli, Cbtcol, Cbtcon, Cbtcta,
                         Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
                         Cbtusuc, Cbtusue, Cbwres, Cbrenci, Cbthom)
 from .utils import *
@@ -2448,7 +2448,7 @@ class visualizacionUsuarios (ListView):
 #************************* CBF23 - CONFIGURACION PARA SEMIAUTOMATICAS *************************#
 
 class ConciliacionSemiautomatica (ListView):
-    model = Cbtcfg
+    model = Cbtcfge
     template_name = 'cbtcfg/list.html'
 
     # @method_decorator( csrf_exempt )
@@ -2466,7 +2466,7 @@ class ConciliacionSemiautomatica (ListView):
         if Cbtusu.objects.filter(idusu1=request.user.username).first().tipousu == "S":
             position = 1
             data = []
-            for i in Cbtcfg.objects.filter(cliente=diccionario["cliente"]).all():
+            for i in Cbtcfge.objects.filter(cliente=diccionario["cliente"]).all():
                 item = i.toJSON()
                 if i.codcfg ==3:
                     aCbtcfgc = Cbtcfgc.objects.filter(idtcfg=i).first()
@@ -2485,6 +2485,25 @@ class ConciliacionSemiautomatica (ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         getContext(self.request, context, 'Configuración de conciliaciones semi-automaticas', 'CBF23')
+        empresa = []
+        banco = []
+        aCbtusu = Cbtusu.objects.filter(idusu1=self.request.user.username).first()
+        if aCbtusu.tipousu == "S":
+            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("empresa"):
+                empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
+        else:
+            for empresaAAgregar in Cbtemp.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"],actpas="A"):
+                if Cbtusue.objects.filter(idtusu=aCbtusu, empresa=empresaAAgregar.empresa).exists():
+                    empresa.append({"nombre":empresaAAgregar.empresa, "descripcion":empresaAAgregar.desemp})
+        for bancoAAgregar in Cbtbco.objects.filter(cliente=clienteYEmpresas(self.request)["cliente"], actpas="A").order_by("codbco"):
+            try:
+                descripcion = Cbmbco.objects.filter(codbco=bancoAAgregar.codbco).first().desbco
+            except:
+                descripcion = ""
+            banco.append({"nombre":bancoAAgregar.codbco, "descripcion":descripcion})
+        context["empresas"]=empresa
+        context["bancos"]=banco
+        
         return context
 
 #************************* CBF24 - Detalle de No conciliados *************************#

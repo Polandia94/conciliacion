@@ -121,6 +121,119 @@ function getCuenta(){
         });
     }
 }
+
+
+function getCuentaSemi(){
+    const csrftoken = getCookie('csrftoken');
+    const urlParams = new URLSearchParams(window.location.search);
+    var bco = '';
+    var emp = '',
+    bco = $("#id_codbco").val();
+    emp = $("#id_empresa").val();
+    var select = document.getElementById('id_nrocta');
+    if (true) {
+        $("#id_nrocta").empty();
+        $.ajax({
+            method: 'GET',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/getcuenta',
+            data: {'banco': bco, 'empresa': emp},
+            
+            success: function (respons) {
+                if (respons) {
+                    
+                    for (var i = 0; i<respons.cuentas.length; i++){
+                        var opt = document.createElement('option');
+                        opt.value = respons.cuentas[i].nombre;
+                        opt.innerHTML = respons.cuentas[i].nombre;
+                        select.appendChild(opt);
+                    }
+                    if(respons.cuentas.length != 0 && $("#id_archivoerp").val() != "" && $("#id_archivobco").val() != ""){
+                        $('#btnCargar').attr('disabled', false);
+                    }else{
+                        $('#btnCargar').attr('disabled', true);
+                    }
+                    getConfigSemi()
+                } 
+            },
+            error: function (data) {
+            }
+        });
+    }
+}
+
+
+function getConfigSemi(){
+    const csrftoken = getCookie('csrftoken');
+    const urlParams = new URLSearchParams(window.location.search);
+    var bco = '';
+    var emp = '',
+    bco = $("#id_codbco").val();
+    emp = $("#id_empresa").val();
+    cta = $("#id_nrocta").val();
+    var aproasi= document.getElementById('id_aproasi');
+    var act= document.getElementById('id_activo');
+    var banerp= document.getElementById('id_banerp');
+    var erpban= document.getElementById('id_erpban');
+    var idcam= document.getElementById('id_cam');
+    var idmas= document.getElementById('nuevoConfiguracionAuto');
+
+    
+    if (true) {
+        //$("#id_nrocta").empty();
+        $.ajax({
+            method: 'GET',
+            beforeSend: function (request) {
+                request.setRequestHeader("X-CSRFToken", csrftoken);
+            },
+            url: '/getconfigsemi',
+            data: {'banco': bco, 'empresa': emp, 'cuenta':cta},
+            
+            success: function (respons) {
+                if (respons) {
+                    
+                    console.log(respons.actpas);
+                    if(respons.actpas=='A'){
+                        act.checked=true;
+                    }else{
+                        act.checked=false; 
+                    }
+                    if(respons.indas=='S'){
+                        aproasi.checked=true;
+                    }else{
+                        aproasi.checked=false;
+                    }
+                    if(respons.bancoerp=='A'){
+                        banerp.checked=true;
+                    }else{
+                        banerp.checked=false;
+                    }
+                    if(respons.erpbanco=='A'){
+                        erpban.checked=true;
+                    }else{
+                        erpban.checked=false;
+                    }
+                    if(respons.campos=='A'){
+                        idcam.checked=true;
+                        idmas.disabled=false;
+                        // for (var i = 0; i<respons.semis.length; i++){
+                        // }     
+                    }else{
+                        idcam.checked=false;
+                        idmas.disabled=true;
+                    }                    
+                } 
+            },
+            error: function (data) {
+            }
+        });
+    }
+}
+
+
+
 (function ($) {
     "use strict"
     const csrftoken = getCookie('csrftoken');
@@ -567,8 +680,10 @@ function getCuenta(){
 
     $(".getanomes").change(getAnoMes);
 
-    
+        
     $(".getcuenta").change(getCuenta);
+
+    $(".getcuentasemi").change(getCuentaSemi);
 
     $(".getdesbco").change(function () {
         getdesbco()

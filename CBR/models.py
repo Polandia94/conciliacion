@@ -115,9 +115,23 @@ class Cbtcta(models.Model):
         return item
 
     def save(self, *args, **kwargs):
+
+        Cbtcfge(cliente=self.cliente, empresa=self.empresa, codbco=self.codbco,nrocta=self.nrocta,indas="N",actpas="P",fechact=self.fechact, idusu=self.idusu).save()
+        encabezado=Cbtcfge.objects.get(cliente=self.cliente, empresa=self.empresa, codbco=self.codbco,nrocta=self.nrocta)
+        Cbtcfgd(idtcfge=encabezado, codcfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+        Cbtcfgd(idtcfge=encabezado, codcfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+        Cbtcfgd(idtcfge=encabezado, codcfg=3,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
         super( Cbtcta, self ).save( *args, **kwargs )
 
         # - - - - - - - - - - - - - - - - - - - - - - - - #
+    # def save(self, *args, **kwargs):
+    #     if Cbtpai.objects.filter(codpai=self.cliente[0:2]).exists():
+    #         if Cbtcli.objects.filter(idtcli=self.idtcli).exists()== False:
+    #             Cbtcfg(cliente=self.cliente, codcfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+    #             Cbtcfg(cliente=self.cliente, codcfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+    #         super( Cbtcli, self ).save( *args, **kwargs )
+    #     else:
+    #         return False
 
 
 #**********************************************************************************************************************#
@@ -764,14 +778,14 @@ class Cbtcli(models.Model):
         managed = True
         db_table = 'cbtcli'
     
-    def save(self, *args, **kwargs):
-        if Cbtpai.objects.filter(codpai=self.cliente[0:2]).exists():
-            if Cbtcli.objects.filter(idtcli=self.idtcli).exists()== False:
-                Cbtcfg(cliente=self.cliente, codcfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
-                Cbtcfg(cliente=self.cliente, codcfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
-            super( Cbtcli, self ).save( *args, **kwargs )
-        else:
-            return False
+    # def save(self, *args, **kwargs):
+    #     if Cbtpai.objects.filter(codpai=self.cliente[0:2]).exists():
+    #         if Cbtcli.objects.filter(idtcli=self.idtcli).exists()== False:
+    #             Cbtcfg(cliente=self.cliente, codcfg=1,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+    #             Cbtcfg(cliente=self.cliente, codcfg=2,actpas="P", fechact=self.fechact, idusu=self.idusu).save()
+    #         super( Cbtcli, self ).save( *args, **kwargs )
+    #     else:
+    #         return False
 
 class Cbtlic(models.Model):
     idtlic = models.AutoField( verbose_name='ID', db_column='idtlic', primary_key=True )
@@ -956,7 +970,7 @@ class Cbtcfgd(models.Model):
     
     class Meta:
         managed = True
-        db_table = 'cbtcfged'
+        db_table = 'cbtcfgd'
 
     def toJSON(self):
         item = model_to_dict(self)

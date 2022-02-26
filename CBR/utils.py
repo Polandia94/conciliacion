@@ -26,7 +26,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from CBR.models import (Cbmbco, Cbrbcod, Cbrbcoe, Cbrbod, Cbrenc, Cbrencl, Cbrenct, Cbrerpd, Cbrerpe, Cbrgal, Cbsres, Cbsresc, Cbsusu,
                         Cbtbco, Cbtcli, Cbtcol, Cbtcta, Cbtemp, Cbterr, Cbtlic, Cbtpai, Cbttco, Cbtusu,
-                        Cbtusuc, Cbtusue, Cbwres, Cbtcfg, Cbtcfgc)
+                        Cbtusuc, Cbtusue, Cbwres, Cbtcfge, Cbtcfgc, Cbtcfgd)
 from pathlib import Path
 import smtplib
 from os.path import basename
@@ -34,6 +34,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
+#from conciliacion.CBR.models import Cbtcfgd
 from dotenv import dotenv_values
 import pydf as htmltopydf
 from PyPDF2 import PdfFileMerger, PdfFileReader
@@ -663,10 +664,10 @@ def conciliacioAutoySemiAuto(request, idrenc, aCbrenc):
                         
                         #Si aparece despues en el banco
     cliente = clienteYEmpresas(request)["cliente"]
-    if Cbtcfg.objects.filter(codcfg=1, actpas="A", cliente=cliente).exists():
+    if Cbtcfge.objects.filter(codcfg=1, actpas="A", cliente=cliente).exists():
         conciliarBancoFechaPosterior(idrenc)
                         #Si aparece despues en el ERP
-    if Cbtcfg.objects.filter(codcfg=2, actpas="A", cliente=cliente).exists():
+    if Cbtcfge.objects.filter(codcfg=2, actpas="A", cliente=cliente).exists():
         conciliarErpFechaPosterior(idrenc)
     for aCbtcfgc in Cbtcfgc.objects.filter(idtcfg__cliente=cliente, idtcfg__actpas="A").order_by("ordencfg"):
         campoBco = aCbtcfgc.campobco
@@ -970,6 +971,59 @@ def getcuenta(request):
         cuentas.append({"nombre": cuenta.nrocta, "descripcion": cuenta.descta})
     data = {}
     data["cuentas"]=cuentas
+    return JsonResponse(data, safe=False)
+
+@login_required
+def getconfigsemi(request):
+    chequearNoDobleConexion(request)
+    empresa = request.GET.get('empresa')
+    codbco = request.GET.get('banco')
+    cuenta = request.GET.get('cuenta')
+    configuracione=Cbtcfge.objects.filter(empresa=empresa, codbco=codbco, cliente=clienteYEmpresas(request)["cliente"],nrocta=cuenta).first()
+    if configuracione:
+        actpas=configuracione.actpas
+        indas=configuracione.indas
+        bancoerp= Cbtcfgd.objects.get(idtcfge=configuracione.idtcfge,codcfg=1).actpas
+        erpbanco= Cbtcfgd.objects.get(idtcfge=configuracione.idtcfge,codcfg=2).actpas
+        campos= Cbtcfgd.objects.get(idtcfge=configuracione.idtcfge,codcfg=3).actpas
+        if campos=='A':
+            semis=[]
+            vali= Cbtcfgd.objects.get(idtcfge=configuracione.idtcfge,codcfg=3)
+            for semi in Cbtcfgc.objects.filter(idtcfgd=vali.idtcfgd).order_by('ordencfg').all():
+                item=semi.toJSON()
+                # item["campobco"]=semi.campobco
+                # item["campoerp"] = semi.campoerp
+                # item["ordencfg"] =  semi.ordencfg
+                # item["oper"]=semi.campoper
+                # item["estado"]=semi.campoper
+                # item["activo"]=semi.campoper
+                
+                # semis.append({"camban":semi.campobco,"camerp":semi.campoerp,"oper":semi.campoper,"estado":semi.indestado,"activo":semi.actpas})
+                semis.append(item)
+        if request.method=="POST":
+            data=semis
+        else:
+            data = {}
+            data["actpas"]=actpas
+            data["indas"]=indas
+            data["bancoerp"]=bancoerp
+            data["erpbanco"]=erpbanco
+            data["campos"]=campos
+            #data["semis"]=semis
+    else:
+        actpas="P"
+        indas="N"
+        bancoerp="P"
+        erpbanco="P"
+        campos="P"
+        data={} 
+        data["actpas"]=actpas
+        data["indas"]=indas
+        data["bancoerp"]=bancoerp
+        data["erpbanco"]=erpbanco
+        data["campos"]=campos
+        print(data)
+            
     return JsonResponse(data, safe=False)
 
 
@@ -1731,8 +1785,8 @@ def cbrencDesconciliar(request):
 
 def CbtcfgCreate(request):
     cliente = clienteYEmpresas(request)["cliente"]
-    ordencfg= Cbtcfg.objects.filter(cliente=cliente).count()-1
-    aCbtcfg = Cbtcfg(cliente=cliente, codcfg=3,actpas="P", fechact=dt.datetime.now(), idusu=request.user.username)
+    ordencfg= Cbtcfge.objects.filter(cliente=cliente).count()-1
+    aCbtcfg = Cbtcfge(cliente=cliente, codcfg=3,actpas="P", fechact=dt.datetime.now(), idusu=request.user.username)
     aCbtcfg.save()
     Cbtcfgc(idtcfg=aCbtcfg, campobco="", campoerp="", ordencfg=ordencfg, fechact=dt.datetime.now(), idusu=request.user.username).save()
     return HttpResponse("")
@@ -1777,7 +1831,7 @@ def updateCbtcfg(request):
         aCbtcfgc.campoerp = request.POST['value']
         aCbtcfgc.save()
     elif request.POST['fila'][0:6]=="actpas":
-        aCbtcfg = Cbtcfg.objects.filter(idtcfg=request.POST['fila'][7:]).first()
+        aCbtcfg = Cbtcfge.objects.filter(idtcfg=request.POST['fila'][7:]).first()
         if request.POST['checked'] == 'true':
             aCbtcfg.actpas = "A"
         else:
